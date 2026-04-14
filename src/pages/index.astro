@@ -1,17 +1,71 @@
 ---
+import Layout from '../layouts/Layout.astro';
 
+const tracks = [
+  { icon: "🤖", name: "Robotika", desc: "Desain, bangun, dan program robot. Dari Arduino hingga ROS." },
+  { icon: "📊", name: "Data Science", desc: "Analisis data, machine learning, dan visualisasi dengan Python." },
+  { icon: "🌐", name: "Jaringan Komputer", desc: "Infrastruktur, protokol, dan administrasi sistem jaringan." },
+  { icon: "🔐", name: "Keamanan Siber", desc: "Ethical hacking, CTF, dan hardening sistem." },
+  { icon: "💻", name: "Software Engineering", desc: "Web, mobile, dan open source development." },
+];
 ---
+<Layout title="Beranda">
+  <!-- Hero -->
+  <section class="max-w-5xl mx-auto px-4 pt-24 pb-16 text-center">
+    <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs px-3 py-1 rounded-full mb-6">
+      🚀 Open Source · Komunitas · Eksplorasi
+    </div>
+    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+      Ruang Eksplorasi<br>
+      <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        Digital SMA UII
+      </span>
+    </h1>
+    <p class="text-lg text-gray-400 max-w-xl mx-auto mb-10">
+      Komunitas siswa yang serius menekuni teknologi — dari robotika hingga keamanan siber.
+      Belajar bersama, berkarya nyata, berkontribusi ke dunia open source.
+    </p>
+    <div class="flex gap-3 justify-center flex-wrap">
+      <a href="/tracks" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
+        Mulai Eksplorasi →
+      </a>
+      <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
+         class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
+        ★ GitHub Org
+      </a>
+    </div>
+  </section>
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+  <!-- Tracks -->
+  <section class="max-w-5xl mx-auto px-4 py-16">
+    <h2 class="text-2xl font-bold mb-2">Track Minat</h2>
+    <p class="text-gray-400 mb-8">Pilih jalur yang sesuai dengan passion-mu</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tracks.map(t => (
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition cursor-default">
+          <div class="text-2xl mb-3">{t.icon}</div>
+          <h3 class="font-semibold mb-1">{t.name}</h3>
+          <p class="text-sm text-gray-400">{t.desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="max-w-5xl mx-auto px-4 py-16 border-t border-gray-800">
+    <div class="grid md:grid-cols-3 gap-8 text-center">
+      <div>
+        <div class="text-3xl font-bold text-blue-400 mb-2">Open Source</div>
+        <p class="text-sm text-gray-400">Semua proyek terbuka di GitHub. Belajar dari kode nyata, berkontribusi ke komunitas global.</p>
+      </div>
+      <div>
+        <div class="text-3xl font-bold text-purple-400 mb-2">Kompetisi</div>
+        <p class="text-sm text-gray-400">Persiapan OPSI, OSN, CTF, dan kompetisi teknologi lainnya dengan bimbingan komunitas.</p>
+      </div>
+      <div>
+        <div class="text-3xl font-bold text-green-400 mb-2">Portofolio</div>
+        <p class="text-sm text-gray-400">Bangun portofolio nyata sejak SMA. Proyek yang bisa ditunjukkan ke universitas dan industri.</p>
+      </div>
+    </div>
+  </section>
+</Layout>

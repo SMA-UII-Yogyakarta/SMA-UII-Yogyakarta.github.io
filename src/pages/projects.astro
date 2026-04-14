@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Proyek">
+  <div class="max-w-5xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-bold mb-2">Proyek Open Source</h1>
+    <p class="text-gray-400 mb-12">Karya nyata dari siswa SMA UII Yogyakarta</p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      {[
+        { name:"smauii-agent", desc:"Autonomous AI agent untuk operasional sekolah via Telegram. Mengelola perpustakaan, elearning, dan monitoring server.", lang:"TypeScript", stars:0, url:"https://github.com/sandikodev/smauii-agent", status:"active" },
+        { name:"smauii-lab", desc:"Website komunitas SMAUII Lab — ruang eksplorasi digital untuk siswa yang menekuni teknologi.", lang:"Astro", stars:0, url:"https://github.com/SMA-UII-Yogyakarta", status:"active" },
+      ].map(p => (
+        <a href={p.url} target="_blank"
+           class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition block">
+          <div class="flex items-start justify-between mb-3">
+            <h3 class="font-mono font-semibold text-blue-400">{p.name}</h3>
+            <span class={`text-xs px-2 py-0.5 rounded-full ${p.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gray-800 text-gray-400'}`}>
+              {p.status}
+            </span>
+          </div>
+          <p class="text-sm text-gray-400 mb-4">{p.desc}</p>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>
+              {p.lang}
+            </span>
+            <span>★ {p.stars}</span>
+          </div>
+        </a>
+      ))}
+
+      <!-- Placeholder untuk proyek berikutnya -->
+      <div class="bg-gray-900/50 border border-dashed border-gray-700 rounded-xl p-5 flex flex-col items-center justify-center text-center min-h-[160px]">
+        <div class="text-2xl mb-2">+</div>
+        <p class="text-sm text-gray-500">Proyek berikutnya dari komunitas</p>
+        <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
+           class="mt-3 text-xs text-blue-400 hover:underline">Kontribusi →</a>
+      </div>
+    </div>
+  </div>
+</Layout>

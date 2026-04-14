@@ -1,0 +1,44 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Track Minat">
+  <div class="max-w-5xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-bold mb-2">Track Minat</h1>
+    <p class="text-gray-400 mb-12">Pilih jalur eksplorasi yang sesuai dengan minatmu</p>
+
+    <div class="space-y-8">
+      {[
+        { icon:"🤖", name:"Robotika", color:"blue",
+          desc:"Desain, bangun, dan program robot. Mulai dari mikrokontroler Arduino, Raspberry Pi, hingga ROS (Robot Operating System). Cocok untuk yang suka hardware dan software sekaligus.",
+          topics:["Arduino & ESP32","Raspberry Pi","ROS Basics","Sensor & Aktuator","Kompetisi Robot"] },
+        { icon:"📊", name:"Data Science", color:"purple",
+          desc:"Analisis data, machine learning, dan visualisasi. Belajar Python, pandas, scikit-learn, dan cara mengolah data menjadi insight yang bermakna.",
+          topics:["Python & Pandas","Visualisasi Data","Machine Learning","Kaggle Competitions","Proyek Riset"] },
+        { icon:"🌐", name:"Jaringan Komputer", color:"cyan",
+          desc:"Infrastruktur, protokol, dan administrasi sistem. Dari konfigurasi router hingga membangun server sendiri.",
+          topics:["TCP/IP & DNS","Linux Server","Docker & Container","Network Security","Cisco Packet Tracer"] },
+        { icon:"🔐", name:"Keamanan Siber", color:"red",
+          desc:"Ethical hacking, CTF (Capture The Flag), dan hardening sistem. Belajar berpikir seperti attacker untuk membangun pertahanan yang lebih baik.",
+          topics:["CTF Challenges","Web Security","Linux Privilege Escalation","Cryptography","Bug Bounty Basics"] },
+        { icon:"💻", name:"Software Engineering", color:"green",
+          desc:"Web, mobile, dan open source development. Dari frontend hingga backend, dari ide hingga deployment.",
+          topics:["Web Development","Git & Open Source","API Design","Mobile App","Kontribusi ke Proyek Nyata"] },
+      ].map(t => (
+        <div class={`bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-${t.color}-500 transition`}>
+          <div class="flex items-start gap-4">
+            <span class="text-3xl">{t.icon}</span>
+            <div class="flex-1">
+              <h2 class="text-xl font-bold mb-2">{t.name}</h2>
+              <p class="text-gray-400 mb-4">{t.desc}</p>
+              <div class="flex flex-wrap gap-2">
+                {t.topics.map(topic => (
+                  <span class="text-xs bg-gray-800 border border-gray-700 px-2 py-1 rounded-md">{topic}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</Layout>
