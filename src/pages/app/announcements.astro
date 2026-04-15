@@ -1,5 +1,6 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+if (Astro.locals.user?.role !== 'maintainer') return Astro.redirect('/app');
 ---
 
 <DashboardLayout title="Announcements">

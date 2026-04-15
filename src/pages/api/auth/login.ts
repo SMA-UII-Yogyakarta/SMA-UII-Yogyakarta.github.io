@@ -50,9 +50,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Check if user is approved
     if (user.status === 'pending') {
       return createErrorResponse(
-        'Pendaftaran kamu masih dalam proses peninjauan. Mohon tunggu persetujuan dari maintainer.',
+        'Pendaftaran kamu masih dalam proses peninjauan.',
         403,
-        { code: 'PENDING_APPROVAL' }
+        { code: 'PENDING_APPROVAL', details: { nisn: user.nisn } }
       );
     }
 

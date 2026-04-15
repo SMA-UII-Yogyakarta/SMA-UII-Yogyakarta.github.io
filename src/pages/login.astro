@@ -112,6 +112,10 @@ import AuthLayout from '@layouts/AuthLayout.astro';
       const result = await response.json();
 
       if (!response.ok) {
+        if (result.code === 'PENDING_APPROVAL' && result.details?.nisn) {
+          window.location.href = `/check-status?nisn=${encodeURIComponent(result.details.nisn)}`;
+          return;
+        }
         errorMessage.textContent = result.error || 'Login gagal';
         errorMessage.classList.remove('hidden');
         return;
