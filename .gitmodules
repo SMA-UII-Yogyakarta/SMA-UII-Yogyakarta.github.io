@@ -1,0 +1,3 @@
+[submodule "smauii-dev-api"]
+	path = smauii-dev-api
+	url = git@github-sandikodev:SMA-UII-Yogyakarta/smauii-dev-api.git
