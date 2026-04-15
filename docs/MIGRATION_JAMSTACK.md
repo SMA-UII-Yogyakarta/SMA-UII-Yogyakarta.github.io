@@ -1868,3 +1868,180 @@ const projects = await db.query.projects.findMany({
 **Status:** Draft - Menunggu Keputusan Teknis  
 **Author:** Kiro AI Assistant
 
+
+---
+
+## E2E Typesafety Strategy
+
+> Ditambahkan 2026-04-16 — berdasarkan diskusi arsitektur lanjutan
+
+### Prinsip
+
+> **Type yang sama dipakai dari DB → API → frontend tanpa duplikasi manual**
+
+Stack yang sudah ada (Astro + Hono + Drizzle + Zod) **sudah ideal** untuk E2E typesafety. Tidak perlu ganti stack — hanya perlu merapikan struktur dan menghubungkan type antar layer.
+
+---
+
+### Struktur Monorepo Target
+
+Saat ini semua dalam satu repo. Setelah migrasi JAMstack, struktur menjadi:
+
+```
+root/
+  apps/
+    web/          ← Astro static (GitHub Pages / CF Pages)
+    api/          ← Hono + Cloudflare Workers
+  packages/
+    db/           ← Drizzle schema (single source of truth)
+    types/        ← shared Zod schemas (opsional, bisa langsung dari db)
+  package.json    ← pnpm workspaces root
+```
+
+Dengan struktur ini:
+- `apps/api` import schema dari `packages/db`
+- `apps/web` import type dari `packages/db` atau via Hono RPC client
+- Tidak ada duplikasi type manual di mana pun
+
+---
+
+### Layer 1 — Database (Drizzle)
+
+Schema sudah ada di `src/db/schema.ts`. Setelah migrasi ke monorepo, pindah ke `packages/db/schema.ts` sebagai **single source of truth**.
+
+```ts
+// packages/db/schema.ts
+export const users = sqliteTable('users', { ... });
+
+// Type otomatis dari schema — tidak perlu tulis manual
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Project = typeof projects.$inferSelect;
+// ... dst untuk semua tabel
+```
+
+Dipakai di API:
+```ts
+import type { User } from '@smauii/db/schema';
+```
+
+Dipakai di Astro:
+```ts
+import type { User } from '@smauii/db/schema';
+```
+
+---
+
+### Layer 2 — API (Hono RPC)
+
+Hono punya built-in RPC client (`hc`) yang menghasilkan typed client dari definisi route — menghilangkan kebutuhan menulis interface manual untuk response API.
+
+```ts
+// apps/api/src/index.ts
+import { Hono } from 'hono';
+import type { User } from '@smauii/db/schema';
+
+const app = new Hono()
+  .get('/users', async (c) => {
+    const users: User[] = await db.query.users.findMany();
+    return c.json({ data: users });
+  })
+  .post('/admin/approve', zValidator('json', approveSchema), async (c) => {
+    const { userId, action } = c.req.valid('json');
+    // ...
+    return c.json({ success: true });
+  });
+
+// Export type untuk dipakai client — ini kuncinya
+export type AppType = typeof app;
+```
+
+---
+
+### Layer 3 — Frontend (Hono Client)
+
+```ts
+// apps/web/src/lib/api.ts
+import { hc } from 'hono/client';
+import type { AppType } from '@smauii/api'; // import dari package api
+
+const API_BASE = import.meta.env.PUBLIC_API_URL;
+export const api = hc<AppType>(API_BASE);
+
+// Usage — fully typed, auto-complete bekerja, tidak perlu cast manual
+const res = await api.users.$get();
+const { data } = await res.json(); // type: User[] — otomatis!
+```
+
+Tidak perlu lagi:
+- Menulis interface response manual
+- `as SomeType` setelah fetch
+- Khawatir response shape berubah tanpa diketahui
+
+---
+
+### Layer 4 — Validasi Runtime (Zod)
+
+Zod sudah ada di `src/lib/validation.ts`. Setelah migrasi, schemas dipindah ke `packages/db/` atau `packages/types/` dan di-share antara API dan frontend.
+
+```ts
+// packages/types/src/schemas.ts
+import { z } from 'zod';
+
+export const registerSchema = z.object({
+  nisn: z.string().min(1).max(10),
+  name: z.string().min(1).max(100),
+  tracks: z.array(z.enum(['robotika', 'ai', 'data-science', 'network', 'security', 'software'])).min(1).max(3),
+  // ...
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+```
+
+Dipakai di API (validasi request):
+```ts
+import { zValidator } from '@hono/zod-validator';
+import { registerSchema } from '@smauii/types/schemas';
+
+app.post('/register', zValidator('json', registerSchema), async (c) => {
+  const body = c.req.valid('json'); // type: RegisterInput — otomatis!
+  // ...
+});
+```
+
+Dipakai di frontend (validasi form — sudah ada di `RegisterForm.tsx`):
+```ts
+import { registerSchema } from '@smauii/types/schemas';
+const validated = registerSchema.parse(formData); // type-safe
+```
+
+---
+
+### Mengapa Tidak tRPC?
+
+tRPC adalah alternatif populer untuk E2E typesafety, tapi untuk setup ini:
+
+| | Hono RPC | tRPC |
+|---|---|---|
+| Edge compatibility | ✅ Native CF Workers | ⚠️ Overhead lebih besar |
+| Bundle size | ✅ Ringan | ❌ Lebih berat |
+| REST compatibility | ✅ Standard HTTP | ❌ Custom protocol |
+| Learning curve | ✅ Familiar | ❌ Perlu belajar tRPC |
+| Ecosystem | ✅ Hono ecosystem | ✅ React ecosystem |
+
+**Kesimpulan:** Hono RPC lebih cocok untuk setup ini. tRPC lebih cocok untuk Next.js + Node.js server tradisional.
+
+---
+
+### Checklist E2E Typesafety (untuk Fase 0 & 6 migrasi)
+
+- [ ] Setup pnpm workspaces di root `package.json`
+- [ ] Buat `packages/db/` — pindahkan `src/db/schema.ts`
+- [ ] Export semua type dari `packages/db/schema.ts` (`$inferSelect`, `$inferInsert`)
+- [ ] Buat `packages/types/` — pindahkan Zod schemas dari `src/lib/validation.ts`
+- [ ] Setup Hono app dengan RPC-style routes di `apps/api/`
+- [ ] Export `AppType` dari `apps/api/src/index.ts`
+- [ ] Buat `apps/web/src/lib/api.ts` dengan `hc<AppType>`
+- [ ] Update tsconfig di semua package untuk path resolution (`@smauii/db`, `@smauii/types`, `@smauii/api`)
+- [ ] Install `@hono/zod-validator` di `apps/api/`
+- [ ] Ganti semua manual `fetch()` di frontend dengan `api.xxx.$get/post/patch/delete()`
