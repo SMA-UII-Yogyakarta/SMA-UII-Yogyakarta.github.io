@@ -6,6 +6,18 @@ if (user.role !== 'maintainer') return Astro.redirect('/app/overview');
 ---
 
 <DashboardLayout title="Members">
+  <!-- Filter bar statis -->
+  <div class="flex flex-col sm:flex-row gap-3 mb-4">
+    <div class="flex gap-2" id="status-filters">
+      <button onclick="filterMembers('')" data-status="" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua</button>
+      <button onclick="filterMembers('pending')" data-status="pending" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Pending</button>
+      <button onclick="filterMembers('active')" data-status="active" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Active</button>
+    </div>
+    <input type="text" id="search-input" placeholder="Cari nama, email, NISN..."
+      class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+      oninput="searchMembers(this.value)">
+  </div>
+
   <div id="members-content">
     <div class="space-y-3">
       {Array.from({length: 5}).map(() => (
@@ -22,152 +34,84 @@ if (user.role !== 'maintainer') return Astro.redirect('/app/overview');
   </div>
 
   <script>
-    async function loadMembers() {
-      loadMembersData();
-    }
+    let currentStatus = '';
+    let currentSearch = '';
 
-    async function loadMembersData(status = '', search = '') {
-      try {
-        const params = new URLSearchParams();
-        if (status) params.set('status', status);
-        if (search) params.set('search', search);
-
-        const response = await fetch(`/api/members?${params}`);
-        if (!response.ok) throw new Error('Failed to fetch');
-
-        const result = await response.json();
-        const { members, total } = result.data;
-
-        renderMembers(members, total, status, search);
-      } catch (error) {
-        console.error('Failed to load members data:', error);
-      }
-    }
-
-    function escapeHtml(str: string): string {
+    function esc(str) {
       if (!str) return '';
-      const htmlEntities: Record<string, string> = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2F;',
-      };
-      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
     }
 
-    function renderMembers(members, total, currentStatus, currentSearch) {
+    const statusColors = {
+      pending: 'text-yellow-400 bg-yellow-400/10',
+      active: 'text-green-400 bg-green-400/10',
+      rejected: 'text-red-400 bg-red-400/10',
+    };
+
+    async function load() {
+      const params = new URLSearchParams();
+      if (currentStatus) params.set('status', currentStatus);
+      if (currentSearch) params.set('search', currentSearch);
+
+      const res = await fetch(`/api/members?${params}`);
+      const json = await res.json();
+      const { members = [], total = 0 } = json.data || {};
       const content = document.getElementById('members-content');
-      const statusFilter = ['pending', 'active', 'rejected'];
-      const statusColors = {
-        pending: 'text-yellow-400 bg-yellow-400/10',
-        active: 'text-green-400 bg-green-400/10',
-        rejected: 'text-red-400 bg-red-400/10',
-      };
 
-      const filterHtml = `
-        <div class="flex flex-col sm:flex-row gap-4 mb-6">
-          <div class="flex gap-2">
-            <button onclick="filterMembers('')" class="px-3 py-1.5 rounded-lg text-sm transition ${!currentStatus ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}">All</button>
-            ${statusFilter.map(s => `
-              <button onclick="filterMembers('${s}')" class="px-3 py-1.5 rounded-lg text-sm transition ${currentStatus === s ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}">
-                ${s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            `).join('')}
-          </div>
-          <input type="text" id="search-input" placeholder="Search name, email, NISN..." value="${escapeHtml(currentSearch)}"
-            class="px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            onkeypress="if(event.key==='Enter') searchMembers()">
-        </div>
-      `;
+      // Update filter button styles
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const s = btn.dataset.status;
+        btn.className = `filter-btn px-3 py-1.5 rounded-lg text-sm transition ${s === currentStatus ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
+      });
 
-      const membersHtml = members.length === 0
-        ? '<p class="text-gray-500 text-center py-8">No members found</p>'
-        : members.map(m => `
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center justify-between hover:border-gray-700 transition">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                ${escapeHtml(m.name).charAt(0).toUpperCase()}
+      if (!members.length) {
+        content.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">Tidak ada anggota ditemukan</p>';
+        return;
+      }
+
+      content.innerHTML = `
+        <p class="text-xs text-gray-500 mb-3">Total: ${total} anggota</p>
+        <div class="space-y-3">
+          ${members.map(m => `
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                  ${esc(m.name).charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p class="font-semibold text-sm">${esc(m.name)}</p>
+                  <p class="text-xs text-gray-400">${esc(m.class)} · ${esc(m.email)}</p>
+                  ${m.tracks?.length ? `<p class="text-xs text-gray-500">${m.tracks.map(t => esc(t)).join(', ')}</p>` : ''}
+                </div>
               </div>
-              <div>
-                <h3 class="font-semibold text-white">${escapeHtml(m.name)}</h3>
-                <p class="text-sm text-gray-400">${escapeHtml(m.class)} • ${escapeHtml(m.email)}</p>
-                <p class="text-xs text-gray-500">NISN: ${escapeHtml(m.nisn || '')}</p>
-                ${m.tracks?.length ? `<p class="text-xs text-gray-500 mt-1">Tracks: ${m.tracks.map(t => escapeHtml(t)).join(', ')}</p>` : ''}
-              </div>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="px-2 py-1 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">
-                ${escapeHtml(m.status || '')}
-              </span>
-              <div class="flex gap-2">
-                <button onclick="viewMember('${m.id}')" class="text-gray-400 hover:text-white p-2 rounded hover:bg-gray-800" title="View">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                  </svg>
-                </button>
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">${esc(m.status)}</span>
                 ${m.status === 'pending' ? `
-                  <button onclick="handleAction('${m.id}', 'approve')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded text-sm transition">Approve</button>
-                  <button onclick="handleAction('${m.id}', 'reject')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded text-sm transition">Reject</button>
+                  <button onclick="approve('${m.id}')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
+                  <button onclick="reject('${m.id}')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
                 ` : ''}
               </div>
             </div>
-          </div>
-        `).join('');
-
-      content.innerHTML = `
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold mb-2">Members</h1>
-          <p class="text-gray-400">Manage and view all registered members</p>
-        </div>
-        ${filterHtml}
-        <div class="text-sm text-gray-500 mb-4">Total: ${total} members</div>
-        <div class="space-y-3">
-          ${membersHtml}
+          `).join('')}
         </div>
       `;
     }
 
-    window.filterMembers = (status) => {
-      const search = document.getElementById('search-input')?.value || '';
-      loadMembersData(status, search);
+    window.filterMembers = (status) => { currentStatus = status; load(); };
+    window.searchMembers = (val) => { currentSearch = val; load(); };
+
+    window.approve = async (id) => {
+      if (!confirm('Setujui anggota ini?')) return;
+      const res = await fetch('/api/admin/approve', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ userId: id, action: 'approve' }) });
+      if (res.ok) load(); else alert('Gagal');
     };
 
-    window.searchMembers = () => {
-      const search = document.getElementById('search-input')?.value || '';
-      const currentStatus = new URLSearchParams(window.location.search).get('status') || '';
-      loadMembersData(currentStatus, search);
+    window.reject = async (id) => {
+      if (!confirm('Tolak dan hapus anggota ini?')) return;
+      const res = await fetch('/api/admin/approve', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ userId: id, action: 'reject' }) });
+      if (res.ok) load(); else alert('Gagal');
     };
 
-    window.handleAction = async (userId, action) => {
-      if (!confirm(`Are you sure you want to ${action} this user?`)) return;
-
-      try {
-        const response = await fetch('/api/admin/approve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, action }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          alert(error.error || 'Failed to process action');
-          return;
-        }
-
-        alert(action === 'approve' ? 'User approved!' : 'User rejected!');
-        loadMembersData();
-      } catch (error) {
-        alert('Failed to process action');
-      }
-    };
-
-    window.viewMember = (id) => {
-      alert('View member details: ' + id);
-    };
-
-    loadMembers();
+    load();
   </script>
 </DashboardLayout>
