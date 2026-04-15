@@ -11,13 +11,9 @@ interface Props {
 const { title } = Astro.props;
 
 const user = Astro.locals.user;
-if (!user) return Astro.redirect('/login');
-if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
-if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
-
-const role = (user.role as 'maintainer' | 'member') ?? 'member';
-const userName = user.name ?? '';
-const userEmail = user.email ?? '';
+const role = (user?.role as 'maintainer' | 'member') ?? 'member';
+const userName = user?.name ?? '';
+const userEmail = user?.email ?? '';
 ---
 
 <!DOCTYPE html>
