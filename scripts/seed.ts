@@ -1,12 +1,11 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import { users, memberTracks, memberCards, activities } from '@db/schema';
-import type { NewUser } from '@db/schema';
 import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
 
 // Load env - compatible with Node.js and Bun
-const env = typeof process !== 'undefined' ? process.env : (Bun?.env || {});
+const env = process.env;
 const tursoUrl = env.TURSO_URL || 'file:local.db';
 const tursoToken = env.TURSO_TOKEN || '';
 
@@ -89,7 +88,7 @@ const SEED_DATA = {
   },
 } as const;
 
-async function generateMemberCard(userId: string, name: string, nis: string) {
+async function generateMemberCard(userId: string, name: string, _nis: string) {
   const cardNumber = `SMAUII-${Date.now().toString().slice(-8)}`;
   const qrData = JSON.stringify({ id: userId, cardNumber, name });
   const qrCode = await QRCode.toDataURL(qrData);
@@ -103,7 +102,7 @@ async function generateMemberCard(userId: string, name: string, nis: string) {
   };
 }
 
-async function createUser(data: typeof SEED_DATA.maintainer | typeof SEED_DATA.pendingMembers[0] | typeof SEED_DATA.activeMember, status: 'active' | 'pending', role: 'maintainer' | 'member', approvedBy?: string) {
+async function createUser(data: { nisn: string; nis: string; name: string; email: string; class: string; tracks: readonly string[]; githubUsername?: string; [key: string]: unknown }, status: 'active' | 'pending', role: 'maintainer' | 'member', approvedBy?: string) {
   const userId = nanoid();
   const now = Date.now();
   

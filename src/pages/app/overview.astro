@@ -1,20 +1,24 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import { requireAuth } from '@lib/guards';
-const { user } = Astro.locals;
+import { db } from '@db';
+import { users } from '@db/schema';
+import { eq } from 'drizzle-orm';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
+const { user } = Astro.locals;
+const fullUser = await db.query.users.findFirst({ where: eq(users.id, user!.id) });
 ---
 
 <DashboardLayout title="Dashboard">
   <!-- Greeting SSR — render instan -->
   <div class="mb-4">
-    {user.role === 'maintainer' ? (
+    {fullUser!.role === 'maintainer' ? (
       <h1 class="text-2xl font-bold">Admin Dashboard</h1>
     ) : (
-      <h1 class="text-2xl font-bold">Halo, {user.name}! 👋</h1>
+      <h1 class="text-2xl font-bold">Halo, {fullUser!.name}! 👋</h1>
     )}
     <p class="text-gray-400 text-sm">
-      {user.role === 'maintainer' ? 'Kelola komunitas Digital Lab SMA UII' : 'Member dashboard'}
+      {fullUser!.role === 'maintainer' ? 'Kelola komunitas Digital Lab SMA UII' : 'Member dashboard'}
     </p>
   </div>
 
@@ -34,20 +38,21 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
   </div>
 
   <div id="overview-meta"
-    data-role={user.role}
-    data-name={user.name}
-    data-status={user.status}
-    data-class={user.class}
+    data-role={fullUser!.role}
+    data-name={fullUser!.name}
+    data-status={fullUser!.status}
+    data-class={fullUser!.class}
     style="display:none">
   </div>
 
   <script>
-    function esc(str) {
+    function esc(str: string): string {
       if (!str) return '';
-      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
+      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
     }
 
-    const meta = document.getElementById('overview-meta');
+    const meta = document.getElementById('overview-meta') as HTMLElement | null;
+    if (!meta) throw new Error('overview-meta not found');
     const role = meta.dataset.role;
     const name = meta.dataset.name;
     const status = meta.dataset.status;
@@ -60,7 +65,8 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
     }
 
     async function loadAdmin() {
-      const content = document.getElementById('overview-content');
+      const content = document.getElementById('overview-content') as HTMLElement | null;
+      if (!content) return;
       try {
         const [statsRes, annRes] = await Promise.all([
           fetch('/api/admin/stats'),
@@ -71,22 +77,22 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
 
         const pendingHtml = pendingUsers.length === 0
           ? '<p class="text-gray-500 text-center py-4 text-sm">Tidak ada pendaftaran baru</p>'
-          : pendingUsers.slice(0, 5).map(u => `
+          : pendingUsers.slice(0, 5).map((u: any) => `
             <div class="flex items-center justify-between p-3 bg-gray-950 rounded-lg">
               <div>
                 <p class="font-medium text-sm">${esc(u.name)}</p>
                 <p class="text-xs text-gray-400">${esc(u.class)} · ${esc((u.tracks || []).join(', '))}</p>
               </div>
               <div class="flex gap-2">
-                <button onclick="approve('${u.id}')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
-                <button onclick="reject('${u.id}')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
+                <button onclick="window.approve('${u.id}')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
+                <button onclick="window.reject('${u.id}')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
               </div>
             </div>
           `).join('');
 
         const annHtml = announcements.length === 0
           ? '<p class="text-gray-500 text-sm">Belum ada pengumuman</p>'
-          : announcements.map(a => `
+          : announcements.map((a: any) => `
             <div class="py-2 border-b border-gray-800 last:border-0">
               <p class="font-medium text-sm">${esc(a.title)}</p>
               <p class="text-xs text-gray-400 truncate">${esc(a.content)}</p>
@@ -154,14 +160,14 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
           </div>
         `;
 
-        window.approve = (id) => handleAction(id, 'approve');
-        window.reject = (id) => handleAction(id, 'reject');
+        window.approve = (id: string) => handleAction(id, 'approve');
+        window.reject = (id: string) => handleAction(id, 'reject');
       } catch (e) {
         content.innerHTML = '<p class="text-red-400">Gagal memuat dashboard</p>';
       }
     }
 
-    async function handleAction(userId, action) {
+    async function handleAction(userId: string, action: string) {
       if (!confirm(`${action === 'approve' ? 'Setujui' : 'Tolak'} anggota ini?`)) return;
       const res = await fetch('/api/admin/approve', {
         method: 'POST',
@@ -172,8 +178,9 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
       else alert('Gagal memproses');
     }
 
-    function renderMember(user) {
-      const content = document.getElementById('overview-content');
+    function renderMember(user: { name?: string; status?: string; class?: string; role?: string }) {
+      const content = document.getElementById('overview-content') as HTMLElement | null;
+      if (!content) return;
       const isActive = user.status === 'active';
 
       content.innerHTML = `
@@ -218,16 +225,16 @@ const redirect = requireAuth(Astro); if (redirect) return redirect;
             <div class="bg-gray-950 rounded-lg p-3">
               <p class="text-xs text-gray-400 mb-1">Status</p>
               <span class="px-2 py-0.5 rounded text-xs font-medium ${isActive ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
-                ${esc(user.status).toUpperCase()}
+                ${esc(user.status ?? '').toUpperCase()}
               </span>
             </div>
             <div class="bg-gray-950 rounded-lg p-3">
               <p class="text-xs text-gray-400 mb-1">Role</p>
-              <p class="text-sm font-medium capitalize">${esc(user.role || 'member')}</p>
+              <p class="text-sm font-medium capitalize">${esc(user.role ?? 'member')}</p>
             </div>
             <div class="bg-gray-950 rounded-lg p-3">
               <p class="text-xs text-gray-400 mb-1">Kelas</p>
-              <p class="text-sm font-medium">${esc(user.class || '-')}</p>
+              <p class="text-sm font-medium">${esc(user.class ?? '-')}</p>
             </div>
           </div>
         </div>

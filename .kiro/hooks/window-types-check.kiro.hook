@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Window Types Check",
+  "description": "Pastikan semua fungsi window.* di script tags sudah dideklarasikan di env.d.ts",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/env.d.ts",
+      "src/pages/app/*.astro"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File yang berkaitan dengan TypeScript global types telah diubah. Periksa hal berikut:\n\n1. Cari semua `window.xxx = ` di file `.astro` yang baru diubah\n2. Pastikan setiap fungsi yang di-assign ke `window` sudah dideklarasikan di `src/env.d.ts` dalam `interface Window`\n3. Jika ada yang belum dideklarasikan, tambahkan ke `interface Window` di `src/env.d.ts`\n\nContoh yang benar:\n```ts\n// src/env.d.ts\ninterface Window {\n  myFunction: (id: string) => void;\n}\n```\n\nLaporkan fungsi mana yang belum dideklarasikan dan tawarkan untuk menambahkannya."
+  }
+}

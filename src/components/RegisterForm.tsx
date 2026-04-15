@@ -2,24 +2,12 @@ import { useState } from 'react';
 import { registerSchema, trackOptions, type RegisterInput } from '@lib/validation';
 import type { ZodError } from 'zod';
 
-interface SLiMSData {
-  nisn: string;
-  nis: string;
-  name: string;
-  email: string;
-  class: string;
-  isExpired: boolean;
-  expiredAt: string;
-  isPending: boolean;
-}
-
 type RegistrationStep = 'verify' | 'data' | 'github' | 'tracks' | 'confirm';
 
 export default function RegisterForm() {
   const [nisn, setNisn] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<RegistrationStep>('verify');
-  const [slimsData, setSlimsData] = useState<SLiMSData | null>(null);
   const [error, setError] = useState('');
   const [hasGithub, setHasGithub] = useState<boolean | null>(null);
   const [dataConfirmed, setDataConfirmed] = useState(false);
@@ -117,7 +105,6 @@ export default function RegisterForm() {
         return;
       }
 
-      setSlimsData(data);
       setFormData(prev => ({
         ...prev,
         nisn: data.nisn || nisn.trim(),
@@ -151,7 +138,7 @@ export default function RegisterForm() {
     nextStep();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
@@ -199,10 +186,9 @@ export default function RegisterForm() {
   const currentStepIndex = stepConfig.findIndex(s => s.key === step);
 
   // Success Step - Immersive
-  if (step === 'success') {
+  if (step === ('success' as RegistrationStep)) {
     return (
       <>
-        <Confetti />
         <div className="fixed inset-0 bg-gray-950 z-40" />
         <div className="relative z-50 min-h-screen flex items-center justify-center">
           <div className="max-w-2xl mx-auto text-center py-16 px-4 animate-fade-in">

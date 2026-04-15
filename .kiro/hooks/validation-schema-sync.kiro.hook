@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validation Schema Sync",
+  "description": "Ingatkan untuk update api-patterns.md dan menggunakan schema baru di route yang relevan setiap kali validation.ts diubah",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/lib/validation.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File `src/lib/validation.ts` telah diubah. Lakukan pengecekan berikut:\n\n1. **Schema baru ditambahkan?** → Pastikan schema tersebut dipakai di API route yang relevan (bukan inline Zod di route file)\n2. **Schema yang ada diubah?** → Cari semua API route yang menggunakan schema tersebut dan pastikan masih kompatibel\n3. **Export baru?** → Update tabel endpoint di `.kiro/steering/api-patterns.md` jika ada endpoint baru yang menggunakan schema ini\n\nAturan: semua Zod schema harus didefinisikan di `src/lib/validation.ts`, bukan inline di route files. Laporkan jika ada yang melanggar aturan ini."
+  }
+}

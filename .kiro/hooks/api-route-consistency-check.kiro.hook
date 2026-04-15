@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "API Route Consistency Check",
+  "description": "Periksa konsistensi API route: gunakan locals bukan manual validateSession, dan pakai helper dari api-utils",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/pages/api/**/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File API route telah diubah. Periksa hal-hal berikut:\n1. Apakah route ini masih memanggil `lucia.validateSession()` secara manual? Jika ya, ini duplikasi — middleware sudah handle ini, cukup pakai `locals.session` dan `locals.user`.\n2. Apakah semua response menggunakan `createErrorResponse` dan `createSuccessResponse` dari `@lib/api-utils`? Jika tidak, perbaiki konsistensinya.\n3. Apakah ada auth check yang hilang untuk endpoint yang seharusnya protected?\nLaporkan temuan secara singkat. Jika ada masalah, tawarkan untuk memperbaikinya."
+  }
+}

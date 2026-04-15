@@ -24,10 +24,11 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
     </div>
   </div>
 
-  <form id="login-form" class="space-y-4">
+  <form id="login-form" data-testid="login-form" class="space-y-4">
     <div>
       <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">NISN atau NIS</label>
       <input
+        data-testid="login-identifier"
         type="text"
         id="identifier"
         name="identifier"
@@ -44,6 +45,7 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
         type="password"
         id="password"
         name="password"
+        data-testid="login-password"
         class="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 focus:bg-gray-800 transition-all placeholder-gray-600"
         placeholder="••••••••"
         autocomplete="current-password"
@@ -51,11 +53,12 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
       <p id="password-error" class="text-red-400 text-xs mt-1.5 hidden"></p>
     </div>
 
-    <div id="error-message" class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm hidden"></div>
+    <div id="error-message" data-testid="login-error" class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm hidden"></div>
 
     <button
       type="submit"
       id="submit-btn"
+      data-testid="login-submit"
       class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 mt-2"
     >
       Masuk
@@ -101,13 +104,10 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
     submitBtn.textContent = 'Memproses...';
 
     try {
-      const isNisn = /^\d{10}$/.test(identifier);
-      const payload = isNisn ? { nisn: identifier, password } : { nis: identifier, password };
-
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ identifier, password }),
       });
 
       const result = await response.json();
@@ -122,7 +122,7 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
         return;
       }
 
-      window.location.href = '/app';
+      window.location.href = '/app/overview';
     } catch {
       errorMessage.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
       errorMessage.classList.remove('hidden');

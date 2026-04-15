@@ -4,14 +4,16 @@ import PageHeader from '@components/app/PageHeader.astro';
 import Modal from '@components/app/Modal.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
-const { user } = Astro.locals;
 const redirect = requireAuth(Astro); if (redirect) return redirect;
+const { user } = Astro.locals;
 const canLog = user!.status === 'active';
-const isAdmin = user!.role === 'maintainer';
 ---
 
 <DashboardLayout title="Activities">
   <PageHeader subtitle="Log kontribusi dan kegiatan" actionLabel={canLog ? "Log Activity" : undefined} />
+
+  <!-- Meta untuk client script -->
+  <div id="activities-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
 
   <div id="activities-list">
     <SkeletonList count={5} />
@@ -51,16 +53,36 @@ const isAdmin = user!.role === 'maintainer';
   )}
 
   <script>
-    function esc(str) {
+    function esc(str: unknown): string {
       if (!str) return '';
-      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
+      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
     }
 
-    function fmtDate(ts) {
+    function fmtDate(ts: number): string {
       return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    const typeColor = {
+    const activitiesMeta = document.getElementById('activities-meta') as HTMLElement | null;
+    const currentUserId = activitiesMeta?.dataset.userId || '';
+    const isAdmin = activitiesMeta?.dataset.userRole === 'maintainer';
+
+    let currentPage = 1;
+    const PAGE_LIMIT = 20;
+
+    type ActivityType = 'contribution' | 'event' | 'workshop' | 'meeting' | 'other';
+
+    interface Activity {
+      id: string;
+      type: ActivityType;
+      title: string;
+      description?: string | null;
+      url?: string | null;
+      userName?: string | null;
+      userId?: string;
+      createdAt: number;
+    }
+
+    const typeColor: Record<ActivityType, string> = {
       contribution: 'bg-purple-500/20 text-purple-400',
       event: 'bg-blue-500/20 text-blue-400',
       workshop: 'bg-green-500/20 text-green-400',
@@ -69,33 +91,78 @@ const isAdmin = user!.role === 'maintainer';
     };
 
     async function load() {
-      const res = await fetch('/api/activities');
+      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
+      const res = await fetch(`/api/activities?${params}`);
       const json = await res.json();
-      const activities = (json.data && json.data.activities) || [];
-      const list = document.getElementById('activities-list');
+      const activities: Activity[] = (json.data && json.data.activities) || [];
+      const total: number = json.data?.total || 0;
+      const list = document.getElementById('activities-list') as HTMLElement | null;
+      if (!list) return;
 
       if (!activities.length) {
-        list.innerHTML = '<div class="text-center py-8 text-gray-500 text-sm">Belum ada aktivitas</div>';
+        list.innerHTML = '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada aktivitas</p></div>';
+        renderPagination(0, currentPage, PAGE_LIMIT);
         return;
       }
 
-      list.innerHTML = activities.map(a => `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
-          <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 ${typeColor[a.type] || typeColor.other}">${esc(a.type)}</span>
-          <div class="flex-1 min-w-0">
-            <p class="font-medium text-sm">${esc(a.title)}</p>
-            ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
-            <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
-              <span>${esc(a.userName || '')}</span>
-              <span>${fmtDate(a.createdAt)}</span>
-              ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
+      list.innerHTML = `<div class="space-y-3">${activities.map((a: Activity) => {
+        const canDelete = a.userId === currentUserId || isAdmin;
+        return `
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
+            <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 shrink-0 ${typeColor[a.type as ActivityType] || typeColor.other}">${esc(a.type)}</span>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-sm">${esc(a.title)}</p>
+              ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
+              <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                <span>${esc(a.userName || '')}</span>
+                <span>${fmtDate(a.createdAt)}</span>
+                ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
+              </div>
             </div>
+            ${canDelete ? `
+              <button onclick="window.deleteActivity('${esc(a.id)}', '${esc(a.title)}')"
+                class="text-gray-600 hover:text-red-400 transition p-1 shrink-0" title="Hapus">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            ` : ''}
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('')}</div>`;
+      renderPagination(total, currentPage, PAGE_LIMIT);
     }
 
-    load();
+    function renderPagination(total: number, page: number, limit: number) {
+      let container = document.getElementById('activities-pagination');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'activities-pagination';
+        document.getElementById('activities-list')?.after(container);
+      }
+      const totalPages = Math.ceil(total / limit);
+      if (total === 0 || totalPages <= 1) { container.innerHTML = ''; return; }
+      const start = (page - 1) * limit + 1;
+      const end = Math.min(page * limit, total);
+      container.className = 'flex items-center justify-between mt-6 pt-4 border-t border-gray-800';
+      container.innerHTML = `
+        <p class="text-xs text-gray-500">Menampilkan ${start}–${end} dari ${total} aktivitas</p>
+        <div class="flex gap-2">
+          <button onclick="window.actPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}
+            class="px-3 py-1.5 rounded-lg text-sm ${page <= 1 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">← Prev</button>
+          <span class="px-3 py-1.5 text-sm text-gray-400">${page} / ${totalPages}</span>
+          <button onclick="window.actPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}
+            class="px-3 py-1.5 rounded-lg text-sm ${page >= totalPages ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">Next →</button>
+        </div>
+      `;
+    }
+
+    window.actPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
+
+    window.deleteActivity = async (id: string, title: string) => {
+      if (!confirm(`Hapus activity "${title}"?`)) return;
+      const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
+      if (res.ok) load();
+      else alert('Gagal menghapus activity');
+    };
 
     const modal = document.getElementById('add-modal');
     document.getElementById('open-modal')?.addEventListener('click', () => modal?.classList.remove('hidden'));
@@ -103,7 +170,8 @@ const isAdmin = user!.role === 'maintainer';
 
     document.getElementById('activity-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fd = new FormData(e.target);
+      const form = e.target as HTMLFormElement;
+      const fd = new FormData(form);
       const res = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +184,7 @@ const isAdmin = user!.role === 'maintainer';
       });
       if (res.ok) {
         modal?.classList.add('hidden');
-        e.target.reset();
+        form.reset();
         load();
       } else {
         alert('Gagal menyimpan');

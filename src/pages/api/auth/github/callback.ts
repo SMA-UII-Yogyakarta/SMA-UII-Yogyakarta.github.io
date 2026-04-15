@@ -5,7 +5,7 @@ import { db } from '@db';
 import { users, sessions } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const code = url.searchParams.get('code');

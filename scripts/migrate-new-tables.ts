@@ -50,4 +50,4 @@ for (const sql of statements) {
 }
 
 console.log('Migration completed!');
-await client.close();
+client.close();

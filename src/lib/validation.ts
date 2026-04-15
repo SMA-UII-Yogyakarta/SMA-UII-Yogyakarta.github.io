@@ -4,7 +4,7 @@ export const registerSchema = z.object({
   nisn: z.string().min(1, 'NISN harus diisi').max(10, 'NISN maksimal 10 digit'),
   nis: z.string().min(1, 'NIS harus diisi').max(20, 'NIS maksimal 20 karakter'),
   name: z.string().min(1, 'Nama harus diisi').max(100, 'Nama maksimal 100 karakter'),
-  email: z.string().min(1, 'Email harus diisi').email('Email tidak valid'),
+  email: z.string().min(1, 'Email harus diisi').check(z.email('Email tidak valid')),
   class: z.string().min(1, 'Kelas harus diisi'),
   githubUsername: z.string().optional(),
   tracks: z.array(z.enum(['robotika', 'ai', 'data-science', 'network', 'security', 'software']))

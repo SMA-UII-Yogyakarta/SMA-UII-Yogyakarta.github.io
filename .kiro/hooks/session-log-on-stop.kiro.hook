@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Session Log on Agent Stop",
+  "description": "Buat ringkasan session log setelah agent selesai bekerja, mencatat file yang diubah dan keputusan penting",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Sesi kerja telah selesai. Buat ringkasan singkat dalam format berikut dan tampilkan ke user (JANGAN tulis ke file, cukup tampilkan di chat):\n\n**Ringkasan Sesi**\n- File yang diubah: [list file]\n- Apa yang dikerjakan: [deskripsi singkat]\n- Isu yang ditemukan: [jika ada]\n- Next steps yang disarankan: [jika ada]\n\nJika tidak ada perubahan signifikan dalam sesi ini, cukup tulis \"Sesi ini hanya berupa diskusi/analisis, tidak ada perubahan kode.\""
+  }
+}

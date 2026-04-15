@@ -14,14 +14,14 @@ export const users = sqliteTable('users', {
   class: text('class').notNull(),
   role: text('role').notNull().default('member'),
   status: text('status').notNull().default('pending'),
-  joinedAt: integer('joined_at').notNull(), // Store as Unix timestamp (ms)
-  approvedAt: integer('approved_at'), // Store as Unix timestamp (ms)
+  joinedAt: integer('joined_at').notNull(), // Unix timestamp (ms)
+  approvedAt: integer('approved_at'),       // Unix timestamp (ms)
   approvedBy: text('approved_by'),
-}, (table) => ({
-  nisnIdx: index('idx_users_nisn').on(table.nisn),
-  emailIdx: index('idx_users_email').on(table.email),
-  statusIdx: index('idx_users_status').on(table.status),
-}));
+}, (table) => [
+  index('idx_users_nisn').on(table.nisn),
+  index('idx_users_email').on(table.email),
+  index('idx_users_status').on(table.status),
+]);
 
 // User relations
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -39,11 +39,11 @@ export const memberTracks = sqliteTable('member_tracks', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
   track: text('track').notNull(),
-  joinedAt: integer('joined_at').notNull(), // Store as Unix timestamp (ms)
-}, (table) => ({
-  userIdIdx: index('idx_member_tracks_user_id').on(table.userId),
-  trackIdx: index('idx_member_tracks_track').on(table.track),
-}));
+  joinedAt: integer('joined_at').notNull(), // Unix timestamp (ms)
+}, (table) => [
+  index('idx_member_tracks_user_id').on(table.userId),
+  index('idx_member_tracks_track').on(table.track),
+]);
 
 // Member tracks relations
 export const memberTracksRelations = relations(memberTracks, ({ one }) => ({
@@ -57,10 +57,10 @@ export const memberTracksRelations = relations(memberTracks, ({ one }) => ({
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
-  expiresAt: integer('expires_at').notNull(), // Store as Unix timestamp (ms)
-}, (table) => ({
-  userIdIdx: index('idx_sessions_user_id').on(table.userId),
-}));
+  expiresAt: integer('expires_at').notNull(), // Unix timestamp (ms)
+}, (table) => [
+  index('idx_sessions_user_id').on(table.userId),
+]);
 
 // Sessions relations
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -76,7 +76,7 @@ export const memberCards = sqliteTable('member_cards', {
   userId: text('user_id').notNull().unique().references(() => users.id),
   cardNumber: text('card_number').notNull().unique(),
   qrCode: text('qr_code').notNull(),
-  issuedAt: integer('issued_at').notNull(), // Store as Unix timestamp (ms)
+  issuedAt: integer('issued_at').notNull(), // Unix timestamp (ms)
 });
 
 // Member cards relations
@@ -95,11 +95,11 @@ export const activities = sqliteTable('activities', {
   title: text('title').notNull(),
   description: text('description'),
   url: text('url'),
-  createdAt: integer('created_at').notNull(), // Store as Unix timestamp (ms)
-}, (table) => ({
-  userIdIdx: index('idx_activities_user_id').on(table.userId),
-  createdAtIdx: index('idx_activities_created_at').on(table.createdAt),
-}));
+  createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
+}, (table) => [
+  index('idx_activities_user_id').on(table.userId),
+  index('idx_activities_created_at').on(table.createdAt),
+]);
 
 // Activities relations
 export const activitiesRelations = relations(activities, ({ one }) => ({
@@ -115,11 +115,11 @@ export const notifications = sqliteTable('notifications', {
   userId: text('user_id').notNull().references(() => users.id),
   message: text('message').notNull(),
   isRead: integer('is_read').notNull().default(0),
-  createdAt: integer('created_at').notNull(),
-}, (table) => ({
-  userIdIdx: index('idx_notifications_user_id').on(table.userId),
-  createdAtIdx: index('idx_notifications_created_at').on(table.createdAt),
-}));
+  createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
+}, (table) => [
+  index('idx_notifications_user_id').on(table.userId),
+  index('idx_notifications_created_at').on(table.createdAt),
+]);
 
 // Notifications relations
 export const notificationsRelations = relations(notifications, ({ one }) => ({
@@ -135,7 +135,7 @@ export const announcements = sqliteTable('announcements', {
   title: text('title').notNull(),
   content: text('content').notNull(),
   createdBy: text('created_by').notNull().references(() => users.id),
-  createdAt: integer('created_at').notNull(),
+  createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
 });
 
 // Announcements relations
@@ -154,10 +154,10 @@ export const projects = sqliteTable('projects', {
   description: text('description'),
   url: text('url'),
   imageUrl: text('image_url'),
-  createdAt: integer('created_at').notNull(),
-}, (table) => ({
-  userIdIdx: index('idx_projects_user_id').on(table.userId),
-}));
+  createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
+}, (table) => [
+  index('idx_projects_user_id').on(table.userId),
+]);
 
 // Projects relations
 export const projectsRelations = relations(projects, ({ one }) => ({

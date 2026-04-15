@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Known Issues Updater",
+  "description": "Ingatkan untuk update known-issues.md setelah task selesai dikerjakan",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Task telah selesai dikerjakan. Periksa `.kiro/steering/known-issues.md` dan update statusnya:\n\n1. Jika ada item di backlog (🔴 atau 🟡 atau 🟢) yang baru saja diselesaikan → pindahkan ke bagian ✅ Sudah Selesai\n2. Jika ditemukan isu baru selama pengerjaan → tambahkan ke bagian yang sesuai (🔴/🟡/🟢)\n3. Jika ada item yang ternyata tidak relevan lagi → hapus atau tandai\n\nLakukan update ini langsung tanpa menunggu konfirmasi — ini adalah maintenance rutin dokumentasi."
+  }
+}

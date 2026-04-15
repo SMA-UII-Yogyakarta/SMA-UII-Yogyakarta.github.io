@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "TypeScript Check on Save",
+  "description": "Jalankan type check Astro setiap kali file .ts atau .astro disimpan untuk mendeteksi error lebih awal",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.astro",
+      "**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "pnpm astro check 2>&1 | tail -30",
+    "timeout": 60
+  }
+}

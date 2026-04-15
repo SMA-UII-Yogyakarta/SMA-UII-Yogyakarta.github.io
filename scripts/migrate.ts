@@ -3,7 +3,7 @@ import { createClient } from '@libsql/client';
 import { migrate } from 'drizzle-orm/libsql/migrator';
 
 // Load env
-const env = typeof process !== 'undefined' ? process.env : (Bun?.env || {});
+const env = process.env;
 const tursoUrl = env.TURSO_URL || 'file:local.db';
 const tursoToken = env.TURSO_TOKEN || '';
 

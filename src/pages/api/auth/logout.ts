@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { lucia } from '@lib/auth';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const POST: APIRoute = async ({ locals, cookies, redirect }) => {
   const { session } = locals;
@@ -9,5 +8,5 @@ export const POST: APIRoute = async ({ locals, cookies, redirect }) => {
   const blankCookie = lucia.createBlankSessionCookie();
   cookies.set(blankCookie.name, blankCookie.value, blankCookie.attributes);
 
-  return redirect('/');
+  return redirect('/login');
 };

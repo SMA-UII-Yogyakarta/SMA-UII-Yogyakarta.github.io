@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Notification Helper Check",
+  "description": "Pastikan penggunaan notification helper sesuai pola yang benar setiap kali file notifications.ts atau file yang menggunakannya diubah",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/lib/notifications.ts",
+      "src/pages/api/admin/approve.ts",
+      "src/pages/api/announcements/index.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File yang berkaitan dengan notification system telah diubah. Verifikasi hal berikut:\n\n1. **Notifikasi di luar transaction** — `createNotification()` atau `notifyAllActiveMembers()` TIDAK boleh dipanggil di dalam `db.transaction()`. Cek apakah ada pelanggaran ini.\n\n2. **Pesan dalam Bahasa Indonesia** — semua string pesan notifikasi harus dalam Bahasa Indonesia.\n\n3. **Trigger yang seharusnya ada:**\n   - `approve.ts` → harus ada `createNotification(userId, '...')` setelah transaction approve\n   - `announcements/index.ts` → harus ada `notifyAllActiveMembers(...)` setelah insert announcement\n\n4. **Import yang benar:**\n   ```ts\n   import { createNotification, notifyAllActiveMembers } from '@lib/notifications';\n   ```\n\nLaporkan jika ada yang tidak sesuai dan tawarkan untuk memperbaiki."
+  }
+}

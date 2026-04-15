@@ -1,6 +1,5 @@
 ---
 import '@styles/global.css';
-import { navItems } from '@lib/nav';
 import Sidebar from '@components/Sidebar.astro';
 import Topbar from '@components/Topbar.astro';
 
@@ -24,26 +23,67 @@ const userEmail = user?.email ?? '';
   <title>{title} — SMA UII Lab</title>
   <link rel="icon" href="/favicon.svg" />
   <script is:inline>
-    if (localStorage.getItem('sidebar-collapsed') === 'true') {
-      document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
-    }
+    // Apply sidebar state BEFORE render to prevent flicker
+    (function() {
+      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (isCollapsed) {
+        // Add style tag to apply collapsed state immediately
+        const style = document.createElement('style');
+        style.textContent = `
+          #sidebar { width: 64px !important; }
+          #sidebar .sidebar-label { display: none !important; }
+          #main-content { margin-left: 64px !important; }
+        `;
+        document.head.appendChild(style);
+        
+        // Add class when DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+          document.getElementById('sidebar')?.classList.add('sidebar-collapsed');
+          document.getElementById('main-content')?.classList.add('sidebar-collapsed');
+        });
+      }
+    })();
   </script>
   <style is:global>
     #sidebar.sidebar-collapsed { width: 64px !important; }
     #sidebar.sidebar-collapsed .sidebar-label { display: none; }
     #main-content.sidebar-collapsed { margin-left: 64px !important; }
-    #toggle-icon.rotate-180 { transform: rotate(180deg); }
+    
+    /* Mobile: disable collapsed state, sidebar is full width overlay */
+    @media (max-width: 1023px) {
+      #sidebar.sidebar-collapsed {
+        width: 16rem !important;
+      }
+      #main-content.sidebar-collapsed {
+        margin-left: 0 !important;
+      }
+    }
+    
     #sidebar.sidebar-collapsed #sidebar-header {
-      flex-direction: column !important;
-      padding: 0.75rem 0.5rem !important;
-      gap: 0.5rem !important;
+      padding: 1rem 0.5rem !important;
+    }
+    #sidebar.sidebar-collapsed #sidebar-header a {
       justify-content: center !important;
     }
-    #sidebar.sidebar-collapsed #sidebar-header a { display: none; }
-    #sidebar.sidebar-collapsed #sidebar-toggle {
-      margin: 0 auto;
-      width: 2.25rem;
-      height: 2.25rem;
+    #sidebar.sidebar-collapsed #sidebar-nav {
+      padding: 0.5rem !important;
+      gap: 0.25rem !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    #sidebar.sidebar-collapsed #sidebar-nav a {
+      justify-content: center !important;
+      padding: 0 !important;
+      width: 2.5rem !important;
+      height: 2.5rem !important;
+      margin: 0 auto !important;
+    }
+    #sidebar.sidebar-collapsed #sidebar-user {
+      padding: 0.5rem !important;
+    }
+    #sidebar.sidebar-collapsed #sidebar-user button {
+      justify-content: center !important;
+      padding: 0.5rem !important;
     }
     .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -54,7 +94,7 @@ const userEmail = user?.email ?? '';
     <Sidebar role={role} userName={userName} userEmail={userEmail} />
 
     <main id="main-content" class="flex-1 lg:ml-64 transition-all duration-300">
-      <Topbar role={role} userName={userName}>
+      <Topbar>
         <span slot="title">{title}</span>
       </Topbar>
 
@@ -65,11 +105,11 @@ const userEmail = user?.email ?? '';
   </div>
 
   <div id="notification-dropdown" class="hidden fixed right-4 sm:right-6 top-16 w-80 max-w-[calc(100vw-2rem)] bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-    <div class="p-3 border-b border-gray-800 flex items-center justify-between">
-      <h3 class="font-semibold">Notifications</h3>
+    <div class="p-3 border-b border-gray-800">
+      <h3 class="font-semibold text-sm">Notifikasi</h3>
     </div>
     <div id="notification-list" class="p-2">
-      <p class="text-sm text-gray-500 text-center py-4">No notifications</p>
+      <p class="text-sm text-gray-500 text-center py-4">Tidak ada notifikasi</p>
     </div>
   </div>
 

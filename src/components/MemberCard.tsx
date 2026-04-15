@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { User, MemberCard } from '@db/schema';
 
 interface MemberCardProps {
@@ -82,7 +82,7 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Card Preview */}
-      <div className="relative aspect-[8/5] bg-gradient-to-br from-blue-900 to-purple-700 rounded-2xl p-8 text-white shadow-2xl mb-6">
+      <div className="relative aspect-8/5 bg-linear-to-br from-blue-900 to-purple-700 rounded-2xl p-8 text-white shadow-2xl mb-6">
         <div className="absolute top-8 left-8">
           <h3 className="text-2xl font-bold mb-1">SMA UII LAB</h3>
           <p className="text-sm text-blue-200">Developer Foundation</p>

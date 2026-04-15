@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "App Page Guard Check",
+  "description": "Pastikan setiap halaman /app/* memiliki server-side guard yang sesuai dengan role matrix",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/pages/app/*.astro"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Halaman dashboard (/app/*) telah diubah. Verifikasi guard matrix berikut:\n\n| Halaman | Guard yang benar |\n|---------|-----------------|\n| overview | requireAuth |\n| members | requireMaintainer |\n| announcements | requireMaintainer |\n| settings | requireAuth (semua role bisa akses) |\n| profile | requireMember (redirect maintainer ke overview) |\n| card | requireMember (redirect maintainer ke overview) |\n| activities | requireAuth |\n| projects | requireAuth |\n\nPeriksa apakah file yang baru diubah sudah menggunakan guard yang tepat dari `@lib/guards`. Jika ada guard yang salah atau hilang, laporkan dan tawarkan untuk memperbaiki."
+  }
+}

@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createNotification } from '@lib/notifications';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { session, user } = locals;
@@ -29,6 +30,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         const qrCode = await QRCode.toDataURL(JSON.stringify({ cardNumber }));
         await tx.insert(memberCards).values({ id: nanoid(), userId, cardNumber, qrCode, issuedAt: Date.now() });
       });
+      // Notifikasi ke member yang diapprove
+      await createNotification(userId, `Selamat! Akun kamu telah disetujui. Kartu anggota sudah tersedia.`);
       return createSuccessResponse({ success: true, message: 'User approved successfully' });
 
     } else if (action === 'reject') {

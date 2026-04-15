@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { db } from '@db';
-import { users, memberTracks } from '@db/schema';
+import { memberTracks } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 

@@ -1,5 +1,3 @@
-import { navItems } from '@lib/nav';
-
 export function escapeHtml(str: string): string {
   if (!str) return '';
   const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;' };
@@ -9,12 +7,10 @@ export function escapeHtml(str: string): string {
 export function updateSidebarState(isCollapsed: boolean) {
   const sidebar = document.getElementById('sidebar');
   const mainContent = document.getElementById('main-content');
-  const toggleIcon = document.getElementById('toggle-icon');
   const toggleBtn = document.getElementById('sidebar-toggle');
 
   sidebar?.classList.toggle('sidebar-collapsed', isCollapsed);
   mainContent?.classList.toggle('sidebar-collapsed', isCollapsed);
-  toggleIcon?.classList.toggle('rotate-180', isCollapsed);
   toggleBtn?.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
   localStorage.setItem('sidebar-collapsed', String(isCollapsed));
   document.querySelectorAll('.sidebar-label').forEach(el => el.classList.toggle('hidden', isCollapsed));
@@ -42,21 +38,37 @@ export async function loadNotifications() {
   }
 }
 
-export function initDashboard({ role, userName }: { role: string; userName: string }) {
-  // Sidebar state
-  updateSidebarState(localStorage.getItem('sidebar-collapsed') === 'true');
+export function initDashboard(_options: { role: string; userName: string }) {
+  // Sidebar state - only for desktop
+  const isDesktop = window.innerWidth >= 1024;
+  if (isDesktop) {
+    updateSidebarState(localStorage.getItem('sidebar-collapsed') === 'true');
+  }
 
   document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-    updateSidebarState(!document.getElementById('sidebar')?.classList.contains('sidebar-collapsed'));
+    // Only toggle collapse on desktop
+    if (window.innerWidth >= 1024) {
+      updateSidebarState(!document.getElementById('sidebar')?.classList.contains('sidebar-collapsed'));
+    }
   });
 
-  // Mobile menu
+  // Mobile menu - only for mobile
   const sidebar = document.getElementById('sidebar');
-  document.getElementById('mobile-menu-btn')?.addEventListener('click', () => sidebar?.classList.toggle('-translate-x-full'));
+  document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+    sidebar?.classList.toggle('-translate-x-full');
+  });
+  
+  // Close sidebar/dropdown when clicking outside
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
-    if (!t.closest('#sidebar') && !t.closest('#mobile-menu-btn')) sidebar?.classList.add('-translate-x-full');
-    if (!t.closest('#notification-btn') && !t.closest('#notification-dropdown')) document.getElementById('notification-dropdown')?.classList.add('hidden');
+    // Close mobile sidebar when clicking outside (only on mobile)
+    if (window.innerWidth < 1024 && !t.closest('#sidebar') && !t.closest('#mobile-menu-btn')) {
+      sidebar?.classList.add('-translate-x-full');
+    }
+    // Close notification dropdown
+    if (!t.closest('#notification-btn') && !t.closest('#notification-dropdown')) {
+      document.getElementById('notification-dropdown')?.classList.add('hidden');
+    }
   });
 
   document.getElementById('notification-btn')?.addEventListener('click', (e) => {

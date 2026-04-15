@@ -2,6 +2,7 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["bun-types"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
@@ -13,8 +14,8 @@
       "@styles/*": ["src/styles/*"]
     },
     "jsx": "preserve",
-    "jsxImportSource": "react"
+    "jsxImportSource": "react",
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "smauii-dev-api"]
 }

@@ -9,10 +9,10 @@ import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const body = await request.json();
-    const { nisn, nis, password } = body;
+    const { identifier, password } = body;
 
     // Validation
-    if (!nisn && !nis) {
+    if (!identifier) {
       return createErrorResponse('NISN atau NIS harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
     }
 
@@ -23,8 +23,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Find user by NISN or NIS
     const user = await db.query.users.findFirst({
       where: or(
-        eq(users.nisn, nisn),
-        eq(users.nis, nis)
+        eq(users.nisn, identifier),
+        eq(users.nis, identifier)
       ),
     });
 
@@ -44,7 +44,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Verify password
     const validPassword = await verify(user.passwordHash, password);
     if (!validPassword) {
-      return createErrorResponse('Password salah', 401, { code: 'INVALID_PASSWORD' });
+      return createErrorResponse('Invalid password', 401, { code: 'INVALID_PASSWORD' });
     }
 
     // Check if user is approved
@@ -68,7 +68,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     await db.delete(sessions).where(eq(sessions.userId, user.id));
 
     // Create new session
-    const session = await lucia.createSession(user, {});
+    const session = await lucia.createSession(user.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
     
     cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);

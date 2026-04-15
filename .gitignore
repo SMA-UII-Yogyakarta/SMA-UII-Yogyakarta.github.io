@@ -11,12 +11,14 @@ dist/
 local.db
 local.db-shm
 local.db-wal
+playwright-report/
+test-results/
 drizzle/
 
 # Logs
 *.log
 npm-debug.log*
-pnpm-debug.log*
+bun-debug.log*
 
 # OS
 .DS_Store
@@ -25,3 +27,10 @@ Thumbs.db
 # AI chat history
 ai.chat
 *.chat
+
+# Build artifacts
+*.out
+*.o
+
+# Editor
+.vscode/settings.json

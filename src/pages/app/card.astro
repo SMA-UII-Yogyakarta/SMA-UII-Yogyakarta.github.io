@@ -2,14 +2,17 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@db';
-import { memberCards } from '@db/schema';
+import { memberCards, users } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { requireMember } from '@lib/guards';
 import { fmtDate } from '@lib/format';
 
 const redirect = requireMember(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) });
+const [card, fullUser] = await Promise.all([
+  db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) }),
+  db.query.users.findFirst({ where: eq(users.id, user!.id) }),
+]);
 ---
 
 <DashboardLayout title="Member Card">
@@ -24,7 +27,7 @@ const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId
     <div class="flex justify-center">
       <div class="w-full max-w-sm space-y-4">
         <!-- Card visual -->
-        <div class="bg-gradient-to-br from-blue-900 to-indigo-950 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden">
+        <div class="bg-linear-to-br from-blue-900 to-indigo-950 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden">
           <div class="absolute -top-8 -right-8 w-32 h-32 bg-white/5 rounded-full"></div>
           <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full"></div>
           <div class="relative z-10">
@@ -37,11 +40,11 @@ const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId
             </div>
             <div class="flex items-center gap-3 mb-6">
               <div class="w-14 h-14 rounded-full bg-blue-500/50 flex items-center justify-center text-2xl font-bold">
-                {user!.name.charAt(0).toUpperCase()}
+                {fullUser!.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p class="font-bold text-lg leading-tight">{user.name}</p>
-                <p class="text-xs opacity-60">{user.class}</p>
+                <p class="font-bold text-lg leading-tight">{fullUser!.name}</p>
+                <p class="text-xs opacity-60">{fullUser!.class}</p>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mb-4">
@@ -51,7 +54,7 @@ const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId
               </div>
               <div>
                 <p class="text-xs opacity-60">NISN</p>
-                <p class="font-mono text-sm">{user.nisn}</p>
+                <p class="font-mono text-sm">{fullUser!.nisn}</p>
               </div>
             </div>
             <div class="flex justify-between items-end">
