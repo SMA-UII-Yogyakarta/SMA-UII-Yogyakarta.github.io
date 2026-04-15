@@ -1,42 +1,24 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import PageHeader from '@components/app/PageHeader.astro';
+import Modal from '@components/app/Modal.astro';
+import SkeletonList from '@components/app/SkeletonList.astro';
+import { requireAuth } from '@lib/guards';
 const { user } = Astro.locals;
-if (!user) return Astro.redirect('/login');
-if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
-if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
-const canAdd = user.status === 'active';
-const isAdmin = user.role === 'maintainer';
+const redirect = requireAuth(Astro); if (redirect) return redirect;
+const canAdd = user!.status === 'active';
+const isAdmin = user!.role === 'maintainer';
 ---
 
 <DashboardLayout title="Projects">
-  <div class="flex justify-between items-center mb-6">
-    <p class="text-gray-400 text-sm">Showcase karya anggota komunitas</p>
-    {canAdd && (
-      <button id="open-modal" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Tambah Project
-      </button>
-    )}
-  </div>
+  <PageHeader subtitle="Showcase karya anggota komunitas" actionLabel={canAdd ? "Tambah Project" : undefined} />
 
-  <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {Array.from({length: 6}).map(() => (
-      <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden animate-pulse">
-        <div class="aspect-video bg-gray-800"></div>
-        <div class="p-4 space-y-2">
-          <div class="h-4 bg-gray-800 rounded w-2/3"></div>
-          <div class="h-3 bg-gray-800 rounded w-full"></div>
-        </div>
-      </div>
-    ))}
+  <div id="projects-grid">
+    <SkeletonList count={6} type="cards" />
   </div>
 
   {canAdd && (
-    <div id="add-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
-        <h2 class="text-lg font-bold mb-4">Tambah Project</h2>
+    <Modal id="add-modal" title="Tambah Project">
         <form id="project-form" class="space-y-3">
           <div>
             <label class="block text-xs text-gray-400 mb-1">Judul *</label>
@@ -55,8 +37,7 @@ const isAdmin = user.role === 'maintainer';
             <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )}
 
   <script>

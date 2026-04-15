@@ -1,0 +1,9 @@
+---
+interface Props {
+  message?: string;
+}
+const { message = 'Tidak ada data' } = Astro.props;
+---
+<div class="text-center py-10">
+  <p class="text-gray-500 text-sm">{message}</p>
+</div>

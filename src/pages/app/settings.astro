@@ -1,8 +1,8 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { requireMaintainer } from '@lib/guards';
+const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-if (!user) return Astro.redirect('/login');
-if (user.role !== 'maintainer') return Astro.redirect('/app/overview');
 ---
 
 <DashboardLayout title="Settings">
