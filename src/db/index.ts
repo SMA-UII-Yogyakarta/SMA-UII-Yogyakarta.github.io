@@ -4,8 +4,8 @@ import * as schema from './schema';
 
 // Client-side Turso connection
 // Note: Untuk production, gunakan env variables yang di-expose ke client
-const tursoUrl = import.meta.env.PUBLIC_TURSO_URL || 'file:local.db';
-const tursoToken = import.meta.env.PUBLIC_TURSO_TOKEN || '';
+const tursoUrl = import.meta.env.TURSO_URL || 'file:local.db';
+const tursoToken = import.meta.env.TURSO_TOKEN || '';
 
 export const client = createClient({
   url: tursoUrl,

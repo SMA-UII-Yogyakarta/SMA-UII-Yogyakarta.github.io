@@ -1,8 +1,8 @@
 import { createClient } from '@libsql/client';
 
 const client = createClient({
-  url: process.env.PUBLIC_TURSO_URL || 'file:local.db',
-  authToken: process.env.PUBLIC_TURSO_TOKEN,
+  url: process.env.TURSO_URL || 'file:local.db',
+  authToken: process.env.TURSO_TOKEN,
 });
 
 const statements = [

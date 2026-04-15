@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 
-const tursoUrl = process.env.PUBLIC_TURSO_URL || 'file:local.db';
-const tursoToken = process.env.PUBLIC_TURSO_TOKEN || '';
+const tursoUrl = process.env.TURSO_URL || 'file:local.db';
+const tursoToken = process.env.TURSO_TOKEN || '';
 
 const client = createClient({
   url: tursoUrl,

@@ -5,7 +5,7 @@ export default {
   out: './drizzle',
   dialect: 'sqlite',
   dbCredentials: {
-    url: process.env.PUBLIC_TURSO_URL || 'file:local.db',
-    authToken: process.env.PUBLIC_TURSO_TOKEN,
+    url: process.env.TURSO_URL || 'file:local.db',
+    authToken: process.env.TURSO_TOKEN,
   },
 } satisfies Config;

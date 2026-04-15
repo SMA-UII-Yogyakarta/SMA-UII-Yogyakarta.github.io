@@ -4,8 +4,8 @@ import { migrate } from 'drizzle-orm/libsql/migrator';
 
 // Load env
 const env = typeof process !== 'undefined' ? process.env : (Bun?.env || {});
-const tursoUrl = env.PUBLIC_TURSO_URL || 'file:local.db';
-const tursoToken = env.PUBLIC_TURSO_TOKEN || '';
+const tursoUrl = env.TURSO_URL || 'file:local.db';
+const tursoToken = env.TURSO_TOKEN || '';
 
 const client = createClient({
   url: tursoUrl,
