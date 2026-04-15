@@ -3,7 +3,9 @@
 > Wadah Serius untuk Penggiat Open Source & Developer Muda
 
 [![Deploy](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions)
-[![Astro](https://img.shields.io/badge/Astro-5.x-orange?logo=astro)](https://astro.build)
+[![Tests](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions/workflows/test.yml/badge.svg)](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions/workflows/test.yml)
+[![Astro](https://img.shields.io/badge/Astro-6.x-orange?logo=astro)](https://astro.build)
+[![Bun](https://img.shields.io/badge/Bun-1.1+-black?logo=bun)](https://bun.sh)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -91,10 +93,14 @@ Hubungi: @sandikodev
 
 ## Stack
 
-- **Framework:** [Astro](https://astro.build) 5.x
-- **Styling:** Tailwind CSS
-- **Package manager:** pnpm
-- **Deploy:** GitHub Pages (manual via `workflow_dispatch`)
+- **Framework:** [Astro](https://astro.build) 6.x — SSR mode
+- **UI:** React 19 (interactive islands), Tailwind CSS v4
+- **Database:** [Turso](https://turso.tech) (libSQL/SQLite) via Drizzle ORM
+- **Auth:** Lucia v3 + GitHub OAuth (Arctic) + Argon2
+- **Runtime:** [Bun](https://bun.sh) >= 1.1.0 (primary), Node.js >= 22.12.0
+- **Package manager:** Bun (primary) — pnpm juga didukung untuk kontributor
+- **Testing:** Bun test (unit) + Playwright (E2E)
+- **CI/CD:** GitHub Actions
 
 ## Development
 
@@ -103,18 +109,31 @@ Hubungi: @sandikodev
 git clone https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io.git
 cd SMA-UII-Yogyakarta.github.io
 
-# Install
-pnpm install
+# Install dependencies
+bun install          # primary (direkomendasikan)
+# atau: pnpm install  # alternatif untuk kontributor
+
+# Setup database (development — pakai smauiilab-prev)
+bun run db:push
+bun run db:seed:enhanced
 
 # Dev server
-pnpm dev
+bun dev              # atau: pnpm dev
+# Buka http://localhost:4321
 
 # Build
-pnpm build
+bun build            # atau: pnpm build
 
 # Preview build
-pnpm preview
+bun run preview      # atau: pnpm preview
+
+# Tests
+bun test tests/unit  # unit tests
+bun run test:e2e     # E2E tests (butuh dev server running)
+bash scripts/ci-local.sh  # seluruh CI pipeline lokal
 ```
+
+> **Catatan:** Project ini menggunakan **Bun** sebagai runtime dan package manager utama. Kontributor yang lebih familiar dengan **pnpm** tetap dipersilakan — semua command `pnpm` bekerja dengan baik.
 
 ## Deploy
 

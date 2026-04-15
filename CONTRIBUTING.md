@@ -24,9 +24,17 @@ Terima kasih sudah tertarik berkontribusi! Panduan ini menjelaskan cara menambah
 ## 🚀 Quick Start
 
 ### Prasyarat
-- [Node.js](https://nodejs.org) >= 18
-- [pnpm](https://pnpm.io) — install: `npm install -g pnpm`
+
+**Primary (direkomendasikan maintainer):**
+- [Bun](https://bun.sh) >= 1.1.0 — install: `curl -fsSL https://bun.sh/install | bash`
+- [Node.js](https://nodejs.org) >= 22.12.0 (dibutuhkan oleh Astro)
 - [Git](https://git-scm.com)
+
+**Alternatif (jika kamu lebih familiar dengan pnpm):**
+- [pnpm](https://pnpm.io) — install: `npm install -g pnpm`
+- Semua command `bun` bisa diganti dengan `pnpm` — keduanya didukung
+
+> **Catatan maintainer:** Project ini menggunakan **Bun** sebagai package manager dan runtime utama untuk konsistensi dan performa. Kontributor yang lebih familiar dengan pnpm tetap dipersilakan — `pnpm install` dan `pnpm dev` akan bekerja dengan baik.
 
 ### Langkah Setup
 
@@ -41,10 +49,16 @@ cd SMA-UII-Yogyakarta.github.io
 git remote add upstream https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io.git
 
 # 4. Install dependencies
-pnpm install
+bun install          # primary (direkomendasikan)
+# atau: pnpm install  # alternatif
 
-# 5. Jalankan dev server
-pnpm dev
+# 5. Setup database (development)
+bun run db:push
+bun run db:seed:enhanced
+
+# 6. Jalankan dev server
+bun dev              # primary
+# atau: pnpm dev      # alternatif
 # Buka http://localhost:4321
 ```
 
@@ -137,8 +151,8 @@ git checkout -b fix/nama-bug
 Edit file yang diperlukan, lalu test di local:
 
 ```bash
-pnpm dev  # Test di browser
-pnpm build  # Pastikan build berhasil
+bun dev    # Test di browser (atau: pnpm dev)
+bun build  # Pastikan build berhasil (atau: pnpm build)
 ```
 
 ### 3. Commit Perubahan
@@ -200,10 +214,20 @@ Sebelum submit PR, pastikan:
 
 ```bash
 # Build berhasil tanpa error
-pnpm build
+bun build          # atau: pnpm build
 
 # Preview build
-pnpm preview
+bun run preview    # atau: pnpm preview
+
+# Jalankan unit tests
+bun test tests/unit
+
+# Jalankan E2E tests (butuh dev server running di terminal lain)
+bun dev            # terminal 1
+bun run test:e2e   # terminal 2
+
+# Atau jalankan seluruh CI pipeline secara lokal
+bash scripts/ci-local.sh
 
 # Cek di browser:
 # - Semua halaman bisa diakses
