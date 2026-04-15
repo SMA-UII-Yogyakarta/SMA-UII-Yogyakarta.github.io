@@ -15,27 +15,7 @@ if (user.role !== 'maintainer') return Astro.redirect('/app');
 
   <script>
     async function loadMembers() {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const result = await response.json();
-        const user = result.data;
-
-        if (user.role !== 'maintainer') {
-          window.location.href = '/app';
-          return;
-        }
-
-        // Fetch members data
-        loadMembersData();
-      } catch (error) {
-        console.error('Failed to load members:', error);
-        window.location.href = '/login';
-      }
+      loadMembersData();
     }
 
     async function loadMembersData(status = '', search = '') {

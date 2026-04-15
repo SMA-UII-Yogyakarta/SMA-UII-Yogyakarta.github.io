@@ -1,0 +1,304 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+const { user } = Astro.locals;
+if (!user) return Astro.redirect('/login');
+if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
+if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
+
+const userData = {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  status: user.status,
+  nisn: user.nisn,
+};
+---
+
+<DashboardLayout title="Dashboard">
+  <div id="app-content">
+    <div class="text-center py-12">
+      <div class="text-4xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  </div>
+
+  <script define:vars={{ userData }}>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"'/]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;','/':'&#x2F;'}[c]||c));
+    }
+
+    if (userData.role === 'maintainer') {
+      loadAdminDashboard();
+    } else {
+      loadMemberDashboard(userData);
+    }
+
+    async function loadAdminDashboard() {
+      try {
+        const [statsRes, announcementsRes] = await Promise.all([
+          fetch('/api/admin/stats'),
+          fetch('/api/announcements'),
+        ]);
+
+        const statsResult = await statsRes.json();
+        const { user, stats, pendingUsers } = statsResult.data;
+
+        let announcements = [];
+        if (announcementsRes.ok) {
+          const annResult = await announcementsRes.json();
+          announcements = annResult.data?.slice(0, 3) || [];
+        }
+
+        const content = document.getElementById('app-content');
+
+        const quickActions = `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <a href="/app/members" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">👥</div>
+              <p class="font-medium group-hover:text-blue-400">Members</p>
+              <p class="text-xs text-gray-500">Manage all members</p>
+            </a>
+            <a href="/app/projects" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">🚀</div>
+              <p class="font-medium group-hover:text-blue-400">Projects</p>
+              <p class="text-xs text-gray-500">View project gallery</p>
+            </a>
+            <a href="/app/activities" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">📅</div>
+              <p class="font-medium group-hover:text-blue-400">Activities</p>
+              <p class="text-xs text-gray-500">Track events</p>
+            </a>
+            <a href="/app/announcements" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">📢</div>
+              <p class="font-medium group-hover:text-blue-400">Announce</p>
+              <p class="text-xs text-gray-500">Post updates</p>
+            </a>
+          </div>
+        `;
+
+        const pendingHtml = pendingUsers.length === 0 
+          ? '<p class="text-gray-500 text-center py-4">No pending approvals</p>'
+          : pendingUsers.slice(0, 5).map(u => `
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-center justify-between hover:border-gray-700 transition">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                  ${escapeHtml(u.name || '').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 class="font-semibold">${escapeHtml(u.name || '')}</h3>
+                  <p class="text-sm text-gray-400">${escapeHtml(u.class || '')} • ${escapeHtml(u.tracks?.join(', ') || '-')}</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="handleAction('${u.id}', 'approve')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm transition">Approve</button>
+                <button onclick="handleAction('${u.id}', 'reject')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm transition">Reject</button>
+              </div>
+            </div>
+          `).join('');
+
+        const announcementsHtml = announcements.length === 0
+          ? '<p class="text-gray-500">No announcements</p>'
+          : announcements.map(a => `
+            <div class="p-3 border-b border-gray-800 last:border-0">
+              <h4 class="font-medium">${escapeHtml(a.title)}</h4>
+              <p class="text-sm text-gray-400 line-clamp-1">${escapeHtml(a.content)}</p>
+            </div>
+          `).join('');
+
+        content!.innerHTML = `
+          <div class="mb-6">
+            <h1 class="text-2xl font-bold mb-1">Admin Dashboard</h1>
+            <p class="text-gray-400">Welcome back, ${escapeHtml(user.name || '')}!</p>
+          </div>
+          
+          ${quickActions}
+
+          <div class="grid lg:grid-cols-2 gap-6">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold">Quick Stats</h2>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-950 rounded-lg p-4">
+                  <div class="text-3xl font-bold text-yellow-400">${stats.pendingApproval}</div>
+                  <p class="text-sm text-gray-400">Pending</p>
+                </div>
+                <div class="bg-gray-950 rounded-lg p-4">
+                  <div class="text-3xl font-bold text-green-400">${stats.activeMembers}</div>
+                  <p class="text-sm text-gray-400">Active</p>
+                </div>
+                <div class="bg-gray-950 rounded-lg p-4">
+                  <div class="text-3xl font-bold">${stats.allUsers}</div>
+                  <p class="text-sm text-gray-400">Total</p>
+                </div>
+                <div class="bg-gray-950 rounded-lg p-4">
+                  <div class="text-3xl font-bold text-blue-400">${announcements.length}</div>
+                  <p class="text-sm text-gray-400">Announcements</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold">Latest Announcements</h2>
+                <a href="/app/announcements" class="text-blue-400 hover:text-blue-300 text-sm">View all →</a>
+              </div>
+              <div class="divide-y divide-gray-800">
+                ${announcementsHtml}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold">Pending Approvals (${pendingUsers.length})</h2>
+              ${pendingUsers.length > 5 ? '<a href="/app/members?status=pending" class="text-blue-400 hover:text-blue-300 text-sm">View all →</a>' : ''}
+            </div>
+            <div class="space-y-3">
+              ${pendingHtml}
+            </div>
+          </div>
+        `;
+
+        window.handleAction = async (userId, action) => {
+          if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+          try {
+            const response = await fetch('/api/admin/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, action }),
+            });
+            if (!response.ok) {
+              const error = await response.json();
+              alert(error.error || 'Failed to process action');
+              return;
+            }
+            alert(action === 'approve' ? 'User approved!' : 'User rejected!');
+            loadAdminDashboard();
+          } catch (error) {
+            alert('Failed to process action');
+          }
+        };
+      } catch (error) {
+        console.error('Failed to load admin dashboard:', error);
+      }
+    }
+
+    async function loadMemberDashboard(user) {
+      const content = document.getElementById('app-content');
+
+      const quickActions = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <a href="/app/profile" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+            <div class="text-2xl mb-2">👤</div>
+            <p class="font-medium group-hover:text-blue-400">Profile</p>
+            <p class="text-xs text-gray-500">Your account</p>
+          </a>
+          ${user.status === 'active' ? `
+            <a href="/app/card" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">🎫</div>
+              <p class="font-medium group-hover:text-blue-400">Member Card</p>
+              <p class="text-xs text-gray-500">ID Card & QR</p>
+            </a>
+            <a href="/app/projects" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">🚀</div>
+              <p class="font-medium group-hover:text-blue-400">Projects</p>
+              <p class="text-xs text-gray-500">Showcase work</p>
+            </a>
+            <a href="/app/activities" class="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-blue-500/50 transition group">
+              <div class="text-2xl mb-2">📊</div>
+              <p class="font-medium group-hover:text-blue-400">Activities</p>
+              <p class="text-xs text-gray-500">Your log</p>
+            </a>
+          ` : ''}
+        </div>
+      `;
+
+      const statusMessage = user.status === 'pending' 
+        ? `<div class="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">⏳</span>
+              <div>
+                <p class="font-medium text-yellow-400">Pending Approval</p>
+                <p class="text-sm text-gray-400">Your registration is being reviewed by admin</p>
+              </div>
+            </div>
+          </div>`
+        : user.status === 'rejected'
+        ? `<div class="bg-red-900/20 border border-red-800 rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">❌</span>
+              <div>
+                <p class="font-medium text-red-400">Registration Rejected</p>
+                <p class="text-sm text-gray-400">Please contact admin for more information</p>
+              </div>
+            </div>
+          </div>`
+        : '';
+
+      content!.innerHTML = `
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold mb-1">Welcome, ${escapeHtml(user.name || '')}!</h1>
+          <p class="text-gray-400">Member dashboard</p>
+        </div>
+        
+        ${statusMessage}
+        ${quickActions}
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <h2 class="text-lg font-bold mb-4">Account Status</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-gray-950 rounded-lg p-4">
+              <p class="text-sm text-gray-400 mb-1">Status</p>
+              <span class="px-2 py-1 rounded text-sm font-medium ${user.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
+                ${escapeHtml(user.status || '').toUpperCase()}
+              </span>
+            </div>
+            <div class="bg-gray-950 rounded-lg p-4">
+              <p class="text-sm text-gray-400 mb-1">Role</p>
+              <p class="font-medium capitalize">${escapeHtml(user.role || 'member')}</p>
+            </div>
+            <div class="bg-gray-950 rounded-lg p-4">
+              <p class="text-sm text-gray-400 mb-1">Class</p>
+              <p class="font-medium">${escapeHtml(user.class || '-')}</p>
+            </div>
+          </div>
+        </div>
+
+        ${user.status === 'active' ? `
+        <div class="grid md:grid-cols-2 gap-6 mt-6">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 class="text-lg font-bold mb-4">Getting Started</h2>
+            <div class="space-y-3">
+              <a href="/app/projects" class="flex items-center gap-3 p-3 bg-gray-950 rounded-lg hover:bg-gray-800 transition">
+                <span class="text-xl">🚀</span>
+                <div>
+                  <p class="font-medium">Add Your First Project</p>
+                  <p class="text-sm text-gray-400">Showcase your work to the community</p>
+                </div>
+              </a>
+              <a href="/app/activities" class="flex items-center gap-3 p-3 bg-gray-950 rounded-lg hover:bg-gray-800 transition">
+                <span class="text-xl">📝</span>
+                <div>
+                  <p class="font-medium">Log Activities</p>
+                  <p class="text-sm text-gray-400">Track your contributions and events</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 class="text-lg font-bold mb-4">Resources</h2>
+            <div class="space-y-2 text-sm">
+              <p class="text-gray-400">📚 Member documentation</p>
+              <p class="text-gray-400">💬 Community Discord</p>
+              <p class="text-gray-400">🐙 GitHub Organization</p>
+            </div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+    }
+  </script>
+</DashboardLayout>

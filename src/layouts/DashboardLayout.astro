@@ -21,377 +21,33 @@ const userEmail = user?.email ?? '';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.github.com;">
   <title>{title} — SMA UII Lab</title>
   <link rel="icon" href="/favicon.svg" />
-  <script>
-    // Prevent FOUC by applying state before render
-    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-    if (isCollapsed) {
-      document.documentElement.classList.add('sidebar-collapsed-init');
+  <script is:inline>
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+      document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
     }
-  </script>
-</head>
-<body class="bg-gray-950 text-gray-100 font-sans antialiased">
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col fixed h-full -translate-x-full lg:translate-x-0 transition-all duration-300 z-50">
-      <script>
-        if (document.documentElement.classList.contains('sidebar-collapsed-init')) {
-          document.getElementById('sidebar')?.classList.add('sidebar-collapsed');
-        }
-      </script>
-      <!-- Logo & Toggle -->
-      <div id="sidebar-header" class="p-3 border-b border-gray-800 flex items-center justify-between gap-2 transition-all duration-300">
-        <a href="/" class="font-bold text-white flex items-center gap-2 whitespace-nowrap min-w-0 flex-1">
-          <span class="text-blue-400 text-xl flex-shrink-0">⬡</span> 
-          <span class="sidebar-label truncate">SMA UII Lab</span>
-        </a>
-        <button id="sidebar-toggle" class="text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition flex items-center justify-center flex-shrink-0 w-9 h-9 aspect-square" title="Toggle sidebar">
-          <svg id="toggle-icon" class="w-4 h-4 transition-transform duration-300 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Navigation -->
-      <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="sidebar-nav">
-        <!-- Dynamic content loaded via JS -->
-      </nav>
-
-      <!-- User Info -->
-      <div class="p-4 border-t border-gray-800" id="sidebar-user">
-        <!-- Dynamic content loaded via JS -->
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main id="main-content" class="flex-1 lg:ml-64 transition-all duration-300">
-      <script>
-        if (document.documentElement.classList.contains('sidebar-collapsed-init')) {
-          document.getElementById('main-content')?.classList.add('sidebar-collapsed');
-        }
-      </script>
-      <!-- Topbar -->
-      <header class="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white p-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-          </button>
-          <span id="page-title" class="font-semibold">{title}</span>
-        </div>
-
-        <div class="flex items-center gap-2 sm:gap-4">
-          <button id="notification-btn" class="relative text-gray-400 hover:text-white transition p-2 rounded hover:bg-gray-800" title="Notifications">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
-            <span id="notification-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-          </button>
-          <a href="/" class="text-sm text-gray-400 hover:text-white transition hidden sm:inline">← Back to Site</a>
-          <div id="topbar-user">
-            <!-- Dynamic content loaded via JS -->
-          </div>
-        </div>
-      </header>
-
-      <!-- Content -->
-      <div class="p-4 sm:p-6" id="dashboard-content">
-        <slot />
-      </div>
-    </main>
-  </div>
-
-  <!-- Notification Dropdown (outside main for fixed positioning) -->
-  <div id="notification-dropdown" class="hidden fixed right-4 sm:right-6 top-16 w-80 max-w-[calc(100vw-2rem)] bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-    <div class="p-3 border-b border-gray-800 flex items-center justify-between">
-      <h3 class="font-semibold">Notifications</h3>
-      <button id="mark-all-read" class="text-xs text-blue-400 hover:text-blue-300">Mark all read</button>
-    </div>
-    <div id="notification-list" class="p-2">
-      <p class="text-sm text-gray-500 text-center py-4">No notifications</p>
-    </div>
-  </div>
-
-  <script>
-    function escapeHtml(str: string): string {
-      if (!str) return '';
-      const htmlEntities: Record<string, string> = {
-        '&': '&amp;', '<': '&lt;', '>': '&gt;',
-        '"': '&quot;', "'": '&#x27;', '/': '&#x2F;',
-      };
-      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
-    }
-
-    function updateSidebarState(isCollapsed: boolean) {
-      const sidebar = document.getElementById('sidebar');
-      const mainContent = document.getElementById('main-content');
-      const toggleIcon = document.getElementById('toggle-icon');
-      const toggleBtn = document.getElementById('sidebar-toggle');
-      
-      if (isCollapsed) {
-        sidebar?.classList.add('sidebar-collapsed');
-        mainContent?.classList.add('sidebar-collapsed');
-        toggleIcon?.classList.add('rotate-180');
-        toggleBtn?.setAttribute('title', 'Expand sidebar');
-      } else {
-        sidebar?.classList.remove('sidebar-collapsed');
-        mainContent?.classList.remove('sidebar-collapsed');
-        toggleIcon?.classList.remove('rotate-180');
-        toggleBtn?.setAttribute('title', 'Collapse sidebar');
-      }
-      
-      // Save to localStorage
-      localStorage.setItem('sidebar-collapsed', String(isCollapsed));
-      
-      // Toggle labels visibility
-      document.querySelectorAll('.sidebar-label').forEach(el => {
-        el.classList.toggle('hidden', isCollapsed);
-      });
-    }
-
-    async function initDashboard() {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-        
-        const result = await response.json();
-        const user = result.data;
-
-        // Initialize sidebar state from localStorage
-        const savedState = localStorage.getItem('sidebar-collapsed');
-        const isCollapsed = savedState === 'true';
-        updateSidebarState(isCollapsed);
-
-        // Sidebar toggle click handler
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        sidebarToggle?.addEventListener('click', () => {
-          const sidebar = document.getElementById('sidebar');
-          const isCurrentlyCollapsed = sidebar?.classList.contains('sidebar-collapsed');
-          updateSidebarState(!isCurrentlyCollapsed);
-        });
-
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        
-        mobileMenuBtn?.addEventListener('click', () => {
-          sidebar?.classList.toggle('-translate-x-full');
-        });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          if (!target.closest('#sidebar') && !target.closest('#mobile-menu-btn')) {
-            sidebar?.classList.add('-translate-x-full');
-          }
-        });
-
-        // Notification dropdown toggle
-        const notifBtn = document.getElementById('notification-btn');
-        const notifDropdown = document.getElementById('notification-dropdown');
-        
-        notifBtn?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          notifDropdown?.classList.toggle('hidden');
-        });
-
-        // Close notification dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          if (!target.closest('#notification-btn') && !target.closest('#notification-dropdown')) {
-            notifDropdown?.classList.add('hidden');
-          }
-        });
-
-        // Render sidebar based on role
-        const sidebarNav = document.getElementById('sidebar-nav');
-        
-        // Add skeleton before loading
-        sidebarNav!.innerHTML = Array.from({ length: 5 }).map(() => `
-          <div class="h-10 w-full bg-gray-800 rounded-lg skeleton mb-1"></div>
-        `).join('');
-
-        const sidebarUser = document.getElementById('sidebar-user');
-        const topbarUser = document.getElementById('topbar-user');
-
-        // Use the navItems imported from @lib/nav
-        const allNavItems = JSON.parse('${JSON.stringify(navItems)}');
-        const items = allNavItems[user.role as keyof typeof allNavItems] || allNavItems.member;
-        
-        sidebarNav!.innerHTML = '';
-        items.forEach(item => {
-          const a = document.createElement('a');
-          a.href = item.href;
-          a.className = 'flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition';
-          a.dataset.nav = item.label.toLowerCase();
-          a.title = item.label;
-
-          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          svg.setAttribute('class', 'w-5 h-5 flex-shrink-0');
-          svg.setAttribute('fill', 'none');
-          svg.setAttribute('stroke', 'currentColor');
-          svg.setAttribute('viewBox', '0 0 24 24');
-          svg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${item.icon}"/>`;
-          
-          const span = document.createElement('span');
-          span.className = 'sidebar-label whitespace-nowrap';
-          span.textContent = item.label;
-
-          a.appendChild(svg);
-          a.appendChild(span);
-          sidebarNav!.appendChild(a);
-        });
-
-        // User info in sidebar
-        sidebarUser!.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-              ${escapeHtml(user.name).charAt(0).toUpperCase()}
-            </div>
-            <div class="flex-1 min-w-0 sidebar-label">
-              <p class="text-sm font-medium truncate">${escapeHtml(user.name)}</p>
-              <p class="text-xs text-gray-500 truncate">${escapeHtml(user.email)}</p>
-            </div>
-          </div>
-          <form action="/api/auth/logout" method="POST" class="mt-3">
-            <button type="submit" class="w-full text-left text-sm text-gray-400 hover:text-white transition py-2 sidebar-label">
-              Logout
-            </button>
-          </form>
-        `;
-
-        // User info in topbar
-        topbarUser!.innerHTML = `
-          <span class="text-sm text-gray-400">${escapeHtml(user.name)}</span>
-        `;
-
-        // Highlight current nav
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('[data-nav]').forEach(el => {
-          const href = el.getAttribute('href');
-          if (currentPath === href || currentPath.startsWith(href + '/')) {
-            el.classList.add('bg-gray-800', 'text-white');
-          }
-        });
-
-        // Load notifications
-        loadNotifications();
-
-      } catch (error) {
-        console.error('Failed to load dashboard:', error);
-        window.location.href = '/login';
-      }
-    }
-
-    async function loadNotifications() {
-      try {
-        const response = await fetch('/api/notifications');
-        if (!response.ok) return;
-        const result = await response.json();
-        const notifications = result.data || [];
-        const notifList = document.getElementById('notification-list');
-        const badge = document.getElementById('notification-badge');
-        
-        if (notifications.length > 0) {
-          badge?.classList.remove('hidden');
-          notifList!.innerHTML = '';
-          notifications.forEach(n => {
-            const div = document.createElement('div');
-            div.className = 'p-2 hover:bg-gray-800 rounded cursor-pointer';
-            div.onclick = () => window.markNotificationRead(n.id);
-            
-            const p = document.createElement('p');
-            p.className = 'text-sm';
-            p.textContent = n.message || '';
-            
-            const date = document.createElement('p');
-            date.className = 'text-xs text-gray-500';
-            date.textContent = new Date(n.createdAt).toLocaleDateString('id-ID');
-            
-            div.appendChild(p);
-            div.appendChild(date);
-            notifList!.appendChild(div);
-          });
-        }
-      } catch (e) {
-        console.error('Failed to load notifications:', e);
-      }
-    }
-
-    window.markNotificationRead = async (id: string) => {
-      try {
-        await fetch('/api/notifications/read', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id }),
-        });
-        loadNotifications();
-      } catch (e) {
-        console.error('Failed to mark notification read:', e);
-      }
-    }
-
-    initDashboard();
   </script>
   <style is:global>
-    /* Sidebar collapsed state: 64px width */
-    #sidebar.sidebar-collapsed {
-      width: 64px !important;
-    }
-    #sidebar.sidebar-collapsed .sidebar-label {
-      display: none;
-    }
-    
-    /* Main content collapsed state: 64px margin */
-    #main-content.sidebar-collapsed {
-      margin-left: 64px !important;
-    }
-    
-    /* Toggle icon rotation */
-    #toggle-icon.rotate-180 {
-      transform: rotate(180deg);
-    }
-    
-    /* Sidebar header layout when collapsed */
+    #sidebar.sidebar-collapsed { width: 64px !important; }
+    #sidebar.sidebar-collapsed .sidebar-label { display: none; }
+    #main-content.sidebar-collapsed { margin-left: 64px !important; }
+    #toggle-icon.rotate-180 { transform: rotate(180deg); }
     #sidebar.sidebar-collapsed #sidebar-header {
       flex-direction: column !important;
       padding: 0.75rem 0.5rem !important;
       gap: 0.5rem !important;
       justify-content: center !important;
     }
-    #sidebar.sidebar-collapsed #sidebar-header a {
-      display: none;
-    }
+    #sidebar.sidebar-collapsed #sidebar-header a { display: none; }
     #sidebar.sidebar-collapsed #sidebar-toggle {
       margin: 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 2.25rem; /* 36px */
-      height: 2.25rem; /* 36px */
+      width: 2.25rem;
+      height: 2.25rem;
     }
-
-    /* Skeleton Loading Animation */
-    .skeleton {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+    .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
   </style>
-    <script is:inline>
-        // Inline script to ensure labels are hidden correctly on page load
-        if (localStorage.getItem('sidebar-collapsed') === 'true') {
-          document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
-        }
-    </script>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
   <div class="flex min-h-screen">
@@ -402,13 +58,25 @@ const userEmail = user?.email ?? '';
         <span slot="title">{title}</span>
         <span slot="user-name">{userName}</span>
       </Topbar>
-      
+
       <div class="p-4 sm:p-6" id="dashboard-content">
         <slot />
       </div>
     </main>
   </div>
-  <script>
+
+  <div id="notification-dropdown" class="hidden fixed right-4 sm:right-6 top-16 w-80 max-w-[calc(100vw-2rem)] bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+    <div class="p-3 border-b border-gray-800 flex items-center justify-between">
+      <h3 class="font-semibold">Notifications</h3>
+    </div>
+    <div id="notification-list" class="p-2">
+      <p class="text-sm text-gray-500 text-center py-4">No notifications</p>
+    </div>
+  </div>
+
+  <script define:vars={{ userRole: role, userName }}>
     import { initDashboard } from '@lib/dashboard-init';
-    initDashboard();
+    initDashboard({ role: userRole, userName });
   </script>
+</body>
+</html>

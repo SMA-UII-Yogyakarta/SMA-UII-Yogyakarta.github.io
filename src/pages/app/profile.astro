@@ -18,17 +18,11 @@ if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
     async function init() {
       try {
         const response = await fetch('/api/profile');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-
+        if (!response.ok) return;
         const result = await response.json();
-        const profile = result.data;
-        renderProfile(profile);
+        renderProfile(result.data);
       } catch (error) {
         console.error('Failed to load profile:', error);
-        window.location.href = '/login';
       }
     }
 

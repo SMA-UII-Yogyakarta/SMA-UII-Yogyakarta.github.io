@@ -8,12 +8,6 @@ interface Props {
 }
 
 const { title, subtitle, wide = false } = Astro.props;
-const user = Astro.locals.user;
-
-// Redirect if already logged in
-if (user) {
-  return Astro.redirect('/app');
-}
 ---
 <!DOCTYPE html>
 <html lang="id">

@@ -4,6 +4,7 @@ const { user } = Astro.locals;
 if (!user) return Astro.redirect('/login');
 if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
 if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
+const userData = { id: user.id, name: user.name, role: user.role, status: user.status };
 ---
 
 <DashboardLayout title="Projects">
@@ -47,24 +48,11 @@ if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
     </div>
   </div>
 
-  <script>
-    let currentUser = null;
+  <script define:vars={{ userData }}>
+    let currentUser = userData;
 
     async function init() {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const result = await response.json();
-        currentUser = result.data;
-        loadProjects();
-      } catch (error) {
-        console.error('Failed to load:', error);
-        window.location.href = '/login';
-      }
+      loadProjects();
     }
 
     async function loadProjects() {

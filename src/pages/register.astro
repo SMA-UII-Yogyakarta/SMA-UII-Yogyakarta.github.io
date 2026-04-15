@@ -1,6 +1,7 @@
 ---
 import AuthLayout from '@layouts/AuthLayout.astro';
 import RegisterForm from '@components/RegisterForm';
+if (Astro.locals.user) return Astro.redirect('/app');
 ---
 <AuthLayout title="Daftar Anggota" subtitle="Bergabung dengan komunitas developer SMA UII Lab" wide>
   <RegisterForm client:load />

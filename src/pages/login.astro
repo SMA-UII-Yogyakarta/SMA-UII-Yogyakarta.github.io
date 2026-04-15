@@ -1,5 +1,6 @@
 ---
 import AuthLayout from '@layouts/AuthLayout.astro';
+if (Astro.locals.user) return Astro.redirect('/app');
 ---
 
 <AuthLayout title="Masuk" subtitle="Akses dashboard anggota SMA UII Lab">

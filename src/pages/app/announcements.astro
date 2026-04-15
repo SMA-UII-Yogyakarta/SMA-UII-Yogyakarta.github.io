@@ -38,26 +38,7 @@ if (user.role !== 'maintainer') return Astro.redirect('/app');
 
   <script>
     async function init() {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const result = await response.json();
-        const user = result.data;
-
-        if (user.role !== 'maintainer') {
-          window.location.href = '/app';
-          return;
-        }
-
-        loadAnnouncements();
-      } catch (error) {
-        console.error('Failed to load:', error);
-        window.location.href = '/login';
-      }
+      loadAnnouncements();
     }
 
     async function loadAnnouncements() {
