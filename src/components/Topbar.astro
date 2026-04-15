@@ -1,36 +1,46 @@
 ---
+interface Props {
+  role?: string;
+  userName?: string;
+}
+const { role = 'member', userName = '' } = Astro.props;
 ---
 
-<header class="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800 px-4 sm:px-6 py-3 flex items-center justify-between">
+<header class="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800 px-4 h-14 flex items-center justify-between">
   <div class="flex items-center gap-3">
-    <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white p-2">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white p-1.5 rounded">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
       </svg>
     </button>
-    <span id="page-title" class="font-semibold"><slot name="title" /></span>
+    <span class="font-semibold text-sm"><slot name="title" /></span>
   </div>
 
-  <div class="flex items-center gap-2 sm:gap-4">
-    <button id="notification-btn" class="relative text-gray-400 hover:text-white transition p-2 rounded hover:bg-gray-800" title="Notifications">
+  <div class="flex items-center gap-2">
+    <button id="notification-btn" class="relative text-gray-400 hover:text-white p-1.5 rounded hover:bg-gray-800 transition" title="Notifikasi">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
       </svg>
       <span id="notification-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
     </button>
-    <a href="/" class="text-sm text-gray-400 hover:text-white transition hidden sm:inline">← Back to Site</a>
-    <div id="topbar-user">
-      <span class="text-sm text-gray-400"><slot name="user-name" /></span>
+
+    <div class="flex items-center gap-2 pl-2 border-l border-gray-800">
+      <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+        {userName.charAt(0).toUpperCase()}
+      </div>
+      <div class="hidden sm:block">
+        <p class="text-sm font-medium leading-none">{userName}</p>
+        <p class="text-xs text-gray-500 mt-0.5 capitalize">{role}</p>
+      </div>
     </div>
   </div>
 </header>
 
-<div id="notification-dropdown" class="hidden fixed right-4 sm:right-6 top-16 w-80 max-w-[calc(100vw-2rem)] bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
-  <div class="p-3 border-b border-gray-800 flex items-center justify-between">
-    <h3 class="font-semibold">Notifications</h3>
-    <button id="mark-all-read" class="text-xs text-blue-400 hover:text-blue-300">Mark all read</button>
+<div id="notification-dropdown" class="hidden fixed right-4 top-16 w-80 max-w-[calc(100vw-2rem)] bg-gray-900 border border-gray-800 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
+  <div class="p-3 border-b border-gray-800">
+    <h3 class="font-semibold text-sm">Notifikasi</h3>
   </div>
   <div id="notification-list" class="p-2">
-    <p class="text-sm text-gray-500 text-center py-4">No notifications</p>
+    <p class="text-sm text-gray-500 text-center py-4">Tidak ada notifikasi</p>
   </div>
 </div>

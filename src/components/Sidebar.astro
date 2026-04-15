@@ -42,7 +42,7 @@ const items = navItems[role] || navItems.member;
 
   <div class="p-4 border-t border-gray-800" id="sidebar-user">
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+      <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
         {userName.charAt(0).toUpperCase()}
       </div>
       <div class="flex-1 min-w-0 sidebar-label">
@@ -50,40 +50,10 @@ const items = navItems[role] || navItems.member;
         <p class="text-xs text-gray-500 truncate">{userEmail}</p>
       </div>
     </div>
-    <form action="/api/auth/logout" method="POST" class="mt-3">
-      <button type="submit" class="w-full text-left text-sm text-gray-400 hover:text-white transition py-2 sidebar-label">
+    <form action="/api/auth/logout" method="POST" class="mt-2">
+      <button type="submit" class="w-full text-left text-xs text-gray-500 hover:text-white transition py-1.5 sidebar-label">
         Logout
       </button>
     </form>
   </div>
 </aside>
-
-<script>
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.getElementById('main-content');
-  const toggleIcon = document.getElementById('toggle-icon');
-  const toggleBtn = document.getElementById('sidebar-toggle');
-  
-  function updateSidebarState(isCollapsed: boolean) {
-    if (isCollapsed) {
-      sidebar?.classList.add('sidebar-collapsed');
-      mainContent?.classList.add('sidebar-collapsed');
-      toggleIcon?.classList.add('rotate-180');
-      toggleBtn?.setAttribute('title', 'Expand sidebar');
-    } else {
-      sidebar?.classList.remove('sidebar-collapsed');
-      mainContent?.classList.remove('sidebar-collapsed');
-      toggleIcon?.classList.remove('rotate-180');
-      toggleBtn?.setAttribute('title', 'Collapse sidebar');
-    }
-    localStorage.setItem('sidebar-collapsed', String(isCollapsed));
-    document.querySelectorAll('.sidebar-label').forEach(el => el.classList.toggle('hidden', isCollapsed));
-  }
-
-  const savedState = localStorage.getItem('sidebar-collapsed') === 'true';
-  updateSidebarState(savedState);
-
-  toggleBtn?.addEventListener('click', () => {
-    updateSidebarState(!sidebar?.classList.contains('sidebar-collapsed'));
-  });
-</script>

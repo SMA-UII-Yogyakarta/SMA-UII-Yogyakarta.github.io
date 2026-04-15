@@ -91,7 +91,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     // Redirect based on role and status
     if (existingUser.status === 'pending') return redirect(`/check-status?nisn=${existingUser.nisn}`);
     if (existingUser.status === 'inactive') return redirect('/login?error=inactive');
-    return redirect('/app');
+    return redirect('/app/overview');
   } catch (e) {
     if (e instanceof OAuth2RequestError) {
       // Handle specific OAuth errors

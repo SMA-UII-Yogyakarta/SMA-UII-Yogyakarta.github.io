@@ -4,185 +4,142 @@ const { user } = Astro.locals;
 if (!user) return Astro.redirect('/login');
 if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
 if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
-const userData = { id: user.id, name: user.name, role: user.role, status: user.status };
+const canLog = user.status === 'active';
+const isAdmin = user.role === 'maintainer';
 ---
 
 <DashboardLayout title="Activities">
-  <div id="activities-content">
-    <div class="text-center py-12">
-      <div class="text-4xl mb-4">⏳</div>
-      <p class="text-gray-400">Loading...</p>
-    </div>
+  <div class="flex justify-between items-center mb-4">
+    <p class="text-gray-400 text-sm">Log kontribusi dan kegiatan</p>
+    {canLog && (
+      <button id="open-modal" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Log Activity
+      </button>
+    )}
   </div>
 
-  <!-- Add Activity Modal -->
-  <div id="add-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-      <h2 class="text-xl font-bold mb-4">Log Activity</h2>
-      <form id="activity-form" class="space-y-4">
-        <div>
-          <label class="block text-sm text-gray-400 mb-1">Activity Type *</label>
-          <select name="type" required
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500">
-            <option value="contribution">Contribution</option>
-            <option value="event">Event</option>
-            <option value="workshop">Workshop</option>
-            <option value="meeting">Meeting</option>
-            <option value="other">Other</option>
-          </select>
+  <div id="activities-list" class="space-y-3">
+    {Array.from({length: 5}).map(() => (
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 animate-pulse">
+        <div class="w-14 h-5 bg-gray-800 rounded mt-0.5 flex-shrink-0"></div>
+        <div class="flex-1 space-y-2">
+          <div class="h-4 bg-gray-800 rounded w-1/2"></div>
+          <div class="h-3 bg-gray-800 rounded w-1/3"></div>
         </div>
-        <div>
-          <label class="block text-sm text-gray-400 mb-1">Title *</label>
-          <input type="text" name="title" required
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500">
-        </div>
-        <div>
-          <label class="block text-sm text-gray-400 mb-1">Description</label>
-          <textarea name="description" rows="3"
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500"></textarea>
-        </div>
-        <div>
-          <label class="block text-sm text-gray-400 mb-1">Related URL</label>
-          <input type="url" name="url"
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500">
-        </div>
-        <div class="flex gap-3">
-          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition">Log Activity</button>
-          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition">Cancel</button>
-        </div>
-      </form>
-    </div>
+      </div>
+    ))}
   </div>
 
-  <script define:vars={{ userData }}>
-    let currentUser = userData;
-
-    async function init() {
-      loadActivities();
-    }
-
-    async function loadActivities() {
-      try {
-        const response = await fetch('/api/activities');
-        const result = await response.json();
-        const { activities, stats } = result.data || { activities: [], stats: [] };
-        renderActivities(activities, stats);
-      } catch (error) {
-        console.error('Failed to load activities:', error);
-      }
-    }
-
-    function escapeHtml(str: string): string {
-      if (!str) return '';
-      const htmlEntities: Record<string, string> = {
-        '&': '&amp;', '<': '&lt;', '>': '&gt;',
-        '"': '&quot;', "'": '&#x27;', '/': '&#x2F;',
-      };
-      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
-    }
-
-    function formatDate(timestamp: number): string {
-      return new Date(timestamp).toLocaleDateString('id-ID', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      });
-    }
-
-    function renderActivities(activities, stats) {
-      const content = document.getElementById('activities-content');
-      const isAdmin = currentUser?.role === 'maintainer';
-      const canLog = currentUser?.status === 'active';
-
-      const typeColors: Record<string, string> = {
-        contribution: 'bg-purple-500/20 text-purple-400',
-        event: 'bg-blue-500/20 text-blue-400',
-        workshop: 'bg-green-500/20 text-green-400',
-        meeting: 'bg-yellow-500/20 text-yellow-400',
-        other: 'bg-gray-500/20 text-gray-400',
-      };
-
-      const activitiesHtml = activities.length === 0
-        ? '<p class="text-gray-500 text-center py-8">No activities logged yet</p>'
-        : activities.map(a => `
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 flex items-start gap-4 hover:border-gray-700 transition">
-            <div class="w-10 h-10 rounded-lg ${typeColors[a.type] || 'bg-gray-800'} flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <h3 class="font-semibold text-white">${escapeHtml(a.title)}</h3>
-                <span class="px-2 py-0.5 rounded text-xs ${typeColors[a.type] || 'bg-gray-800'}">${escapeHtml(a.type)}</span>
-              </div>
-              <p class="text-sm text-gray-400">${escapeHtml(a.description || '')}</p>
-              <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                <span>${escapeHtml(a.userName || 'Unknown')}</span>
-                <span>${formatDate(a.createdAt)}</span>
-                ${a.url ? `<a href="${escapeHtml(a.url)}" target="_blank" class="text-blue-400 hover:text-blue-300">View →</a>` : ''}
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-      content!.innerHTML = `
-        <div class="flex justify-between items-center mb-6">
+  {canLog && (
+    <div id="add-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
+        <h2 class="text-lg font-bold mb-4">Log Activity</h2>
+        <form id="activity-form" class="space-y-3">
           <div>
-            <h1 class="text-2xl font-bold mb-2">Activities</h1>
-            <p class="text-gray-400">Track your contributions and events</p>
+            <label class="block text-xs text-gray-400 mb-1">Tipe *</label>
+            <select name="type" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+              <option value="contribution">Contribution</option>
+              <option value="event">Event</option>
+              <option value="workshop">Workshop</option>
+              <option value="meeting">Meeting</option>
+              <option value="other">Other</option>
+            </select>
           </div>
-          ${canLog ? `
-            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              Log Activity
-            </button>
-          ` : ''}
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          ${(stats || []).map(s => `
-            <div class="bg-gray-900 border border-gray-800 rounded-lg p-4">
-              <div class="text-2xl font-bold">${activities.filter(a => a.type === s.type).length}</div>
-              <p class="text-sm text-gray-400 capitalize">${escapeHtml(s.type || '')}</p>
-            </div>
-          `).join('')}
-        </div>
-        <div class="space-y-3">
-          ${activitiesHtml}
-        </div>
-      `;
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Judul *</label>
+            <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Deskripsi</label>
+            <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">URL</label>
+            <input type="url" name="url" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Simpan</button>
+            <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )}
+
+  <script>
+    function esc(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'}[c]));
     }
 
-    window.openModal = () => document.getElementById('add-modal')?.classList.remove('hidden');
-    window.closeModal = () => document.getElementById('add-modal')?.classList.add('hidden');
+    function fmtDate(ts) {
+      return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    const typeColor = {
+      contribution: 'bg-purple-500/20 text-purple-400',
+      event: 'bg-blue-500/20 text-blue-400',
+      workshop: 'bg-green-500/20 text-green-400',
+      meeting: 'bg-yellow-500/20 text-yellow-400',
+      other: 'bg-gray-500/20 text-gray-400',
+    };
+
+    async function load() {
+      const res = await fetch('/api/activities');
+      const json = await res.json();
+      const activities = (json.data && json.data.activities) || [];
+      const list = document.getElementById('activities-list');
+
+      if (!activities.length) {
+        list.innerHTML = '<div class="text-center py-8 text-gray-500 text-sm">Belum ada aktivitas</div>';
+        return;
+      }
+
+      list.innerHTML = activities.map(a => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
+          <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 ${typeColor[a.type] || typeColor.other}">${esc(a.type)}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm">${esc(a.title)}</p>
+            ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
+            <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+              <span>${esc(a.userName || '')}</span>
+              <span>${fmtDate(a.createdAt)}</span>
+              ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    load();
+
+    const modal = document.getElementById('add-modal');
+    document.getElementById('open-modal')?.addEventListener('click', () => modal?.classList.remove('hidden'));
+    document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.add('hidden'));
 
     document.getElementById('activity-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.target as HTMLFormElement;
-      const formData = new FormData(form);
-
-      try {
-        const response = await fetch('/api/activities', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: formData.get('type'),
-            title: formData.get('title'),
-            description: formData.get('description'),
-            url: formData.get('url'),
-          }),
-        });
-
-        if (!response.ok) throw new Error('Failed to log activity');
-
-        closeModal();
-        form.reset();
-        loadActivities();
-      } catch (error) {
-        alert('Failed to log activity');
+      const fd = new FormData(e.target);
+      const res = await fetch('/api/activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: fd.get('type'),
+          title: fd.get('title'),
+          description: fd.get('description') || null,
+          url: fd.get('url') || null,
+        }),
+      });
+      if (res.ok) {
+        modal?.classList.add('hidden');
+        e.target.reset();
+        load();
+      } else {
+        alert('Gagal menyimpan');
       }
     });
-
-    init();
   </script>
 </DashboardLayout>

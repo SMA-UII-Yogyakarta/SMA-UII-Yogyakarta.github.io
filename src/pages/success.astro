@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 
 // Redirect jika sudah login
 if (Astro.locals.user) {
-  return Astro.redirect('/app');
+  return Astro.redirect('/app/overview');
 }
 
 const nisn = Astro.url.searchParams.get('nisn') || '';
