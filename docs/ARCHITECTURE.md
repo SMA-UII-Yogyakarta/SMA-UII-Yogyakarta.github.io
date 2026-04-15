@@ -349,3 +349,204 @@ Login form sudah aman (JSON body, bukan form POST). GitHub OAuth sudah pakai sta
 ---
 
 *Dokumen ini dibuat: 2026-04-15. Update sesuai progress pengerjaan.*
+
+---
+
+## E2E Typesafety Strategy
+
+> Ditambahkan setelah diskusi dengan komunitas — 2026-04-16
+
+### Prinsip
+
+> **Type yang sama dipakai dari DB → API → frontend tanpa duplikasi manual**
+
+Stack saat ini (Astro + Hono + Drizzle + Zod) sudah sangat cocok untuk E2E typesafety. Yang perlu dilakukan adalah **merapikan struktur** dan **menghubungkan type antar layer**.
+
+---
+
+### Struktur Monorepo Target (setelah Jamstack)
+
+Saat ini:
+```
+smauii-dev-foundation/   ← Astro SSR (semua dalam satu repo)
+```
+
+Target setelah migrasi Jamstack:
+```
+root/
+  apps/
+    web/        ← Astro (static, GitHub Pages)
+    api/        ← Hono + Cloudflare Workers
+  packages/
+    db/         ← Drizzle schema (single source of truth)
+    types/      ← shared types (opsional, bisa langsung dari db)
+```
+
+Dengan struktur ini:
+- `apps/api` import schema dari `packages/db`
+- `apps/web` import type dari `packages/db` atau via Hono RPC client
+- Tidak ada duplikasi type manual
+
+---
+
+### Layer 1 — Database (Drizzle)
+
+Drizzle schema sudah ada di `src/db/schema.ts`. Setelah migrasi ke monorepo, ini pindah ke `packages/db/schema.ts` dan menjadi **single source of truth** untuk semua type.
+
+```ts
+// packages/db/schema.ts
+export const users = sqliteTable('users', { ... });
+
+// Type otomatis dari schema — tidak perlu tulis manual
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+```
+
+Dipakai di API:
+```ts
+import type { User } from 'db/schema';
+```
+
+Dipakai di Astro:
+```ts
+import type { User } from 'db/schema';
+```
+
+---
+
+### Layer 2 — API (Hono RPC)
+
+Hono punya built-in RPC client (`hc`) yang menghasilkan typed client dari definisi route. Ini menghilangkan kebutuhan menulis interface manual untuk response API.
+
+```ts
+// apps/api/src/index.ts
+import { Hono } from 'hono';
+import type { User } from 'db/schema';
+
+const app = new Hono()
+  .get('/users', async (c) => {
+    const users: User[] = await db.query.users.findMany();
+    return c.json(users);
+  })
+  .post('/users/:id/approve', async (c) => {
+    // ...
+    return c.json({ success: true });
+  });
+
+// Export type untuk dipakai client
+export type AppType = typeof app;
+```
+
+---
+
+### Layer 3 — Frontend (Hono Client)
+
+```ts
+// apps/web/src/lib/api.ts
+import { hc } from 'hono/client';
+import type { AppType } from 'smauii-api';  // import dari package api
+
+export const api = hc<AppType>('https://api.lab.smauiiyk.sch.id');
+
+// Usage — fully typed, auto-complete bekerja
+const res = await api.users.$get();
+const users = await res.json(); // type: User[]
+```
+
+Tidak perlu lagi:
+- Menulis interface response manual
+- Cast `as SomeType` setelah fetch
+- Khawatir response shape berubah tanpa diketahui
+
+---
+
+### Layer 4 — Validasi Runtime (Zod)
+
+Zod sudah ada di project (`src/lib/validation.ts`). Setelah migrasi, Zod dipakai di API untuk validasi request body, dan type-nya bisa di-share ke frontend untuk validasi form.
+
+```ts
+// packages/types/src/user.ts (atau langsung di packages/db)
+import { z } from 'zod';
+
+export const registerSchema = z.object({
+  nisn: z.string().min(1).max(10),
+  name: z.string().min(1).max(100),
+  // ...
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+```
+
+Dipakai di API untuk validasi:
+```ts
+import { registerSchema } from 'types/user';
+const body = registerSchema.parse(await c.req.json());
+```
+
+Dipakai di frontend untuk form validation:
+```ts
+import { registerSchema } from 'types/user';
+// RegisterForm.tsx sudah pakai ini ✓
+```
+
+---
+
+### Auth: Dari Lucia Session ke JWT
+
+Saat migrasi ke Jamstack, auth model berubah:
+
+| | SSR (sekarang) | Jamstack (target) |
+|---|---|---|
+| Library | Lucia | Jose / hono/jwt |
+| Storage | Session di DB + httpOnly cookie | JWT di httpOnly cookie |
+| Validasi | Server validate session ID | Server verify JWT signature |
+| Type | `locals.user` dari Lucia | Decoded JWT payload |
+
+JWT payload akan mengandung field yang sama dengan `locals.user` saat ini:
+```ts
+// Type JWT payload — sama dengan DatabaseUserAttributes di auth.ts
+interface JWTPayload {
+  sub: string;      // user.id
+  name: string;
+  email: string;
+  role: 'maintainer' | 'member';
+  status: string;
+  nisn: string;
+}
+```
+
+Di Astro static, tidak ada `locals` — tapi JWT bisa dibaca dari cookie di client-side atau di Astro middleware (jika pakai Cloudflare Pages SSR).
+
+---
+
+### Checklist E2E Typesafety (untuk fase Jamstack)
+
+- [ ] Setup monorepo dengan pnpm workspaces
+- [ ] Pindahkan `src/db/` ke `packages/db/`
+- [ ] Export semua type dari `packages/db/schema.ts`
+- [ ] Setup Hono app dengan RPC-style routes di `apps/api/`
+- [ ] Export `AppType` dari `apps/api/src/index.ts`
+- [ ] Buat `apps/web/src/lib/api.ts` dengan `hc<AppType>`
+- [ ] Pindahkan Zod schemas ke `packages/db/` atau `packages/types/`
+- [ ] Update tsconfig di semua package untuk path resolution
+- [ ] Ganti Lucia dengan JWT di Hono (jose atau hono/jwt)
+
+---
+
+### Mengapa Tidak tRPC?
+
+tRPC adalah alternatif yang populer untuk E2E typesafety, tapi untuk setup ini:
+
+- **Hono lebih cocok untuk edge** (Cloudflare Workers) — tRPC punya overhead lebih besar
+- **Hono RPC sudah cukup** — tidak perlu abstraksi tambahan
+- **Ekosistem Hono lebih ringan** — sesuai filosofi project ini
+
+tRPC lebih cocok jika stack-nya Next.js + Node.js server tradisional.
+
+---
+
+### Referensi
+
+- [Hono RPC Documentation](https://hono.dev/docs/guides/rpc)
+- [Drizzle ORM Type Inference](https://orm.drizzle.team/docs/column-types/sqlite)
+- [Zod Schema Inference](https://zod.dev/?id=type-inference)
