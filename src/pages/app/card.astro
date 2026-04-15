@@ -1,5 +1,6 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@db';
 import { memberCards } from '@db/schema';
 import { eq } from 'drizzle-orm';
@@ -12,6 +13,7 @@ const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId
 ---
 
 <DashboardLayout title="Member Card">
+  <PageHeader subtitle="Kartu identitas digital anggota komunitas" />
   {!card ? (
     <div class="text-center py-16">
       <div class="text-6xl mb-4">🎫</div>

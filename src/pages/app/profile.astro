@@ -1,5 +1,6 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@db';
 import { memberTracks, memberCards } from '@db/schema';
 import { eq } from 'drizzle-orm';
@@ -17,6 +18,7 @@ const [tracks, card] = await Promise.all([
 ---
 
 <DashboardLayout title="Profile">
+  <PageHeader subtitle="Informasi akun dan keanggotaanmu" />
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Avatar + status -->
     <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col items-center text-center self-start">
