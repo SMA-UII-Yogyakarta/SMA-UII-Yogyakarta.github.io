@@ -1,0 +1,142 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Member Card">
+  <div id="card-content">
+    <div class="text-center py-12">
+      <div class="text-4xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const result = await response.json();
+        const profile = result.data;
+        renderCard(profile);
+      } catch (error) {
+        console.error('Failed to load card:', error);
+        window.location.href = '/login';
+      }
+    }
+
+    function escapeHtml(str: string): string {
+      if (!str) return '';
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;',
+        '"': '&quot;', "'": '&#x27;', '/': '&#x2F;',
+      };
+      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+    }
+
+    function formatDate(timestamp: number): string {
+      return new Date(timestamp).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      });
+    }
+
+    function renderCard(profile) {
+      const content = document.getElementById('card-content');
+
+      if (!profile.cardNumber) {
+        content!.innerHTML = `
+          <div class="text-center py-12">
+            <div class="text-6xl mb-4">🎫</div>
+            <h2 class="text-xl font-bold mb-2">No Member Card</h2>
+            <p class="text-gray-400">Your member card will be generated after your account is approved.</p>
+          </div>
+        `;
+        return;
+      }
+
+      content!.innerHTML = `
+        <div class="flex justify-center">
+          <div class="w-full max-w-md">
+            <!-- Card -->
+            <div class="bg-gradient-to-br from-blue-900 to-blue-950 rounded-2xl p-6 text-white shadow-2xl mb-6 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+              
+              <div class="relative z-10">
+                <div class="flex items-center justify-between mb-8">
+                  <div>
+                    <div class="text-sm opacity-70">SMA UII Lab</div>
+                    <div class="text-lg font-bold">Member Card</div>
+                  </div>
+                  <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                    <span class="text-2xl">⬡</span>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-4 mb-6">
+                  <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold">
+                    ${escapeHtml(profile.name).charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div class="text-xl font-bold">${escapeHtml(profile.name)}</div>
+                    <div class="text-sm opacity-70">${escapeHtml(profile.class || '')}</div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <div class="text-xs opacity-70">Card Number</div>
+                    <div class="font-mono font-bold">${escapeHtml(profile.cardNumber)}</div>
+                  </div>
+                  <div>
+                    <div class="text-xs opacity-70">NISN</div>
+                    <div class="font-mono">${escapeHtml(profile.nisn || '')}</div>
+                  </div>
+                </div>
+
+                <div class="flex items-end justify-between">
+                  <div>
+                    <div class="text-xs opacity-70">Issued</div>
+                    <div class="text-sm">${profile.cardIssuedAt ? formatDate(profile.cardIssuedAt) : '-'}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs opacity-70">Status</div>
+                    <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded text-xs">ACTIVE</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
+              <h3 class="text-lg font-bold mb-4">QR Code</h3>
+              <div class="inline-block p-4 bg-white rounded-lg mb-4">
+                ${profile.cardQrCode ? `<img src="${escapeHtml(profile.cardQrCode)}" alt="QR Code" class="w-32 h-32">` : '<div class="w-32 h-32 flex items-center justify-center text-black">No QR</div>'}
+              </div>
+              <p class="text-sm text-gray-400">Scan this code to verify membership</p>
+            </div>
+
+            <!-- Download Button -->
+            <div class="mt-6 text-center">
+              <button onclick="downloadCard()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg transition inline-flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download Card
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.downloadCard = () => {
+      alert('Download feature - capture the card as image');
+    };
+
+    init();
+  </script>
+</DashboardLayout>

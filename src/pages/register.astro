@@ -1,0 +1,12 @@
+---
+import AuthLayout from '@layouts/AuthLayout.astro';
+import RegisterForm from '@components/RegisterForm';
+---
+<AuthLayout title="Daftar Anggota" subtitle="Bergabung dengan komunitas developer SMA UII Lab" wide>
+  <RegisterForm client:load />
+
+  <p class="text-center text-xs text-gray-600 mt-6">
+    Sudah punya akun?
+    <a href="/login" class="text-blue-400 hover:text-blue-300 transition-colors ml-1">Masuk</a>
+  </p>
+</AuthLayout>

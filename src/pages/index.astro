@@ -2,28 +2,29 @@
 import Layout from '../layouts/Layout.astro';
 
 const tracks = [
-  { icon: "🤖", name: "Robotika", desc: "Desain, bangun, dan program robot. Dari Arduino hingga ROS." },
-  { icon: "📊", name: "Data Science", desc: "Analisis data, machine learning, dan visualisasi dengan Python." },
-  { icon: "🌐", name: "Jaringan Komputer", desc: "Infrastruktur, protokol, dan administrasi sistem jaringan." },
-  { icon: "🔐", name: "Keamanan Siber", desc: "Ethical hacking, CTF, dan hardening sistem." },
-  { icon: "💻", name: "Software Engineering", desc: "Web, mobile, dan open source development." },
+  { icon: "🤖", name: "Robotika/IoT", desc: "Bikin robot yang bisa gerak sendiri. Dari Arduino sampai kompetisi nasional." },
+  { icon: "🧠", name: "AI (Kecerdasan Buatan)", desc: "Ajarin komputer belajar sendiri. Computer vision, chatbot, dan lainnya." },
+  { icon: "📊", name: "Data Science", desc: "Ubah data jadi insight keren. Visualisasi, analisis, prediksi." },
+  { icon: "🌐", name: "Jaringan Komputer", desc: "Bangun infrastruktur internet. Server, cloud, sampai keamanan jaringan." },
+  { icon: "🔐", name: "Keamanan Siber", desc: "Jadi ethical hacker. CTF, bug bounty, dan security research." },
+  { icon: "💻", name: "Software Engineering", desc: "Coding web, mobile, atau kontribusi ke open source dunia." },
 ];
 ---
 <Layout title="Beranda">
   <!-- Hero -->
   <section class="max-w-5xl mx-auto px-4 pt-24 pb-16 text-center">
     <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs px-3 py-1 rounded-full mb-6">
-      🚀 Open Source · Komunitas · Eksplorasi
+      🚀 Belajar · Bikin · Berkontribusi
     </div>
     <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-      Ruang Eksplorasi<br>
       <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        Digital SMA UII
-      </span>
+        SMA UII Lab
+      </span><br>
+      <span class="text-2xl md:text-3xl font-normal text-gray-400">Ruang Eksplorasi Digital</span>
     </h1>
-    <p class="text-lg text-gray-400 max-w-xl mx-auto mb-10">
-      Komunitas siswa yang serius menekuni teknologi — dari robotika hingga keamanan siber.
-      Belajar bersama, berkarya nyata, berkontribusi ke dunia open source.
+    <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
+      Tempat buat kamu yang suka ngulik teknologi — dari bikin robot, ngoding AI, 
+      sampe jadi ethical hacker. Belajar bareng, bikin proyek nyata, ikut kompetisi.
     </p>
     <div class="flex gap-3 justify-center flex-wrap">
       <a href="/tracks" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
@@ -31,15 +32,15 @@ const tracks = [
       </a>
       <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
          class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
-        ★ GitHub Org
+        ★ Lihat Proyek
       </a>
     </div>
   </section>
 
   <!-- Tracks -->
   <section class="max-w-5xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-2">Track Minat</h2>
-    <p class="text-gray-400 mb-8">Pilih jalur yang sesuai dengan passion-mu</p>
+    <h2 class="text-2xl font-bold mb-2">Track yang Bisa Kamu Ikuti</h2>
+    <p class="text-gray-400 mb-8">Pilih yang sesuai minatmu, atau coba semuanya!</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {tracks.map(t => (
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition cursor-default">
@@ -49,23 +50,73 @@ const tracks = [
         </div>
       ))}
     </div>
+    <div class="text-center mt-8">
+      <a href="/tracks" class="text-blue-400 hover:text-blue-300 font-semibold">
+        Lihat detail track →
+      </a>
+    </div>
   </section>
 
-  <!-- Why -->
+  <!-- Why Join -->
   <section class="max-w-5xl mx-auto px-4 py-16 border-t border-gray-800">
-    <div class="grid md:grid-cols-3 gap-8 text-center">
+    <h2 class="text-2xl font-bold mb-8 text-center">Kenapa Ikut Lab?</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="text-center">
+        <div class="text-4xl mb-3">🎯</div>
+        <h3 class="font-bold mb-2">Proyek Nyata</h3>
+        <p class="text-sm text-gray-400">Bukan cuma teori. Bikin proyek yang bisa dipake orang lain, kontribusi ke open source.</p>
+      </div>
+      <div class="text-center">
+        <div class="text-4xl mb-3">🏆</div>
+        <h3 class="font-bold mb-2">Ikut Kompetisi</h3>
+        <p class="text-sm text-gray-400">Persiapan OPSI, OSN, CTF, Kaggle, dan kompetisi lainnya bareng komunitas.</p>
+      </div>
+      <div class="text-center">
+        <div class="text-4xl mb-3">🤝</div>
+        <h3 class="font-bold mb-2">Belajar Bareng</h3>
+        <p class="text-sm text-gray-400">Senior bantu junior, alumni jadi mentor. Stuck? Tanya aja, semua pernah pemula.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="max-w-5xl mx-auto px-4 py-16 border-t border-gray-800">
+    <h2 class="text-2xl font-bold mb-8 text-center">Gimana Cara Kerjanya?</h2>
+    <div class="grid md:grid-cols-4 gap-6 text-center">
       <div>
-        <div class="text-3xl font-bold text-blue-400 mb-2">Open Source</div>
-        <p class="text-sm text-gray-400">Semua proyek terbuka di GitHub. Belajar dari kode nyata, berkontribusi ke komunitas global.</p>
+        <div class="text-3xl font-bold text-blue-400 mb-2">1</div>
+        <p class="text-sm text-gray-400">Pilih track yang kamu suka</p>
       </div>
       <div>
-        <div class="text-3xl font-bold text-purple-400 mb-2">Kompetisi</div>
-        <p class="text-sm text-gray-400">Persiapan OPSI, OSN, CTF, dan kompetisi teknologi lainnya dengan bimbingan komunitas.</p>
+        <div class="text-3xl font-bold text-purple-400 mb-2">2</div>
+        <p class="text-sm text-gray-400">Mulai dari proyek kecil</p>
       </div>
       <div>
-        <div class="text-3xl font-bold text-green-400 mb-2">Portofolio</div>
-        <p class="text-sm text-gray-400">Bangun portofolio nyata sejak SMA. Proyek yang bisa ditunjukkan ke universitas dan industri.</p>
+        <div class="text-3xl font-bold text-green-400 mb-2">3</div>
+        <p class="text-sm text-gray-400">Belajar bareng komunitas</p>
       </div>
+      <div>
+        <div class="text-3xl font-bold text-orange-400 mb-2">4</div>
+        <p class="text-sm text-gray-400">Bikin portofolio keren</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-3xl mx-auto px-4 py-16 text-center border-t border-gray-800">
+    <h2 class="text-2xl font-bold mb-4">Yuk, Mulai Sekarang!</h2>
+    <p class="text-gray-400 mb-8">
+      Semua orang bisa belajar. Yang penting konsisten dan mau bertanya.
+    </p>
+    <div class="flex gap-3 justify-center flex-wrap">
+      <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank"
+         class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
+        Cara Berkontribusi
+      </a>
+      <a href="/tracks"
+         class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
+        Lihat Track
+      </a>
     </div>
   </section>
 </Layout>

@@ -1,16 +1,19 @@
 ---
+import '@styles/global.css';
+
 interface Props {
   title: string;
   description?: string;
 }
-const { title, description = "SMAUII Lab — Ruang Eksplorasi Digital SMA UII Yogyakarta" } = Astro.props;
+const { title, description = "SMA UII Lab — Ruang eksplorasi digital buat yang suka ngulik teknologi" } = Astro.props;
+const user = Astro.locals.user;
 ---
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{title} — SMAUII Lab</title>
+  <title>{title} — SMA UII Lab</title>
   <meta name="description" content={description} />
   <link rel="icon" href="/favicon.svg" />
 </head>
@@ -18,25 +21,89 @@ const { title, description = "SMAUII Lab — Ruang Eksplorasi Digital SMA UII Yo
   <nav class="sticky top-0 z-50 bg-gray-950/80 backdrop-blur border-b border-gray-800">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-6">
       <a href="/" class="font-bold text-white flex items-center gap-2">
-        <span class="text-blue-400">⬡</span> SMAUII Lab
+        <span class="text-blue-400">⬡</span> SMA UII Lab
       </a>
-      <a href="/projects" class="text-sm text-gray-400 hover:text-white transition">Proyek</a>
       <a href="/tracks" class="text-sm text-gray-400 hover:text-white transition">Track</a>
+      <a href="/projects" class="text-sm text-gray-400 hover:text-white transition">Proyek</a>
       <a href="/members" class="text-sm text-gray-400 hover:text-white transition">Anggota</a>
+      <a href="/about" class="text-sm text-gray-400 hover:text-white transition">Tentang</a>
       <div class="flex-1"></div>
-      <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
-         class="text-sm border border-gray-700 px-3 py-1 rounded-md hover:border-blue-500 transition">
-        GitHub →
-      </a>
+      {user ? (
+        <>
+          <a href="/app" class="text-sm text-gray-400 hover:text-white transition">
+            App
+          </a>
+          <span class="text-sm text-gray-400">Hi, {user.name}</span>
+          <form action="/api/auth/logout" method="POST" class="inline">
+            <button type="submit" class="text-sm text-gray-400 hover:text-white transition">
+              Logout
+            </button>
+          </form>
+        </>
+      ) : (
+        <>
+          <a href="/register" class="text-sm text-blue-400 hover:text-blue-300 transition">
+            Daftar
+          </a>
+          <a href="/login" class="text-sm border border-gray-700 px-3 py-1 rounded-md hover:border-blue-500 transition">
+            Login
+          </a>
+        </>
+      )}
     </div>
   </nav>
   <slot />
-  <footer class="border-t border-gray-800 mt-24 py-8 text-center text-sm text-gray-500">
-    <p>SMAUII Lab · SMA Universitas Islam Indonesia Yogyakarta</p>
-    <p class="mt-1">
-      <a href="https://github.com/SMA-UII-Yogyakarta" class="text-blue-400 hover:underline">GitHub</a>
-      · lab.smauiiyk.sch.id
-    </p>
+  <footer class="border-t border-gray-800 mt-24 py-12">
+    <div class="max-w-5xl mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8 mb-8">
+        <!-- About -->
+        <div>
+          <h3 class="font-bold mb-3 flex items-center gap-2">
+            <span class="text-blue-400">⬡</span> SMA UII Lab
+          </h3>
+          <p class="text-sm text-gray-400">
+            Ruang eksplorasi digital untuk siswa yang menekuni teknologi.
+          </p>
+        </div>
+        
+        <!-- Links -->
+        <div>
+          <h4 class="font-semibold mb-3 text-sm">Navigasi</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="/tracks" class="hover:text-blue-400 transition">Track</a></li>
+            <li><a href="/projects" class="hover:text-blue-400 transition">Proyek</a></li>
+            <li><a href="/members" class="hover:text-blue-400 transition">Anggota</a></li>
+            <li><a href="/about" class="hover:text-blue-400 transition">Tentang</a></li>
+          </ul>
+        </div>
+        
+        <!-- Resources -->
+        <div>
+          <h4 class="font-semibold mb-3 text-sm">Resources</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" target="_blank" class="hover:text-blue-400 transition">Filosofi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank" class="hover:text-blue-400 transition">Kontribusi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CODE_OF_CONDUCT.md" target="_blank" class="hover:text-blue-400 transition">Code of Conduct</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" class="hover:text-blue-400 transition">GitHub Org</a></li>
+          </ul>
+        </div>
+        
+        <!-- Contact -->
+        <div>
+          <h4 class="font-semibold mb-3 text-sm">Kontak</h4>
+          <ul class="space-y-2 text-sm text-gray-400">
+            <li><a href="https://github.com/sandikodev" target="_blank" class="hover:text-blue-400 transition">@sandikodev</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" class="hover:text-blue-400 transition">Issues</a></li>
+            <li class="text-gray-500">lab.smauiiyk.sch.id</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
+        <p>© 2026 SMA UII Lab · SMA Universitas Islam Indonesia Yogyakarta</p>
+        <p class="mt-1">Open Source · MIT License</p>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

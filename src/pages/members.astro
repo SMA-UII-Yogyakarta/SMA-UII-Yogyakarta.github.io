@@ -1,0 +1,234 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Anggota">
+  <div id="members-content" class="max-w-5xl mx-auto px-4 py-16">
+    <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
+    <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
+
+    <div class="text-center py-12">
+      <div class="text-4xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    // XSS-safe HTML escape
+    function escapeHtml(str: string): string {
+      if (!str) return '';
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;',
+      };
+      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+    }
+
+    async function loadMembers() {
+      try {
+        const response = await fetch('/api/members');
+        if (!response.ok) {
+          throw new Error('Failed to load members');
+        }
+        
+        const result = await response.json();
+        const data = result.data;
+        renderMembers(data);
+      } catch (error) {
+        const content = document.getElementById('members-content');
+        if (content) {
+          content.innerHTML = `
+            <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
+            <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
+            <div class="text-center py-12">
+              <div class="text-4xl mb-4">⚠️</div>
+              <p class="text-red-400">Failed to load members data</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function renderMembers(data) {
+      const { members, maintainers, alumni, stats } = data;
+      const content = document.getElementById('members-content');
+      if (!content) return;
+
+      const maintainerCards = maintainers.map(m => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white font-bold">
+              ${escapeHtml(m.name).charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 class="font-semibold">${escapeHtml(m.name)}</h3>
+              <p class="text-xs text-gray-400">Maintainer</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1 mb-3">
+            <span class="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">Software Engineering</span>
+            <span class="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded">DevOps</span>
+          </div>
+          ${m.githubUsername ? `
+            <a href="https://github.com/${escapeHtml(m.githubUsername)}" target="_blank" 
+               class="text-xs text-gray-400 hover:text-blue-400 transition">
+              @${escapeHtml(m.githubUsername)} →
+            </a>
+          ` : ''}
+        </div>
+      `).join('');
+
+      const memberCards = members.length === 0 
+        ? `<div class="bg-gray-900/50 border border-dashed border-gray-700 rounded-xl p-8 text-center">
+            <div class="text-3xl mb-3">👥</div>
+            <p class="text-gray-400 mb-4">Belum ada anggota aktif</p>
+          </div>`
+        : members.map(m => `
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-green-500 transition">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-teal-400 flex items-center justify-center text-white font-bold">
+                ${escapeHtml(m.name).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 class="font-semibold">${escapeHtml(m.name)}</h3>
+                <p class="text-xs text-gray-400">${escapeHtml(m.class)}</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1 mb-3">
+              ${m.tracks.map(track => `
+                <span class="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded">${escapeHtml(formatTrack(track))}</span>
+              `).join('')}
+            </div>
+            ${m.githubUsername ? `
+              <a href="https://github.com/${escapeHtml(m.githubUsername)}" target="_blank" 
+                 class="text-xs text-gray-400 hover:text-green-400 transition">
+                @${escapeHtml(m.githubUsername)} →
+              </a>
+            ` : ''}
+          </div>
+        `).join('');
+
+      const alumniCards = alumni.length === 0
+        ? `<div class="bg-gray-900/50 border border-dashed border-gray-700 rounded-xl p-8 text-center">
+            <div class="text-3xl mb-3">🤝</div>
+            <p class="text-gray-400 mb-4">Belum ada alumni</p>
+          </div>`
+        : alumni.map(a => `
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-orange-500 transition">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-bold">
+                ${escapeHtml(a.name).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 class="font-semibold">${escapeHtml(a.name)}</h3>
+                <p class="text-xs text-gray-400">${escapeHtml(a.class)}</p>
+              </div>
+            </div>
+            ${a.githubUsername ? `
+              <a href="https://github.com/${escapeHtml(a.githubUsername)}" target="_blank" 
+                 class="text-xs text-gray-400 hover:text-orange-400 transition">
+                @${escapeHtml(a.githubUsername)} →
+              </a>
+            ` : ''}
+          </div>
+        `).join('');
+
+      content.innerHTML = `
+        <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
+        <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-blue-400">${stats.maintainers}</div>
+            <div class="text-xs text-gray-400">Maintainer</div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-green-400">${stats.activeMembers}</div>
+            <div class="text-xs text-gray-400">Anggota Aktif</div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-yellow-400">${stats.pending}</div>
+            <div class="text-xs text-gray-400">Pending</div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-orange-400">${stats.alumni}</div>
+            <div class="text-xs text-gray-400">Alumni</div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
+            <div class="text-2xl font-bold text-purple-400">${stats.totalMembers}</div>
+            <div class="text-xs text-gray-400">Total</div>
+          </div>
+        </div>
+
+        <!-- Maintainer -->
+        <section class="mb-12">
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="text-blue-400">⚡</span> Maintainer
+          </h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            ${maintainerCards}
+          </div>
+        </section>
+
+        <!-- Active Members -->
+        <section class="mb-12">
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="text-green-400">●</span> Anggota Aktif
+          </h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            ${memberCards}
+          </div>
+        </section>
+
+        <!-- Alumni -->
+        <section>
+          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+            <span class="text-orange-400">🎓</span> Alumni & Mentor
+          </h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            ${alumniCards}
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="mt-16 text-center border-t border-gray-800 pt-16">
+          <h2 class="text-2xl font-bold mb-4">Ingin Bergabung?</h2>
+          <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
+            Kami mencari siswa yang konsisten, curious, dan mau belajar bareng. 
+            Tidak perlu jago coding — yang penting komitmen!
+          </p>
+          <div class="flex gap-3 justify-center flex-wrap">
+            <a href="/tracks" 
+               class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
+              Lihat Track
+            </a>
+            <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" 
+               target="_blank"
+               class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
+              Baca Filosofi
+            </a>
+          </div>
+        </section>
+      `;
+    }
+
+    function formatTrack(track) {
+      const trackNames = {
+        'robotika': 'Robotika/IoT',
+        'ai': 'AI',
+        'data-science': 'Data Science',
+        'network': 'Network',
+        'security': 'Security',
+        'software': 'Software',
+      };
+      return trackNames[track] || track;
+    }
+
+    loadMembers();
+  </script>
+</Layout>

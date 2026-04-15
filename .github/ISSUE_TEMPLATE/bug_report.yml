@@ -1,0 +1,22 @@
+name: Bug Report
+description: Laporkan bug atau tampilan yang tidak sesuai
+labels: ["bug"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Halaman yang bermasalah
+      placeholder: "/, /tracks, /projects"
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: Deskripsi masalah
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options: [Chrome, Firefox, Safari, Edge, Mobile]

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cek Status Pendaftaran — SMA UII Lab</title>
+  <link rel="icon" href="/favicon.svg" />
+  <style>
+    @import "tailwindcss";
+    body {
+      margin: 0;
+      background: #030712;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-950">
+  <div class="min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <a href="/" class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition">
+          <span class="text-2xl">⬡</span> SMA UII Lab
+        </a>
+      </div>
+
+      <div id="search-form" class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <h1 class="text-2xl font-bold text-white mb-2">Cek Status Pendaftaran</h1>
+        <p class="text-gray-400 text-sm mb-6">Masukkan NISN atau Email untuk melihat status pendaftaranmu</p>
+        
+        <div class="space-y-4">
+          <div>
+            <input
+              type="text"
+              id="identifier"
+              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 text-white"
+              placeholder="NISN atau Email"
+            />
+            <p id="error-msg" class="text-red-400 text-sm mt-2 hidden"></p>
+          </div>
+          
+          <button
+            id="check-btn"
+            class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg font-semibold transition"
+          >
+            Cek Status
+          </button>
+        </div>
+      </div>
+
+      <div id="status-result" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div class="text-center mb-6">
+          <div id="status-icon" class="text-6xl mb-4"></div>
+          <h2 id="status-title" class="text-xl font-bold text-white mb-2"></h2>
+          <p id="status-message" class="text-gray-400 text-sm"></p>
+        </div>
+
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between py-2 border-b border-gray-700">
+            <span class="text-gray-400">NISN</span>
+            <span id="result-nisn" class="font-medium text-white"></span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-700">
+            <span class="text-gray-400">Nama</span>
+            <span id="result-name" class="font-medium text-white"></span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-700">
+            <span class="text-gray-400">Email</span>
+            <span id="result-email" class="font-medium text-white"></span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-700">
+            <span class="text-gray-400">Kelas</span>
+            <span id="result-class" class="font-medium text-white"></span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-700">
+            <span class="text-gray-400">Track</span>
+            <span id="result-tracks" class="font-medium text-white"></span>
+          </div>
+        </div>
+
+        <div id="countdown-section" class="hidden mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-center">
+          <p class="text-blue-400 text-sm mb-2">Estimasi waktu peninjauan</p>
+          <div id="countdown" class="text-3xl font-bold text-white"></div>
+          <p class="text-gray-500 text-xs mt-2">Batas maksimal 3 hari kerja</p>
+        </div>
+
+        <div id="expired-section" class="hidden mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
+          <p class="text-yellow-400 font-semibold">Menunggu terlalu lama?</p>
+          <p class="text-gray-400 text-sm mt-1">Silakan hubungi admin melalui GitHub Issues</p>
+        </div>
+
+        <button
+          id="check-another"
+          class="w-full mt-6 border border-gray-700 hover:border-gray-600 text-gray-300 px-4 py-3 rounded-lg font-semibold transition"
+        >
+          Cek NISN/Email Lain
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const prefillNisn = params.get('nisn') || '';
+    const prefillName = params.get('name') || '';
+
+    if (prefillNisn) {
+      (document.getElementById('identifier') as HTMLInputElement).value = prefillNisn;
+    }
+
+    // Show prefill name if available
+    if (prefillName) {
+      const nameDisplay = document.createElement('p');
+      nameDisplay.className = 'text-lg text-blue-400 mb-4 text-center';
+      nameDisplay.textContent = `Hi, ${prefillName}!`;
+      document.querySelector('#search-form')?.prepend(nameDisplay);
+    }
+
+    const identifierInput = document.getElementById('identifier') as HTMLInputElement;
+    const checkBtn = document.getElementById('check-btn') as HTMLButtonElement;
+    const errorMsg = document.getElementById('error-msg') as HTMLParagraphElement;
+    const searchForm = document.getElementById('search-form') as HTMLDivElement;
+    const statusResult = document.getElementById('status-result') as HTMLDivElement;
+    const checkAnotherBtn = document.getElementById('check-another') as HTMLButtonElement;
+
+    function showError(msg: string, isWarning = false) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.remove('hidden');
+      if (isWarning) {
+        errorMsg.classList.remove('text-red-400');
+        errorMsg.classList.add('text-yellow-400');
+      } else {
+        errorMsg.classList.remove('text-yellow-400');
+        errorMsg.classList.add('text-red-400');
+      }
+    }
+
+    function hideError() {
+      errorMsg.classList.add('hidden');
+    }
+
+    function getStatusInfo(status: string) {
+      switch (status) {
+        case 'pending':
+          return {
+            icon: '⏳',
+            title: 'Menunggu Persetujuan',
+            message: 'Pendaftaranmu sedang ditinjau oleh maintainer',
+            color: 'text-yellow-400'
+          };
+        case 'approved':
+        case 'active':
+          return {
+            icon: '✅',
+            title: 'Pendaftaran Disetujui!',
+            message: 'Silakan login untuk mengakses dashboard',
+            color: 'text-green-400'
+          };
+        case 'rejected':
+          return {
+            icon: '❌',
+            title: 'Pendaftaran Ditolak',
+            message: 'Silakan hubungi maintainer untuk informasi lebih lanjut',
+            color: 'text-red-400'
+          };
+        default:
+          return {
+            icon: '❓',
+            title: 'Status Tidak Diketahui',
+            message: 'Hubungi admin untuk informasi',
+            color: 'text-gray-400'
+          };
+      }
+    }
+
+    function calculateCountdown(joinedAt: string) {
+      const registered = new Date(joinedAt);
+      const now = new Date();
+      
+      const deadline = new Date(registered.getTime() + 72 * 60 * 60 * 1000);
+      
+      const diff = deadline.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        return null;
+      }
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return { hours, minutes, seconds };
+    }
+
+    let countdownInterval: number | null = null;
+
+    async function checkStatus() {
+      const identifier = identifierInput.value.trim();
+      if (!identifier) {
+        showError('Masukkan NISN atau Email');
+        return;
+      }
+
+      hideError();
+      checkBtn.disabled = true;
+      checkBtn.textContent = 'Memeriksa...';
+
+      try {
+        const response = await fetch(`/api/register?identifier=${encodeURIComponent(identifier)}&checkStatus=true`);
+        const result = await response.json();
+        const data = result.data;
+
+        if (!response.ok) {
+          showError(result.error || 'Pendaftaran tidak ditemukan');
+          return;
+        }
+
+        const statusInfo = getStatusInfo(data.status);
+
+        // XSS-safe HTML escape
+        function escapeHtml(str: string): string {
+          if (!str) return '';
+          const htmlEntities: Record<string, string> = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#x27;',
+            '/': '&#x2F;',
+          };
+          return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+        }
+
+        document.getElementById('status-icon')!.textContent = statusInfo.icon;
+        document.getElementById('status-title')!.textContent = statusInfo.title;
+        document.getElementById('status-message')!.textContent = statusInfo.message;
+        
+        document.getElementById('result-nisn')!.textContent = escapeHtml(data.nisn) || '-';
+        document.getElementById('result-name')!.textContent = escapeHtml(data.name) || '-';
+        document.getElementById('result-email')!.textContent = escapeHtml(data.email) || '-';
+        document.getElementById('result-class')!.textContent = escapeHtml(data.class) || '-';
+        document.getElementById('result-tracks')!.textContent = data.tracks?.map((t: string) => escapeHtml(t)).join(', ') || '-';
+
+        const countdownSection = document.getElementById('countdown-section')!;
+        const expiredSection = document.getElementById('expired-section')!;
+
+        if (data.status === 'pending') {
+          countdownSection.classList.remove('hidden');
+          expiredSection.classList.add('hidden');
+
+          const countdownEl = document.getElementById('countdown')!;
+          
+          function updateCountdown() {
+            const countdown = calculateCountdown(data.joinedAt);
+            
+            if (!countdown) {
+              countdownSection.classList.add('hidden');
+              expiredSection.classList.remove('hidden');
+              if (countdownInterval) clearInterval(countdownInterval);
+              return;
+            }
+
+            countdownEl.textContent = `${countdown.hours}j ${countdown.minutes}m ${countdown.seconds}dt`;
+          }
+
+          updateCountdown();
+          countdownInterval = setInterval(updateCountdown, 1000) as unknown as number;
+        } else {
+          countdownSection.classList.add('hidden');
+          expiredSection.classList.add('hidden');
+          if (countdownInterval) clearInterval(countdownInterval);
+        }
+
+        searchForm.classList.add('hidden');
+        statusResult.classList.remove('hidden');
+        history.replaceState(null, '', `/check-status?nisn=${encodeURIComponent(identifier)}`);
+
+      } catch (err) {
+        // Failover: show manual input form
+        searchForm.classList.remove('hidden');
+        statusResult.classList.add('hidden');
+        showError('Tidak dapat mengambil data otomatis. Silakan masukkan NISN/Email secara manual.', true);
+      } finally {
+        checkBtn.disabled = false;
+        checkBtn.textContent = 'Cek Status';
+      }
+    }
+
+    if (prefillNisn) {
+      checkStatus();
+    }
+
+    identifierInput.addEventListener('input', () => {
+      const val = identifierInput.value.trim();
+      const url = val ? `/check-status?nisn=${encodeURIComponent(val)}` : '/check-status';
+      history.replaceState(null, '', url);
+    });
+
+    checkBtn.addEventListener('click', checkStatus);
+    
+    identifierInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkStatus();
+    });
+
+    checkAnotherBtn.addEventListener('click', () => {
+      if (countdownInterval) clearInterval(countdownInterval);
+      identifierInput.value = '';
+      hideError();
+      history.replaceState(null, '', '/check-status');
+      searchForm.classList.remove('hidden');
+      statusResult.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>

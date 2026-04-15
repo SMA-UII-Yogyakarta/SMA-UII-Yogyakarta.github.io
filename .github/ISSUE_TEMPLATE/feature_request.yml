@@ -1,0 +1,18 @@
+name: Feature Request
+description: Usulkan fitur atau perbaikan baru
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Fitur yang diusulkan
+      description: Jelaskan fitur atau perbaikan yang Anda inginkan
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Alasan
+      description: Mengapa fitur ini diperlukan?
+    validations:
+      required: false

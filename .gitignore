@@ -1,3 +1,27 @@
 node_modules/
 dist/
 .astro/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database
+local.db
+local.db-shm
+local.db-wal
+drizzle/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI chat history
+ai.chat
+*.chat

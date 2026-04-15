@@ -9,11 +9,44 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "db:migrate": "bun run scripts/migrate.ts",
+    "db:migrate:node": "tsx scripts/migrate.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:drop": "drizzle-kit drop",
+    "db:check": "drizzle-kit check",
+    "db:up": "drizzle-kit up",
+    "db:seed": "bun run scripts/seed.ts",
+    "db:seed:node": "tsx scripts/seed.ts",
+    "db:setup": "bun run db:migrate && bun run db:seed"
+  },
+  "peerDependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "dependencies": {
+    "@astrojs/node": "^10.0.4",
+    "@astrojs/react": "^5.0.3",
+    "@libsql/client": "^0.17.2",
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
+    "@node-rs/argon2": "^2.0.2",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "arctic": "^3.7.0",
     "astro": "^6.1.6",
-    "tailwindcss": "^4.2.2"
+    "drizzle-orm": "^0.45.2",
+    "lucia": "^3.2.2",
+    "nanoid": "^5.1.7",
+    "qrcode": "^1.5.4",
+    
+    "tailwindcss": "^4.2.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
 }

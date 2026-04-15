@@ -1,43 +1,159 @@
-# Astro Starter Kit: Minimal
+# SMAUII Developer Foundation
 
-```sh
-pnpm create astro@latest -- --template minimal
+> Wadah Serius untuk Penggiat Open Source & Developer Muda
+
+[![Deploy](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/actions)
+[![Astro](https://img.shields.io/badge/Astro-5.x-orange?logo=astro)](https://astro.build)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+**🌐 Live:** https://lab.smauiiyk.sch.id
+
+---
+
+## Tentang
+
+**SMAUII Developer Foundation** adalah wadah bagi siswa SMA UII Yogyakarta yang **benar-benar berkomitmen** menekuni teknologi. Bukan sekadar ekstrakurikuler — ini adalah **komunitas serius** untuk mempersiapkan siswa ke:
+
+- 🏆 **Olimpiade** — OPSI, OSN, IOI, CTF, Kaggle
+- 🎓 **Perguruan Tinggi Top** — dengan portofolio nyata
+- 🌍 **Open Source Global** — kontribusi ke proyek dunia
+- 💼 **Karir Teknologi** — skill yang relevan dengan industri
+
+**Filosofi lengkap:** [PHILOSOPHY.md](PHILOSOPHY.md)
+
+---
+
+## Track Minat
+
+- 🤖 **Robotika/IoT** — Arduino, ESP32, ROS, kompetisi robot
+- 🧠 **AI (Kecerdasan Buatan)** — ML, DL, computer vision, NLP
+- 📊 **Data Science** — Analisis data, visualisasi, statistical modeling
+- 🌐 **Jaringan Komputer** — Infrastructure, server, cloud computing
+- 🔐 **Keamanan Siber** — Ethical hacking, CTF, bug bounty
+- 💻 **Software Engineering** — Web, mobile, open source contribution
+
+**Detail track:** [Halaman Tracks](https://lab.smauiiyk.sch.id/tracks)
+
+---
+
+## Prinsip Inti
+
+### 1. Open Source First
+Semua proyek terbuka di GitHub. Transparansi, kolaborasi, dan kontribusi ke komunitas global.
+
+### 2. Learning by Building
+Tidak ada teori tanpa praktik. Proyek nyata, kompetisi, dan kontribusi open source.
+
+### 3. Komunitas, Bukan Kelas
+Peer learning, mentorship dari alumni, kolaborasi lintas track.
+
+### 4. Komitmen > Bakat
+Kami mencari siswa yang konsisten, curious, collaborative, dan persistent.
+
+---
+
+## Untuk Siswa
+
+**Ingin bergabung?**
+
+1. Pilih track yang sesuai passion-mu
+2. Mulai dari proyek kecil atau kontribusi dokumentasi
+3. Hadir di pertemuan rutin
+4. Konsisten berkontribusi
+
+**Yang akan kamu dapatkan:**
+- Mentor dari alumni & praktisi
+- Persiapan kompetisi (OPSI, OSN, CTF, dll)
+- Portofolio untuk universitas/industri
+- Networking dengan komunitas developer
+
+**Ekspektasi:**
+- Hadir di pertemuan rutin
+- Kontribusi minimal 1 proyek per semester
+- Dokumentasi pembelajaran
+- Membantu sesama anggota
+
+---
+
+## Untuk Alumni
+
+**Ingin berkontribusi?**
+
+- Jadi mentor untuk track tertentu
+- Code review untuk proyek siswa
+- Sharing session tentang kuliah/industri
+- Koneksi ke peluang (internship, kompetisi)
+
+Hubungi: @sandikodev
+
+---
+
+## Stack
+
+- **Framework:** [Astro](https://astro.build) 5.x
+- **Styling:** Tailwind CSS
+- **Package manager:** pnpm
+- **Deploy:** GitHub Pages (manual via `workflow_dispatch`)
+
+## Development
+
+```bash
+# Clone
+git clone https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io.git
+cd SMA-UII-Yogyakarta.github.io
+
+# Install
+pnpm install
+
+# Dev server
+pnpm dev
+
+# Build
+pnpm build
+
+# Preview build
+pnpm preview
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Deploy
 
-## 🚀 Project Structure
+Deploy dilakukan **manual** untuk menghindari penggunaan GitHub Actions yang berlebihan.
 
-Inside of your Astro project, you'll see the following folders and files:
+**Untuk maintainer:**
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+Via GitHub UI:
+```
+Actions → Deploy to GitHub Pages → Run workflow → Run workflow
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Via CLI:
+```bash
+gh workflow run deploy.yml
+```
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+**Untuk kontributor:** Kamu tidak perlu deploy sendiri — fokus saja pada PR. Maintainer akan deploy setelah PR di-merge.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Kontribusi
 
-## 🧞 Commands
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan lengkap.
 
-All commands are run from the root of the project, from a terminal:
+**Cara cepat berkontribusi:**
+1. Fork repo ini
+2. Buat branch: `git checkout -b feat/nama-fitur`
+3. Commit: `git commit -m "feat: deskripsi"`
+4. Push dan buat Pull Request
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+**Semua orang bisa berkontribusi!** Tidak harus siswa SMA UII. Lihat [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## 👀 Want to learn more?
+## Keamanan
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Jika menemukan kerentanan keamanan, jangan buat issue publik. Lihat [SECURITY.md](SECURITY.md) untuk cara melaporkan.
+
+## Lisensi
+
+MIT — lihat [LICENSE](LICENSE)
+
+---
+
+**SMAUII Developer Foundation** — Membangun masa depan teknologi Indonesia, satu commit pada satu waktu.

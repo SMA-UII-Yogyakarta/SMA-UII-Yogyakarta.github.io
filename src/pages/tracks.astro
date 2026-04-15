@@ -4,16 +4,23 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Track Minat">
   <div class="max-w-5xl mx-auto px-4 py-16">
     <h1 class="text-3xl font-bold mb-2">Track Minat</h1>
-    <p class="text-gray-400 mb-12">Pilih jalur eksplorasi yang sesuai dengan minatmu</p>
+    <p class="text-gray-400 mb-4">Pilih jalur eksplorasi yang sesuai dengan passion dan tujuan karirmu</p>
+    <p class="text-sm text-gray-500 mb-12">
+      Setiap track memiliki jalur ke olimpiade, perguruan tinggi, dan karir teknologi.
+      Kamu bisa fokus di satu track atau eksplorasi beberapa track sekaligus.
+    </p>
 
     <div class="space-y-8">
       {[
-        { icon:"🤖", name:"Robotika", color:"blue",
-          desc:"Desain, bangun, dan program robot. Mulai dari mikrokontroler Arduino, Raspberry Pi, hingga ROS (Robot Operating System). Cocok untuk yang suka hardware dan software sekaligus.",
-          topics:["Arduino & ESP32","Raspberry Pi","ROS Basics","Sensor & Aktuator","Kompetisi Robot"] },
+        { icon:"🤖", name:"Robotika/IoT", color:"blue",
+          desc:"Desain, bangun, dan program robot & IoT. Mulai dari mikrokontroler Arduino, ESP32, Raspberry Pi, hingga ROS. Cocok untuk yang suka hardware dan software sekaligus.",
+          topics:["Arduino & ESP32","IoT & Sensor","Raspberry Pi","ROS Basics","Kompetisi Robot"] },
+        { icon:"🧠", name:"AI (Kecerdasan Buatan)", color:"indigo",
+          desc:"Machine learning, deep learning, dan aplikasi AI modern. Dari computer vision hingga natural language processing.",
+          topics:["Machine Learning","Deep Learning","Computer Vision","NLP Basics","AI Ethics"] },
         { icon:"📊", name:"Data Science", color:"purple",
-          desc:"Analisis data, machine learning, dan visualisasi. Belajar Python, pandas, scikit-learn, dan cara mengolah data menjadi insight yang bermakna.",
-          topics:["Python & Pandas","Visualisasi Data","Machine Learning","Kaggle Competitions","Proyek Riset"] },
+          desc:"Analisis data, visualisasi, dan data-driven decision making. Belajar Python, pandas, dan cara mengolah data menjadi insight yang bermakna.",
+          topics:["Python & Pandas","Visualisasi Data","Statistical Analysis","Kaggle Competitions","Proyek Riset"] },
         { icon:"🌐", name:"Jaringan Komputer", color:"cyan",
           desc:"Infrastruktur, protokol, dan administrasi sistem. Dari konfigurasi router hingga membangun server sendiri.",
           topics:["TCP/IP & DNS","Linux Server","Docker & Container","Network Security","Cisco Packet Tracer"] },

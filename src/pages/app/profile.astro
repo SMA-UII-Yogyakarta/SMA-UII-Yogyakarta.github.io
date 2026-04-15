@@ -1,0 +1,116 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Profile">
+  <div id="profile-content">
+    <div class="text-center py-12">
+      <div class="text-4xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const result = await response.json();
+        const profile = result.data;
+        renderProfile(profile);
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        window.location.href = '/login';
+      }
+    }
+
+    function escapeHtml(str: string): string {
+      if (!str) return '';
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;',
+        '"': '&quot;', "'": '&#x27;', '/': '&#x2F;',
+      };
+      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+    }
+
+    function formatDate(timestamp: number): string {
+      return new Date(timestamp).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
+
+    function renderProfile(profile) {
+      const content = document.getElementById('profile-content');
+      const statusColors = {
+        pending: 'text-yellow-400 bg-yellow-400/10',
+        active: 'text-green-400 bg-green-400/10',
+        rejected: 'text-red-400 bg-red-400/10',
+      };
+
+      content!.innerHTML = `
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+            <div class="flex items-center gap-6 mb-6">
+              <div class="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                ${escapeHtml(profile.name).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold">${escapeHtml(profile.name)}</h1>
+                <p class="text-gray-400">${escapeHtml(profile.email)}</p>
+                <span class="inline-block mt-2 px-3 py-1 rounded text-sm ${statusColors[profile.status] || 'text-gray-400 bg-gray-800'}">
+                  ${escapeHtml(profile.status || '')}
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">NISN</p>
+                <p class="font-medium">${escapeHtml(profile.nisn || '-')}</p>
+              </div>
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">NIS</p>
+                <p class="font-medium">${escapeHtml(profile.nis || '-')}</p>
+              </div>
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Class</p>
+                <p class="font-medium">${escapeHtml(profile.class || '-')}</p>
+              </div>
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Role</p>
+                <p class="font-medium capitalize">${escapeHtml(profile.role || 'member')}</p>
+              </div>
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Tracks</p>
+                <p class="font-medium">${profile.tracks?.length ? profile.tracks.map(t => escapeHtml(t)).join(', ') : '-'}</p>
+              </div>
+              <div class="bg-gray-950 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Joined</p>
+                <p class="font-medium">${profile.joinedAt ? formatDate(profile.joinedAt) : '-'}</p>
+              </div>
+            </div>
+          </div>
+
+          ${profile.cardNumber ? `
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <h2 class="text-lg font-bold mb-4">Member Card</h2>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-400">Card Number</p>
+                  <p class="font-mono text-lg">${escapeHtml(profile.cardNumber)}</p>
+                </div>
+                <a href="/app/card" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition">View Card</a>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    init();
+  </script>
+</DashboardLayout>

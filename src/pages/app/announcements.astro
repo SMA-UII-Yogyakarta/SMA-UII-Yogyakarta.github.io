@@ -1,0 +1,162 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Announcements">
+  <div id="announcements-content">
+    <div class="text-center py-12">
+      <div class="text-4xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Create Announcement Modal -->
+  <div id="create-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+      <h2 class="text-xl font-bold mb-4">Create Announcement</h2>
+      <form id="announcement-form" class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Title *</label>
+          <input type="text" name="title" required
+            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Content *</label>
+          <textarea name="content" rows="5" required
+            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-lg text-gray-100 focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition">Publish</button>
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function init() {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (!response.ok) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const result = await response.json();
+        const user = result.data;
+
+        if (user.role !== 'maintainer') {
+          window.location.href = '/app';
+          return;
+        }
+
+        loadAnnouncements();
+      } catch (error) {
+        console.error('Failed to load:', error);
+        window.location.href = '/login';
+      }
+    }
+
+    async function loadAnnouncements() {
+      try {
+        const response = await fetch('/api/announcements');
+        const result = await response.json();
+        const announcements = result.data || [];
+        renderAnnouncements(announcements);
+      } catch (error) {
+        console.error('Failed to load announcements:', error);
+      }
+    }
+
+    function escapeHtml(str: string): string {
+      if (!str) return '';
+      const htmlEntities: Record<string, string> = {
+        '&': '&amp;', '<': '&lt;', '>': '&gt;',
+        '"': '&quot;', "'": '&#x27;', '/': '&#x2F;',
+      };
+      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+    }
+
+    function formatDate(timestamp: number): string {
+      return new Date(timestamp).toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function renderAnnouncements(announcements) {
+      const content = document.getElementById('announcements-content');
+
+      const announcementsHtml = announcements.length === 0
+        ? '<p class="text-gray-500 text-center py-8">No announcements yet</p>'
+        : announcements.map(a => `
+          <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-gray-700 transition">
+            <div class="flex items-start justify-between mb-3">
+              <h3 class="text-lg font-bold text-white">${escapeHtml(a.title)}</h3>
+              <button onclick="deleteAnnouncement('${a.id}')" class="text-gray-500 hover:text-red-400 p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+            <p class="text-gray-300 mb-4 whitespace-pre-wrap">${escapeHtml(a.content)}</p>
+            <div class="text-xs text-gray-500">
+              Posted by ${escapeHtml(a.creatorName || 'Admin')} • ${formatDate(a.createdAt)}
+            </div>
+          </div>
+        `).join('');
+
+      content!.innerHTML = `
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h1 class="text-2xl font-bold mb-2">Announcements</h1>
+            <p class="text-gray-400">Post announcements to all members</p>
+          </div>
+          <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Announcement
+          </button>
+        </div>
+        <div class="space-y-4">
+          ${announcementsHtml}
+        </div>
+      `;
+    }
+
+    window.openModal = () => document.getElementById('create-modal')?.classList.remove('hidden');
+    window.closeModal = () => document.getElementById('create-modal')?.classList.add('hidden');
+
+    document.getElementById('announcement-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/api/announcements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.get('title'),
+            content: formData.get('content'),
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to create announcement');
+
+        closeModal();
+        form.reset();
+        loadAnnouncements();
+      } catch (error) {
+        alert('Failed to create announcement');
+      }
+    });
+
+    window.deleteAnnouncement = async (id) => {
+      if (!confirm('Delete this announcement?')) return;
+      alert('Delete feature coming soon');
+    };
+
+    init();
+  </script>
+</DashboardLayout>
