@@ -1,0 +1,150 @@
+---
+import Layout from '@layouts/Layout.astro';
+import { getCollection, getEntry } from 'astro:content';
+
+const { track } = Astro.params;
+if (!track) return Astro.redirect('/learn');
+
+const trackEntry = await getEntry('lessons', `${track}/README`);
+if (!trackEntry) return new Response(null, { status: 404 });
+
+const all = await getCollection('lessons');
+
+const modules: Record<string, typeof all> = {};
+for (const l of all) {
+  if (l.data.track === track && !l.id.endsWith('/README')) {
+    const mod = l.data.module || 'other';
+    if (!modules[mod]) modules[mod] = [];
+    modules[mod].push(l);
+  }
+}
+for (const mod of Object.values(modules)) {
+  mod.sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+const allLessons = Object.values(modules).flat();
+const totalDuration = allLessons.reduce((s, l) => s + (l.data.duration ?? 0), 0);
+const { user } = Astro.locals;
+
+const levelColor: Record<string, string> = {
+  beginner: 'text-green-400',
+  intermediate: 'text-yellow-400',
+  advanced: 'text-red-400',
+};
+---
+
+<Layout title={trackEntry.data.title}>
+  <div class="max-w-3xl mx-auto px-4 py-12">
+
+    <!-- Breadcrumb -->
+    <nav class="text-xs text-gray-500 mb-8 flex items-center gap-2">
+      <a href="/learn" class="hover:text-white transition">Belajar</a>
+      <span>/</span>
+      <span class="text-gray-400">{trackEntry.data.title}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-10">
+      <div class="flex items-start gap-4 mb-4">
+        <span class="text-5xl">{trackEntry.data.icon}</span>
+        <div>
+          <h1 class="text-3xl font-bold mb-2">{trackEntry.data.title}</h1>
+          <p class="text-gray-400 leading-relaxed">{trackEntry.data.description}</p>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div class="flex items-center gap-6 mt-5 text-sm text-gray-500">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          {allLessons.length} materi
+        </span>
+        {totalDuration > 0 && (
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            ~{Math.round(totalDuration / 60)} jam
+          </span>
+        )}
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          {Object.keys(modules).length} modul
+        </span>
+      </div>
+    </div>
+
+    <!-- Accordion modul -->
+    <div class="space-y-3 mb-10">
+      {Object.entries(modules).map(([modSlug, lessons], i) => {
+        const modEntry = all.find(l => l.id === `${track}/${modSlug}/README`);
+        return (
+          <details class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden" open={i === 0}>
+            <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-800/50 transition select-none">
+              <div>
+                <h2 class="font-semibold">{modEntry?.data.title || modSlug.replace(/-/g, ' ')}</h2>
+                <p class="text-xs text-gray-500 mt-0.5">{lessons.length} materi</p>
+              </div>
+              <svg class="w-4 h-4 text-gray-500 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="border-t border-gray-800">
+              {lessons.map((lesson, li) => (
+                <div class={`flex items-center gap-3 px-5 py-3 ${li < lessons.length - 1 ? 'border-b border-gray-800' : ''}`}>
+                  <span class="text-xs text-gray-600 w-5 text-right flex-shrink-0">{li + 1}</span>
+                  <span class="flex-1 text-sm text-gray-300">{lesson.data.title}</span>
+                  <div class="flex items-center gap-3 text-xs flex-shrink-0">
+                    {lesson.data.level && (
+                      <span class={`capitalize ${levelColor[lesson.data.level] || 'text-gray-500'}`}>
+                        {lesson.data.level}
+                      </span>
+                    )}
+                    {lesson.data.duration && <span class="text-gray-600">⏱ {lesson.data.duration}m</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+
+    <!-- CTA -->
+    <div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/20 border border-blue-500/20 rounded-xl p-6 text-center">
+      {user ? (
+        <>
+          <div class="text-3xl mb-3">🚀</div>
+          <p class="font-bold text-lg mb-1">Siap mulai belajar?</p>
+          <p class="text-sm text-gray-400 mb-5">
+            Lanjutkan dari mana saja, tandai materi yang sudah selesai, dan pantau progress belajarmu.
+          </p>
+          <a href={`/app/learn/${track}`} class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl text-sm font-semibold transition">
+            Mulai Belajar {trackEntry.data.title} →
+          </a>
+        </>
+      ) : (
+        <>
+          <div class="text-3xl mb-3">🎯</div>
+          <p class="font-bold text-lg mb-1">Mulai perjalanan belajarmu</p>
+          <p class="text-sm text-gray-400 mb-5">
+            Daftar gratis untuk akses materi lengkap, lacak progress, dan belajar bersama {allLessons.length} materi di track ini.
+          </p>
+          <div class="flex gap-3 justify-center">
+            <a href="/register" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition">
+              Daftar Sekarang
+            </a>
+            <a href="/login" class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-xl text-sm transition">
+              Sudah punya akun
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+
+  </div>
+
+  <style>
+    details[open] .chevron { transform: rotate(180deg); }
+    .chevron { transition: transform 0.2s; }
+    details summary { list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+  </style>
+</Layout>
