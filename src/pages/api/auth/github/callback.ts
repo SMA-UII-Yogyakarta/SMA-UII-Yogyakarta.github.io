@@ -6,13 +6,16 @@ import { users, sessions } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
 import { createErrorResponse } from '@lib/api-utils';
+import { verifySignedState, extractReturnTo } from './index';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
-  const storedState = cookies.get('github_oauth_state')?.value ?? null;
+  const signedState = url.searchParams.get('state');
 
-  if (!code || !state || !storedState || state !== storedState) {
+  // Verifikasi HMAC signature — tidak butuh cookie sama sekali
+  const state = signedState ? verifySignedState(signedState) : null;
+
+  if (!code || !state) {
     return createErrorResponse('Invalid request', 400, { code: 'INVALID_STATE' });
   }
 
@@ -91,7 +94,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     // Redirect based on role and status
     if (existingUser.status === 'pending') return redirect(`/check-status?nisn=${existingUser.nisn}`);
     if (existingUser.status === 'inactive') return redirect('/login?error=inactive');
-    return redirect('/app/overview');
+    return redirect(extractReturnTo(state));
   } catch (e) {
     if (e instanceof OAuth2RequestError) {
       // Handle specific OAuth errors

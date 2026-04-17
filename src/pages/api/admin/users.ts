@@ -5,8 +5,8 @@ import { eq, inArray } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ url, locals }) => {
-  const { session, user } = locals;
-  if (!session || !user || user.role !== 'maintainer') {
+  const { user } = locals;
+  if (!user || user.role !== 'maintainer') {
     return createErrorResponse('Forbidden', 403);
   }
 
@@ -60,8 +60,8 @@ export const GET: APIRoute = async ({ url, locals }) => {
 };
 
 export const PATCH: APIRoute = async ({ request, locals }) => {
-  const { session, user } = locals;
-  if (!session || !user || user.role !== 'maintainer') {
+  const { user } = locals;
+  if (!user || user.role !== 'maintainer') {
     return createErrorResponse('Forbidden', 403);
   }
 
@@ -91,8 +91,8 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
 };
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
-  const { session, user } = locals;
-  if (!session || !user || user.role !== 'maintainer') {
+  const { user } = locals;
+  if (!user || user.role !== 'maintainer') {
     return createErrorResponse('Forbidden', 403);
   }
 

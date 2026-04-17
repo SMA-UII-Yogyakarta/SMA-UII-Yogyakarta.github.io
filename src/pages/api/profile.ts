@@ -5,8 +5,8 @@ import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ locals }) => {
-  const { session, user: sessionUser } = locals;
-  if (!session || !sessionUser) return createErrorResponse('Unauthorized', 401);
+  const { user: sessionUser } = locals;
+  if (!sessionUser) return createErrorResponse('Unauthorized', 401);
 
   try {
     const userData = await db
@@ -36,8 +36,8 @@ export const GET: APIRoute = async ({ locals }) => {
 };
 
 export const PATCH: APIRoute = async ({ locals, request }) => {
-  const { session, user: sessionUser } = locals;
-  if (!session || !sessionUser) return createErrorResponse('Unauthorized', 401);
+  const { user: sessionUser } = locals;
+  if (!sessionUser) return createErrorResponse('Unauthorized', 401);
 
   try {
     const { name, githubUsername } = await request.json();

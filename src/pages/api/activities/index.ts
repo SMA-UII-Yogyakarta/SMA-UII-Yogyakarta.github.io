@@ -6,8 +6,8 @@ import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 import { nanoid } from 'nanoid';
 
 export const GET: APIRoute = async ({ locals, url }) => {
-  const { session, user } = locals;
-  if (!session || !user) return createErrorResponse('Unauthorized', 401);
+  const { user } = locals;
+  if (!user) return createErrorResponse('Unauthorized', 401);
 
   try {
     const type = url.searchParams.get('type');
@@ -52,8 +52,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
 };
 
 export const POST: APIRoute = async ({ locals, request }) => {
-  const { session, user } = locals;
-  if (!session || !user) return createErrorResponse('Unauthorized', 401);
+  const { user } = locals;
+  if (!user) return createErrorResponse('Unauthorized', 401);
   if (user.status !== 'active') return createErrorResponse('Only active members can log activities', 403);
 
   try {

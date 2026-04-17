@@ -5,8 +5,8 @@ import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ locals }) => {
-  const { session, user } = locals;
-  if (!session || !user) return createErrorResponse('Unauthorized', 401);
+  const { user } = locals;
+  if (!user) return createErrorResponse('Unauthorized', 401);
 
   try {
     const userNotifications = await db

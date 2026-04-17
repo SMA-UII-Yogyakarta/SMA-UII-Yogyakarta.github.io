@@ -13,13 +13,15 @@ export const lucia = new Lucia(adapter, {
   },
   getUserAttributes: (attributes) => {
     return {
-      githubId: attributes.github_id,
-      githubUsername: attributes.github_username,
+      githubId: attributes.githubId,
+      githubUsername: attributes.githubUsername,
       name: attributes.name,
       email: attributes.email,
       role: attributes.role,
       status: attributes.status,
       nisn: attributes.nisn,
+      class: attributes.class,
+      joinedAt: attributes.joinedAt,
     };
   },
 });
@@ -32,11 +34,13 @@ declare module 'lucia' {
 }
 
 interface DatabaseUserAttributes {
-  github_id: string | null;
-  github_username: string | null;
+  githubId: string | null;
+  githubUsername: string | null;
   name: string;
   email: string;
   role: string;
   status: string;
   nisn: string;
+  class: string;
+  joinedAt: number;
 }

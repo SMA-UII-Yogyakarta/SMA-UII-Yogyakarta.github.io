@@ -17,5 +17,5 @@
     "jsxImportSource": "react",
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", "smauii-dev-api"]
+  "exclude": ["dist", "node_modules", "smauii-dev-api", "playwright-report", "test-results"]
 }

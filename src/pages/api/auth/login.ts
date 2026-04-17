@@ -13,23 +13,24 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Validation
     if (!identifier) {
-      return createErrorResponse('NISN atau NIS harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
+      return createErrorResponse('NISN, NIS, atau Email harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
     }
 
     if (!password) {
       return createErrorResponse('Password harus diisi', 400, { code: 'MISSING_PASSWORD' });
     }
 
-    // Find user by NISN or NIS
+    // Find user by NISN, NIS, or email
     const user = await db.query.users.findFirst({
       where: or(
         eq(users.nisn, identifier),
-        eq(users.nis, identifier)
+        eq(users.nis, identifier),
+        eq(users.email, identifier),
       ),
     });
 
     if (!user) {
-      return createErrorResponse('NISN/NIS tidak ditemukan', 401, { code: 'USER_NOT_FOUND' });
+      return createErrorResponse('NISN/NIS/Email tidak ditemukan', 401, { code: 'USER_NOT_FOUND' });
     }
 
     // Check if password hash exists

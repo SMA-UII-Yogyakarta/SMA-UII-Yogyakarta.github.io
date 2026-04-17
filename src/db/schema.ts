@@ -167,8 +167,37 @@ export const projectsRelations = relations(projects, ({ one }) => ({
   }),
 }));
 
-export type User = typeof users.$inferSelect;
+// Learning progress — tandai selesai per lesson
+export const learningProgress = sqliteTable('learning_progress', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  lessonSlug: text('lesson_slug').notNull(),
+  completedAt: integer('completed_at').notNull(),
+}, (table) => [
+  index('idx_progress_user_id').on(table.userId),
+  index('idx_progress_lesson').on(table.lessonSlug),
+]);
+
+// Reading sessions — waktu baca per lesson
+export const readingSessions = sqliteTable('reading_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  lessonSlug: text('lesson_slug').notNull(),
+  startedAt: integer('started_at').notNull(),  // Unix ms
+  endedAt: integer('ended_at'),                // null = masih baca
+  duration: integer('duration'),               // detik aktif
+}, (table) => [
+  index('idx_reading_user_id').on(table.userId),
+  index('idx_reading_started').on(table.startedAt),
+]);
+
+export const learningProgressRelations = relations(learningProgress, ({ one }) => ({
+  user: one(users, { fields: [learningProgress.userId], references: [users.id] }),
+}));
+
+export type LearningProgress = typeof learningProgress.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 export type MemberTrack = typeof memberTracks.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type MemberCard = typeof memberCards.$inferSelect;

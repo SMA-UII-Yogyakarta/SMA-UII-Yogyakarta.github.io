@@ -5,9 +5,9 @@ import { eq } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ locals }) => {
-  const { session, user } = locals;
+  const { user } = locals;
 
-  if (!session || !user) {
+  if (!user) {
     return createErrorResponse('Unauthorized', 401);
   }
 
