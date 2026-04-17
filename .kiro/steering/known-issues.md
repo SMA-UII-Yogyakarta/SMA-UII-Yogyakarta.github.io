@@ -4,6 +4,23 @@ Status aktual per 2026-04-15. Update file ini setiap kali isu diselesaikan atau 
 
 ---
 
+## ⚠️ Konvensi Git untuk AI Assistant
+
+Repo ini dikelola dengan dua identitas GitHub. Untuk operasi git/push:
+
+```bash
+# BENAR — jalankan sebagai command terpisah
+cd smauii-dev-content
+git push
+
+# SALAH — jangan gabungkan dengan as/use alias
+as sandikodev git push   # ← ini tidak bekerja di tool execution
+```
+
+Submodule `smauii-dev-content` menggunakan remote `github-sandikodev` (sudah dikonfigurasi di `.git/config` submodule). Cukup `git push` tanpa prefix identitas.
+
+---
+
 ## 🔴 Kritis — Harus Diselesaikan
 
 ### 1. SLIMS Integration Masih Mock
@@ -37,7 +54,7 @@ Status aktual per 2026-04-15. Update file ini setiap kali isu diselesaikan atau 
 - ✅ Edit/Delete Projects — `PATCH/DELETE /api/projects/[id]` + UI
 - ✅ Delete Activities — `DELETE /api/activities/[id]` + UI
 - ✅ Edit/Delete Announcements — `PATCH/DELETE /api/announcements/[id]` + UI
-- ✅ Pagination — semua list endpoints (members, projects, activities, announcements) + UI Prev/Next
+- ✅ Overview admin dashboard — fix mismatch response shape `/api/announcements` (`.data.announcements` bukan `.data`)
 - ✅ E2E Tests — 44 tests, 42 passed, 2 flaky (pass on retry)
 - ✅ CI/CD Pipeline — `.github/workflows/test.yml` (unit + E2E + type check on push/PR)
 - ✅ `pnpm test` fix — Bun test runner hanya jalankan `tests/unit/`
