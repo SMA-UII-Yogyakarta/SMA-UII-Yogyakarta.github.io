@@ -26,14 +26,14 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
 
   <form id="login-form" data-testid="login-form" class="space-y-4">
     <div>
-      <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">NISN atau NIS</label>
+      <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">NISN, NIS, atau Email</label>
       <input
         data-testid="login-identifier"
         type="text"
         id="identifier"
         name="identifier"
         class="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 focus:bg-gray-800 transition-all placeholder-gray-600"
-        placeholder="Masukkan NISN atau NIS"
+        placeholder="NISN, NIS, atau email"
         autocomplete="username"
       />
       <p id="identifier-error" class="text-red-400 text-xs mt-1.5 hidden"></p>
@@ -88,7 +88,7 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
     let hasError = false;
     if (!identifier) {
       const el = document.getElementById('identifier-error')!;
-      el.textContent = 'NISN atau NIS harus diisi';
+      el.textContent = 'NISN, NIS, atau Email harus diisi';
       el.classList.remove('hidden');
       hasError = true;
     }

@@ -12,22 +12,22 @@ import Layout from '../layouts/Layout.astro';
 
     <div class="space-y-8">
       {[
-        { icon:"🤖", name:"Robotika/IoT", color:"blue",
+        { icon:"🤖", name:"Robotika/IoT", slug:"robotika-iot", color:"blue",
           desc:"Desain, bangun, dan program robot & IoT. Mulai dari mikrokontroler Arduino, ESP32, Raspberry Pi, hingga ROS. Cocok untuk yang suka hardware dan software sekaligus.",
           topics:["Arduino & ESP32","IoT & Sensor","Raspberry Pi","ROS Basics","Kompetisi Robot"] },
-        { icon:"🧠", name:"AI (Kecerdasan Buatan)", color:"indigo",
+        { icon:"🧠", name:"AI (Kecerdasan Buatan)", slug:"ai", color:"indigo",
           desc:"Machine learning, deep learning, dan aplikasi AI modern. Dari computer vision hingga natural language processing.",
           topics:["Machine Learning","Deep Learning","Computer Vision","NLP Basics","AI Ethics"] },
-        { icon:"📊", name:"Data Science", color:"purple",
+        { icon:"📊", name:"Data Science", slug:"data-science", color:"purple",
           desc:"Analisis data, visualisasi, dan data-driven decision making. Belajar Python, pandas, dan cara mengolah data menjadi insight yang bermakna.",
           topics:["Python & Pandas","Visualisasi Data","Statistical Analysis","Kaggle Competitions","Proyek Riset"] },
-        { icon:"🌐", name:"Jaringan Komputer", color:"cyan",
+        { icon:"🌐", name:"Jaringan Komputer", slug:"jaringan-komputer", color:"cyan",
           desc:"Infrastruktur, protokol, dan administrasi sistem. Dari konfigurasi router hingga membangun server sendiri.",
           topics:["TCP/IP & DNS","Linux Server","Docker & Container","Network Security","Cisco Packet Tracer"] },
-        { icon:"🔐", name:"Keamanan Siber", color:"red",
+        { icon:"🔐", name:"Keamanan Siber", slug:"keamanan-siber", color:"red",
           desc:"Ethical hacking, CTF (Capture The Flag), dan hardening sistem. Belajar berpikir seperti attacker untuk membangun pertahanan yang lebih baik.",
           topics:["CTF Challenges","Web Security","Linux Privilege Escalation","Cryptography","Bug Bounty Basics"] },
-        { icon:"💻", name:"Software Engineering", color:"green",
+        { icon:"💻", name:"Software Engineering", slug:"software-engineering", color:"green",
           desc:"Web, mobile, dan open source development. Dari frontend hingga backend, dari ide hingga deployment.",
           topics:["Web Development","Git & Open Source","API Design","Mobile App","Kontribusi ke Proyek Nyata"] },
       ].map(t => (
@@ -37,11 +37,15 @@ import Layout from '../layouts/Layout.astro';
             <div class="flex-1">
               <h2 class="text-xl font-bold mb-2">{t.name}</h2>
               <p class="text-gray-400 mb-4">{t.desc}</p>
-              <div class="flex flex-wrap gap-2">
+              <div class="flex flex-wrap gap-2 mb-4">
                 {t.topics.map(topic => (
                   <span class="text-xs bg-gray-800 border border-gray-700 px-2 py-1 rounded-md">{topic}</span>
                 ))}
               </div>
+              <a href={`/learn/${t.slug}`}
+                class="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition">
+                Mulai Belajar →
+              </a>
             </div>
           </div>
         </div>

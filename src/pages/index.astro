@@ -18,7 +18,7 @@ const tracks = [
     </div>
     <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
       <span class="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        SMA UII Lab
+        Digital Lab SMA UII
       </span><br>
       <span class="text-2xl md:text-3xl font-normal text-gray-400">Ruang Eksplorasi Digital</span>
     </h1>
@@ -33,26 +33,6 @@ const tracks = [
       <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
          class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
         ★ Lihat Proyek
-      </a>
-    </div>
-  </section>
-
-  <!-- Tracks -->
-  <section class="max-w-5xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-2">Track yang Bisa Kamu Ikuti</h2>
-    <p class="text-gray-400 mb-8">Pilih yang sesuai minatmu, atau coba semuanya!</p>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {tracks.map(t => (
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition cursor-default">
-          <div class="text-2xl mb-3">{t.icon}</div>
-          <h3 class="font-semibold mb-1">{t.name}</h3>
-          <p class="text-sm text-gray-400">{t.desc}</p>
-        </div>
-      ))}
-    </div>
-    <div class="text-center mt-8">
-      <a href="/tracks" class="text-blue-400 hover:text-blue-300 font-semibold">
-        Lihat detail track →
       </a>
     </div>
   </section>
@@ -76,6 +56,31 @@ const tracks = [
         <h3 class="font-bold mb-2">Belajar Bareng</h3>
         <p class="text-sm text-gray-400">Senior bantu junior, alumni jadi mentor. Stuck? Tanya aja, semua pernah pemula.</p>
       </div>
+    </div>
+  </section>
+
+  <!-- Divider -->
+  <div class="flex justify-center py-2">
+    <div class="w-96 h-px bg-gray-700"></div>
+  </div>
+
+  <!-- Tracks -->
+  <section class="max-w-5xl mx-auto px-4 py-16">
+    <h2 class="text-2xl font-bold mb-2">Track yang Bisa Kamu Ikuti</h2>
+    <p class="text-gray-400 mb-8">Pilih yang sesuai minatmu, atau coba semuanya!</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {tracks.map(t => (
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition cursor-default">
+          <div class="text-2xl mb-3">{t.icon}</div>
+          <h3 class="font-semibold mb-1">{t.name}</h3>
+          <p class="text-sm text-gray-400">{t.desc}</p>
+        </div>
+      ))}
+    </div>
+    <div class="text-center mt-8">
+      <a href="/tracks" class="text-blue-400 hover:text-blue-300 font-semibold">
+        Lihat detail track →
+      </a>
     </div>
   </section>
 

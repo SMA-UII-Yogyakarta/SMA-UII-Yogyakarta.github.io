@@ -18,41 +18,65 @@ const user = Astro.locals.user;
   <link rel="icon" href="/favicon.svg" />
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
-  <nav class="sticky top-0 z-50 bg-gray-950/80 backdrop-blur border-b border-gray-800">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-6">
-      <a href="/" class="font-bold text-white flex items-center gap-2">
+  <nav class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl">
+    <div class="bg-gray-900/75 backdrop-blur-md border border-gray-700/40 rounded-full px-6 py-3.5 flex items-center gap-6 shadow-lg shadow-black/20">
+      <!-- Logo -->
+      <a href="/" class="font-bold text-white flex items-center gap-2 flex-shrink-0">
         <span class="text-blue-400">⬡</span> SMA UII Lab
       </a>
-      <a href="/tracks" class="text-sm text-gray-400 hover:text-white transition">Track</a>
-      <a href="/projects" class="text-sm text-gray-400 hover:text-white transition">Proyek</a>
-      <a href="/members" class="text-sm text-gray-400 hover:text-white transition">Anggota</a>
-      <a href="/about" class="text-sm text-gray-400 hover:text-white transition">Tentang</a>
-      <div class="flex-1"></div>
+
+      <!-- Nav tengah -->
+      <div class="flex-1 flex items-center justify-center gap-6">
+        <a href="/tracks" class="text-gray-400 hover:text-white transition">Track</a>
+        <a href="/learn" class="text-gray-400 hover:text-white transition">Belajar</a>
+        <a href="/projects" class="text-gray-400 hover:text-white transition">Proyek</a>
+        <a href="/members" class="text-gray-400 hover:text-white transition">Anggota</a>
+        <a href="/about" class="text-gray-400 hover:text-white transition">Tentang</a>
+      </div>
+
+      <!-- Kanan: auth -->
       {user ? (
-        <>
-          <a href="/app/overview" class="text-sm text-gray-400 hover:text-white transition">
-            App
-          </a>
-          <span class="text-sm text-gray-400">Hi, {user.name}</span>
-          <form action="/api/auth/logout" method="POST" class="inline">
-            <button type="submit" class="text-sm text-gray-400 hover:text-white transition">
-              Logout
-            </button>
-          </form>
-        </>
+        <div class="relative flex-shrink-0" id="nav-profile">
+          <button id="nav-profile-btn" class="flex items-center gap-2 hover:bg-gray-800 px-3 py-1.5 rounded-xl transition">
+            <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <span class="text-sm font-medium">{user.name.split(' ')[0]}</span>
+            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="nav-profile-dropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-xl overflow-hidden">
+            <a href="/app" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+              Dashboard
+            </a>
+            <div class="border-t border-gray-800"></div>
+            <form action="/api/auth/logout" method="POST">
+              <button type="submit" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-gray-800 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+              </button>
+            </form>
+          </div>
+        </div>
       ) : (
-        <>
-          <a href="/register" class="text-sm text-blue-400 hover:text-blue-300 transition">
-            Daftar
-          </a>
-          <a href="/login" class="text-sm border border-gray-700 px-3 py-1 rounded-md hover:border-blue-500 transition">
-            Login
-          </a>
-        </>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <a href="/register" class="text-blue-400 hover:text-blue-300 transition">Daftar</a>
+          <a href="/login" class="border border-gray-700 px-4 py-1.5 rounded-xl hover:border-blue-500 transition text-sm">Login</a>
+        </div>
       )}
     </div>
   </nav>
-  <slot />
+  <script>
+    const btn = document.getElementById('nav-profile-btn');
+    const dropdown = document.getElementById('nav-profile-dropdown');
+    btn?.addEventListener('click', (e) => { e.stopPropagation(); dropdown?.classList.toggle('hidden'); });
+    document.addEventListener('click', () => dropdown?.classList.add('hidden'));
+  </script>
+  <div class="pt-20">
+    <slot />
+  </div>
   <footer class="border-t border-gray-800 mt-24 py-12">
     <div class="max-w-5xl mx-auto px-4">
       <div class="grid md:grid-cols-4 gap-8 mb-8">
@@ -71,6 +95,7 @@ const user = Astro.locals.user;
           <h4 class="font-semibold mb-3 text-sm">Navigasi</h4>
           <ul class="space-y-2 text-sm text-gray-400">
             <li><a href="/tracks" class="hover:text-blue-400 transition">Track</a></li>
+            <li><a href="/learn" class="hover:text-blue-400 transition">Belajar</a></li>
             <li><a href="/projects" class="hover:text-blue-400 transition">Proyek</a></li>
             <li><a href="/members" class="hover:text-blue-400 transition">Anggota</a></li>
             <li><a href="/about" class="hover:text-blue-400 transition">Tentang</a></li>
