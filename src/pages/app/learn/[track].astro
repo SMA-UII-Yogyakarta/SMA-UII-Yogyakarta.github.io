@@ -1,0 +1,232 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { requireAuth } from '@lib/guards';
+import { getCollection, getEntry } from 'astro:content';
+import { db } from '@db';
+import { learningProgress, readingSessions } from '@db/schema';
+import { eq, and, gte } from 'drizzle-orm';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const { track } = Astro.params;
+if (!track) return Astro.redirect('/app/learn');
+
+const trackEntry = await getEntry('lessons', `${track}/README`);
+if (!trackEntry) return new Response(null, { status: 404 });
+
+const { user } = Astro.locals;
+const all = await getCollection('lessons');
+
+const progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user!.id));
+const completedSlugs = new Set(progress.map(p => p.lessonSlug));
+
+// Reading sessions untuk track ini
+const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+const sessions = await db.select().from(readingSessions)
+  .where(and(eq(readingSessions.userId, user!.id), gte(readingSessions.startedAt, sevenDaysAgo)));
+
+// Total waktu baca (detik) per lesson di track ini
+const trackLessonSlugs = new Set(all.filter(l => l.data.track === track && !l.id.endsWith('/README')).map(l => l.id));
+const trackSessions = sessions.filter(s => trackLessonSlugs.has(s.lessonSlug));
+const totalReadSeconds = trackSessions.reduce((sum, s) => sum + (s.duration ?? 0), 0);
+const totalReadMinutes = Math.round(totalReadSeconds / 60);
+
+// Streak — hari berturut-turut belajar (semua track)
+const allSessions = await db.select().from(readingSessions).where(eq(readingSessions.userId, user!.id));
+const activeDays = new Set(allSessions.map(s => new Date(s.startedAt).toDateString()));
+let streak = 0;
+const today = new Date();
+for (let i = 0; i < 365; i++) {
+  const d = new Date(today);
+  d.setDate(d.getDate() - i);
+  if (activeDays.has(d.toDateString())) streak++;
+  else if (i > 0) break;
+}
+
+// Activity graph — 7 hari terakhir (menit per hari)
+const dailyMinutes: Record<string, number> = {};
+for (let i = 6; i >= 0; i--) {
+  const d = new Date();
+  d.setDate(d.getDate() - i);
+  dailyMinutes[d.toDateString()] = 0;
+}
+for (const s of trackSessions) {
+  const day = new Date(s.startedAt).toDateString();
+  if (day in dailyMinutes) dailyMinutes[day] += Math.round((s.duration ?? 0) / 60);
+}
+const dailyData = Object.entries(dailyMinutes).map(([day, mins]) => ({
+  label: new Date(day).toLocaleDateString('id-ID', { weekday: 'short' }),
+  mins,
+  pct: Math.min(100, Math.round((mins / Math.max(1, Math.max(...Object.values(dailyMinutes)))) * 100)),
+}));
+
+const modules: Record<string, typeof all> = {};
+for (const l of all) {
+  if (l.data.track === track && !l.id.endsWith('/README')) {
+    const mod = l.data.module || 'other';
+    if (!modules[mod]) modules[mod] = [];
+    modules[mod].push(l);
+  }
+}
+for (const mod of Object.values(modules)) {
+  mod.sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+const allLessons = Object.values(modules).flat();
+const totalCompleted = allLessons.filter(l => completedSlugs.has(l.id)).length;
+const pct = allLessons.length > 0 ? Math.round((totalCompleted / allLessons.length) * 100) : 0;
+const nextLesson = allLessons.find(l => !completedSlugs.has(l.id)) ?? allLessons[0];
+
+const levelColor: Record<string, string> = {
+  beginner: 'text-green-400',
+  intermediate: 'text-yellow-400',
+  advanced: 'text-red-400',
+};
+---
+
+<DashboardLayout title={trackEntry.data.title}>
+  <!-- Breadcrumb -->
+  <nav class="text-xs text-gray-500 mb-4 flex items-center gap-2">
+    <a href="/app/learn" class="hover:text-white transition">Belajar</a>
+    <span>/</span>
+    <span class="text-gray-400">{trackEntry.data.title}</span>
+  </nav>
+
+  <div class="grid lg:grid-cols-3 gap-6">
+    <!-- Kiri: modul + lesson list -->
+    <div class="lg:col-span-2 space-y-3">
+      <!-- Header track -->
+      <div class="flex items-start gap-3 mb-2">
+        <span class="text-4xl">{trackEntry.data.icon}</span>
+        <div>
+          <h1 class="text-xl font-bold">{trackEntry.data.title}</h1>
+          <p class="text-sm text-gray-400">{trackEntry.data.description}</p>
+        </div>
+      </div>
+
+      {Object.entries(modules).map(([modSlug, lessons]) => {
+        const modEntry = all.find(l => l.id === `${track}/${modSlug}/README`);
+        const modCompleted = lessons.filter(l => completedSlugs.has(l.id)).length;
+        return (
+          <details class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden" open>
+            <summary class="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-gray-800/50 transition select-none">
+              <div class="flex-1">
+                <div class="flex items-center gap-3">
+                  <h2 class="font-semibold text-sm">{modEntry?.data.title || modSlug.replace(/-/g, ' ')}</h2>
+                  {modCompleted === lessons.length && lessons.length > 0 && (
+                    <span class="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">Selesai</span>
+                  )}
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5">{modCompleted}/{lessons.length} materi</p>
+              </div>
+              <svg class="w-4 h-4 text-gray-500 chevron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </summary>
+            <div class="border-t border-gray-800">
+              {lessons.map((lesson, li) => {
+                const done = completedSlugs.has(lesson.id);
+                const lessonPath = lesson.id.replace(`${track}/`, '');
+                return (
+                  <a href={`/app/learn/${track}/${lessonPath}`}
+                    class={`flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition ${li < lessons.length - 1 ? 'border-b border-gray-800' : ''}`}>
+                    <div class={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500 border-green-500' : 'border-gray-600'}`}>
+                      {done && (
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span class={`flex-1 text-sm ${done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
+                      {lesson.data.title}
+                    </span>
+                    <div class="flex items-center gap-3 text-xs flex-shrink-0">
+                      {lesson.data.level && (
+                        <span class={`capitalize ${levelColor[lesson.data.level] || 'text-gray-500'}`}>
+                          {lesson.data.level}
+                        </span>
+                      )}
+                      {lesson.data.duration && <span class="text-gray-600">⏱ {lesson.data.duration}m</span>}
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+
+    <!-- Kanan: progress + analytics -->
+    <div class="space-y-4">
+      <!-- Progress card -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 sticky top-4 space-y-5">
+        <h3 class="font-semibold text-sm">Progress Kamu</h3>
+
+        <!-- Persentase -->
+        <div class="text-center">
+          <div class="text-4xl font-bold text-blue-400">{pct}%</div>
+          <p class="text-xs text-gray-500 mt-1">{totalCompleted} dari {allLessons.length} materi selesai</p>
+        </div>
+        <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div class="h-full bg-blue-500 rounded-full transition-all" style={`width: ${pct}%`}></div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-gray-800/50 rounded-lg p-2">
+            <div class="text-lg font-bold text-orange-400">{streak > 0 ? `🔥${streak}` : '—'}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Hari streak</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-lg p-2">
+            <div class="text-lg font-bold text-purple-400">{totalReadMinutes > 0 ? `${totalReadMinutes}m` : '—'}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Baca 7 hari</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-lg p-2">
+            <div class="text-lg font-bold text-green-400">{totalCompleted}</div>
+            <div class="text-xs text-gray-500 mt-0.5">Selesai</div>
+          </div>
+        </div>
+
+        <!-- Activity graph 7 hari -->
+        <div>
+          <p class="text-xs text-gray-500 mb-2">Aktivitas 7 hari terakhir</p>
+          <div class="flex items-end gap-1 h-12">
+            {dailyData.map(d => (
+              <div class="flex-1 flex flex-col items-center gap-1">
+                <div
+                  class={`w-full rounded-sm transition-all ${d.mins > 0 ? 'bg-blue-500' : 'bg-gray-800'}`}
+                  style={`height: ${Math.max(4, d.pct * 0.4 + 4)}px`}
+                  title={`${d.label}: ${d.mins} menit`}
+                ></div>
+                <span class="text-gray-600" style="font-size:9px">{d.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- CTA -->
+        {nextLesson && (
+          <a href={`/app/learn/${track}/${nextLesson.id.replace(`${track}/`, '')}`}
+            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition">
+            {totalCompleted === 0 ? 'Mulai Belajar' : 'Lanjutkan'}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        )}
+        {totalCompleted === allLessons.length && allLessons.length > 0 && (
+          <div class="text-center text-xs text-green-400">🎉 Track selesai!</div>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    details[open] .chevron { transform: rotate(180deg); }
+    .chevron { transition: transform 0.2s; }
+    details summary { list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+  </style>
+</DashboardLayout>

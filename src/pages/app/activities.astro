@@ -12,165 +12,114 @@ const canLog = user!.status === 'active';
 <DashboardLayout title="Activities">
   <PageHeader subtitle="Log kontribusi dan kegiatan" actionLabel={canLog ? "Log Activity" : undefined} />
 
-  <!-- Meta untuk client script -->
   <div id="activities-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
-
-  <div id="activities-list">
-    <SkeletonList count={5} />
-  </div>
+  <div id="activities-list"><SkeletonList count={5} /></div>
 
   {canLog && (
     <Modal id="add-modal" title="Log Activity">
-        <form id="activity-form" class="space-y-3">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Tipe *</label>
-            <select name="type" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-              <option value="contribution">Contribution</option>
-              <option value="event">Event</option>
-              <option value="workshop">Workshop</option>
-              <option value="meeting">Meeting</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Judul *</label>
-            <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Deskripsi</label>
-            <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">URL</label>
-            <input type="url" name="url" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-          </div>
-          <div class="flex gap-3 pt-2">
-            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Simpan</button>
-            <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
-          </div>
-        </form>
+      <form id="activity-form" class="space-y-3">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Tipe *</label>
+          <select name="type" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+            <option value="contribution">Contribution</option>
+            <option value="event">Event</option>
+            <option value="workshop">Workshop</option>
+            <option value="meeting">Meeting</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Judul *</label>
+          <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Deskripsi</label>
+          <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">URL</label>
+          <input type="url" name="url" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Simpan</button>
+          <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+        </div>
+      </form>
     </Modal>
   )}
 
   <script>
-    function esc(str: unknown): string {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
-    }
+    import { esc, fmtDate, renderPagination, icons } from '@lib/ui';
 
-    function fmtDate(ts: number): string {
-      return new Date(ts).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-
-    const activitiesMeta = document.getElementById('activities-meta') as HTMLElement | null;
-    const currentUserId = activitiesMeta?.dataset.userId || '';
-    const isAdmin = activitiesMeta?.dataset.userRole === 'maintainer';
+    const meta = document.getElementById('activities-meta') as HTMLElement;
+    const currentUserId = meta.dataset.userId || '';
+    const isAdmin = meta.dataset.userRole === 'maintainer';
+    const listEl = document.getElementById('activities-list') as HTMLElement;
+    const modal = document.getElementById('add-modal');
+    const form = document.getElementById('activity-form') as HTMLFormElement | null;
 
     let currentPage = 1;
     const PAGE_LIMIT = 20;
 
-    type ActivityType = 'contribution' | 'event' | 'workshop' | 'meeting' | 'other';
-
-    interface Activity {
-      id: string;
-      type: ActivityType;
-      title: string;
-      description?: string | null;
-      url?: string | null;
-      userName?: string | null;
-      userId?: string;
-      createdAt: number;
-    }
-
-    const typeColor: Record<ActivityType, string> = {
+    const typeColor: Record<string, string> = {
       contribution: 'bg-purple-500/20 text-purple-400',
-      event: 'bg-blue-500/20 text-blue-400',
-      workshop: 'bg-green-500/20 text-green-400',
-      meeting: 'bg-yellow-500/20 text-yellow-400',
-      other: 'bg-gray-500/20 text-gray-400',
+      event:        'bg-blue-500/20 text-blue-400',
+      workshop:     'bg-green-500/20 text-green-400',
+      meeting:      'bg-yellow-500/20 text-yellow-400',
+      other:        'bg-gray-500/20 text-gray-400',
     };
 
-    async function load() {
-      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
-      const res = await fetch(`/api/activities?${params}`);
-      const json = await res.json();
-      const activities: Activity[] = (json.data && json.data.activities) || [];
-      const total: number = json.data?.total || 0;
-      const list = document.getElementById('activities-list') as HTMLElement | null;
-      if (!list) return;
-
-      if (!activities.length) {
-        list.innerHTML = '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada aktivitas</p></div>';
-        renderPagination(0, currentPage, PAGE_LIMIT);
-        return;
-      }
-
-      list.innerHTML = `<div class="space-y-3">${activities.map((a: Activity) => {
-        const canDelete = a.userId === currentUserId || isAdmin;
-        return `
-          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
-            <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 shrink-0 ${typeColor[a.type as ActivityType] || typeColor.other}">${esc(a.type)}</span>
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-sm">${esc(a.title)}</p>
-              ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
-              <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                <span>${esc(a.userName || '')}</span>
-                <span>${fmtDate(a.createdAt)}</span>
-                ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
-              </div>
+    function renderCard(a: any): string {
+      const canDelete = a.userId === currentUserId || isAdmin;
+      return `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
+          <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 shrink-0 ${typeColor[a.type] || typeColor.other}">${esc(a.type)}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm">${esc(a.title)}</p>
+            ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
+            <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+              <span>${esc(a.userName || '')}</span>
+              <span>${fmtDate(a.createdAt)}</span>
+              ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
             </div>
-            ${canDelete ? `
-              <button onclick="window.deleteActivity('${esc(a.id)}', '${esc(a.title)}')"
-                class="text-gray-600 hover:text-red-400 transition p-1 shrink-0" title="Hapus">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-              </button>
-            ` : ''}
           </div>
-        `;
-      }).join('')}</div>`;
-      renderPagination(total, currentPage, PAGE_LIMIT);
+          ${canDelete ? `
+            <button data-action="delete" data-id="${esc(a.id)}" data-title="${esc(a.title)}"
+              class="text-gray-600 hover:text-red-400 transition p-1 shrink-0" title="Hapus">${icons.trash}</button>
+          ` : ''}
+        </div>`;
     }
 
-    function renderPagination(total: number, page: number, limit: number) {
-      let container = document.getElementById('activities-pagination');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'activities-pagination';
-        document.getElementById('activities-list')?.after(container);
-      }
-      const totalPages = Math.ceil(total / limit);
-      if (total === 0 || totalPages <= 1) { container.innerHTML = ''; return; }
-      const start = (page - 1) * limit + 1;
-      const end = Math.min(page * limit, total);
-      container.className = 'flex items-center justify-between mt-6 pt-4 border-t border-gray-800';
-      container.innerHTML = `
-        <p class="text-xs text-gray-500">Menampilkan ${start}–${end} dari ${total} aktivitas</p>
-        <div class="flex gap-2">
-          <button onclick="window.actPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}
-            class="px-3 py-1.5 rounded-lg text-sm ${page <= 1 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">← Prev</button>
-          <span class="px-3 py-1.5 text-sm text-gray-400">${page} / ${totalPages}</span>
-          <button onclick="window.actPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}
-            class="px-3 py-1.5 rounded-lg text-sm ${page >= totalPages ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">Next →</button>
-        </div>
-      `;
+    async function load() {
+      const res = await fetch(`/api/activities?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      const { data } = await res.json();
+      const activities: any[] = data?.activities || [];
+      const total: number = data?.total || 0;
+
+      listEl.innerHTML = activities.length
+        ? '<div class="space-y-3">' + activities.map(renderCard).join('') + '</div>'
+        : '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada aktivitas</p></div>';
+
+      renderPagination('activities-pagination', 'activities-list', total, currentPage, PAGE_LIMIT, 'aktivitas', 'window.actPage');
     }
 
     window.actPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
 
-    window.deleteActivity = async (id: string, title: string) => {
+    // Event delegation
+    listEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action="delete"]');
+      if (!btn) return;
+      const { id, title } = btn.dataset;
       if (!confirm(`Hapus activity "${title}"?`)) return;
       const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-      if (res.ok) load();
-      else alert('Gagal menghapus activity');
-    };
+      res.ok ? load() : alert('Gagal menghapus activity');
+    });
 
-    const modal = document.getElementById('add-modal');
     document.getElementById('open-modal')?.addEventListener('click', () => modal?.classList.remove('hidden'));
-    document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.add('hidden'));
+    document.getElementById('close-modal')?.addEventListener('click', () => { modal?.classList.add('hidden'); form?.reset(); });
 
-    document.getElementById('activity-form')?.addEventListener('submit', async (e) => {
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.target as HTMLFormElement;
       const fd = new FormData(form);
       const res = await fetch('/api/activities', {
         method: 'POST',
@@ -182,13 +131,10 @@ const canLog = user!.status === 'active';
           url: fd.get('url') || null,
         }),
       });
-      if (res.ok) {
-        modal?.classList.add('hidden');
-        form.reset();
-        load();
-      } else {
-        alert('Gagal menyimpan');
-      }
+      if (res.ok) { modal?.classList.add('hidden'); form.reset(); load(); }
+      else alert('Gagal menyimpan');
     });
+
+    load();
   </script>
 </DashboardLayout>

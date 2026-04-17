@@ -1,205 +1,181 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
+import Modal from '@components/app/Modal.astro';
 import { requireMaintainer } from '@lib/guards';
 const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 ---
 
 <DashboardLayout title="Members">
   <p class="text-gray-400 text-sm mb-4">Kelola dan pantau seluruh anggota komunitas</p>
-  <!-- Filter bar statis -->
+
   <div class="flex flex-col sm:flex-row gap-3 mb-4">
     <div class="flex gap-2" id="status-filters" data-testid="member-filters">
-      <button onclick="filterMembers('')" data-status="" data-testid="filter-all" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua</button>
-      <button onclick="filterMembers('pending')" data-status="pending" data-testid="filter-pending" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Pending</button>
-      <button onclick="filterMembers('active')" data-status="active" data-testid="filter-active" class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Active</button>
+      <button data-status="" data-testid="filter-all"
+        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua</button>
+      <button data-status="pending" data-testid="filter-pending"
+        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Pending</button>
+      <button data-status="active" data-testid="filter-active"
+        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Active</button>
     </div>
-    <input type="text" id="search-input" data-testid="member-search" placeholder="Cari nama, email, NISN..."
-      class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-      oninput="searchMembers(this.value)">
+    <input type="text" id="search-input" data-testid="member-search"
+      placeholder="Cari nama, email, NISN..."
+      class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500">
   </div>
 
-  <div id="members-content" data-testid="members-list">
-    <SkeletonList count={5} />
-  </div>
+  <div id="members-content" data-testid="members-list"><SkeletonList count={5} /></div>
 
-  <!-- Pagination -->
-  <div id="pagination-container" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-800">
-    <p id="pagination-info" class="text-xs text-gray-500"></p>
-    <div id="pagination-controls" class="flex gap-2"></div>
-  </div>
-
-  <!-- Modal Set Password -->
-  <div id="password-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center z-50">
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-      <h3 class="text-lg font-semibold mb-4">Set Password Anggota</h3>
-      <p class="text-sm text-gray-400 mb-4">Set password untuk: <span id="modal-member-name" class="text-white font-medium"></span></p>
-      <input type="password" id="new-password" placeholder="Password baru (min. 6 karakter)"
-        class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 mb-4">
-      <div class="flex gap-3">
-        <button onclick="closePasswordModal()" class="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm transition">Batal</button>
-        <button onclick="setPassword()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm transition">Set Password</button>
-      </div>
+  <Modal id="password-modal" title="Set Password Anggota" draggable>
+    <p class="text-sm text-gray-400 mb-4">Set password untuk: <span id="modal-member-name" class="text-white font-medium"></span></p>
+    <input type="password" id="new-password" placeholder="Password baru (min. 6 karakter)"
+      class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 mb-4">
+    <div class="flex gap-3">
+      <button id="cancel-password" class="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm transition">Batal</button>
+      <button id="confirm-password" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm transition">Set Password</button>
     </div>
-  </div>
+  </Modal>
 
   <script>
+    import { esc, renderPagination } from '@lib/ui';
+
+    const contentEl = document.getElementById('members-content') as HTMLElement;
+    const passwordModal = document.getElementById('password-modal');
+    const pwInput = document.getElementById('new-password') as HTMLInputElement;
+
     let currentStatus = '';
     let currentSearch = '';
-    let selectedUserId = '';
     let currentPage = 1;
+    let selectedUserId = '';
     const PAGE_LIMIT = 20;
-
-    function esc(str: string): string {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
-    }
 
     const statusColors: Record<string, string> = {
       pending: 'text-yellow-400 bg-yellow-400/10',
-      active: 'text-green-400 bg-green-400/10',
-      rejected: 'text-red-400 bg-red-400/10',
+      active:  'text-green-400 bg-green-400/10',
+      rejected:'text-red-400 bg-red-400/10',
     };
 
-    window.openSetPasswordModal = (userId: string, userName: string) => {
-      selectedUserId = userId;
-      const nameEl = document.getElementById('modal-member-name');
-      const pwEl = document.getElementById('new-password') as HTMLInputElement | null;
-      const modalEl = document.getElementById('password-modal');
-      if (nameEl) nameEl.textContent = userName;
-      if (pwEl) pwEl.value = '';
-      modalEl?.classList.remove('hidden');
-    };
-
-    window.closePasswordModal = () => {
-      document.getElementById('password-modal')?.classList.add('hidden');
-      selectedUserId = '';
-    };
-
-    window.setPassword = async () => {
-      const pwEl = document.getElementById('new-password') as HTMLInputElement | null;
-      const password = pwEl?.value ?? '';
-      if (!password) {
-        alert('Password tidak boleh kosong');
-        return;
-      }
-      if (password.length < 6) {
-        alert('Password minimal 6 karakter');
-        return;
-      }
-
-      const res = await fetch('/api/admin/set-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUserId, password })
-      });
-
-      if (res.ok) {
-        alert('Password berhasil diatur');
-        window.closePasswordModal();
-      } else {
-        const json = await res.json();
-        alert(json.error || 'Gagal set password');
-      }
-    };
-
-    async function load() {
-      const params = new URLSearchParams();
-      if (currentStatus) params.set('status', currentStatus);
-      if (currentSearch) params.set('search', currentSearch);
-      params.set('page', String(currentPage));
-      params.set('limit', String(PAGE_LIMIT));
-
-      const res = await fetch(`/api/members?${params}`);
-      const json = await res.json();
-      const { members = [], total = 0, page = 1, limit = PAGE_LIMIT } = json.data || {};
-      const content = document.getElementById('members-content') as HTMLElement | null;
-      if (!content) return;
-
-      // Update filter button styles
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        const s = (btn as HTMLElement).dataset.status;
-        btn.className = `filter-btn px-3 py-1.5 rounded-lg text-sm transition ${s === currentStatus ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
-      });
-
-      if (!members.length) {
-        content.innerHTML = '<p class="text-gray-500 text-center py-8 text-sm">Tidak ada anggota ditemukan</p>';
-        renderPagination(0, page, limit);
-        return;
-      }
-
-      content.innerHTML = `
-        <div class="space-y-3">
-          ${members.map((m: any) => `
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                  ${esc(m.name).charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p class="font-semibold text-sm">${esc(m.name)}</p>
-                  <p class="text-xs text-gray-400">${esc(m.class)} · ${esc(m.email)}</p>
-                  ${m.tracks?.length ? `<p class="text-xs text-gray-500">${m.tracks.map((t: string) => esc(t)).join(', ')}</p>` : ''}
-                </div>
-              </div>
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">${esc(m.status)}</span>
-                ${m.status === 'pending' ? `
-                  <button onclick="window.approve('${m.id}')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
-                  <button onclick="window.reject('${m.id}')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
-                ` : ''}
-                <button onclick="window.openSetPasswordModal('${m.id}', '${esc(m.name)}')" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs transition" title="Set Password">🔑</button>
-              </div>
+    function renderMember(m: any): string {
+      return `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+              ${esc(m.name).charAt(0).toUpperCase()}
             </div>
-          `).join('')}
-        </div>
-      `;
-      renderPagination(total, page, limit);
+            <div>
+              <p class="font-semibold text-sm">${esc(m.name)}</p>
+              <p class="text-xs text-gray-400">${esc(m.class)} · ${esc(m.email)}</p>
+              ${m.tracks?.length ? `<p class="text-xs text-gray-500">${(m.tracks as string[]).map(esc).join(', ')}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">${esc(m.status)}</span>
+            ${m.status === 'pending' ? `
+              <button data-action="approve" data-id="${m.id}"
+                class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
+              <button data-action="reject" data-id="${m.id}"
+                class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
+            ` : ''}
+            <button data-action="set-password" data-id="${m.id}" data-name="${esc(m.name)}"
+              class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs transition" title="Set Password">🔑</button>
+          </div>
+        </div>`;
     }
 
-    function renderPagination(total: number, page: number, limit: number) {
-      const container = document.getElementById('pagination-container');
-      const info = document.getElementById('pagination-info');
-      const controls = document.getElementById('pagination-controls');
-      if (!container || !info || !controls) return;
+    async function load() {
+      const params = new URLSearchParams({ admin: '1', page: String(currentPage), limit: String(PAGE_LIMIT) });
+      if (currentStatus) params.set('status', currentStatus);
+      if (currentSearch) params.set('search', currentSearch);
 
-      const totalPages = Math.ceil(total / limit);
-      if (total === 0) { container.classList.add('hidden'); return; }
+      const { data } = await fetch(`/api/members?${params}`).then(r => r.json());
+      const { members = [], total = 0, page = 1, limit = PAGE_LIMIT } = data || {};
 
-      container.classList.remove('hidden');
-      const start = (page - 1) * limit + 1;
-      const end = Math.min(page * limit, total);
-      info.textContent = `Menampilkan ${start}–${end} dari ${total} anggota`;
+      // Update filter buttons
+      document.querySelectorAll<HTMLElement>('.filter-btn').forEach(btn => {
+        const active = btn.dataset.status === currentStatus;
+        btn.className = `filter-btn px-3 py-1.5 rounded-lg text-sm transition ${active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
+      });
 
-      controls.innerHTML = `
-        <button onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}
-          class="px-3 py-1.5 rounded-lg text-sm ${page <= 1 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">
-          ← Prev
-        </button>
-        <span class="px-3 py-1.5 text-sm text-gray-400">${page} / ${totalPages}</span>
-        <button onclick="goToPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}
-          class="px-3 py-1.5 rounded-lg text-sm ${page >= totalPages ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">
-          Next →
-        </button>
-      `;
+      contentEl.innerHTML = members.length
+        ? '<div class="space-y-3">' + members.map(renderMember).join('') + '</div>'
+        : '<p class="text-gray-500 text-center py-8 text-sm">Tidak ada anggota ditemukan</p>';
+
+      renderPagination('members-pagination', 'members-content', total, page, limit, 'anggota', 'window.goToPage');
     }
 
     window.goToPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
 
-    window.filterMembers = (status: string) => { currentStatus = status; currentPage = 1; load(); };
-    window.searchMembers = (val: string) => { currentSearch = val; currentPage = 1; load(); };
+    // --- Event delegation untuk list ---
 
-    window.approve = async (id: string) => {
-      if (!confirm('Setujui anggota ini?')) return;
-      const res = await fetch('/api/admin/approve', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ userId: id, action: 'approve' }) });
-      if (res.ok) load(); else alert('Gagal');
-    };
+    contentEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+      if (!btn) return;
+      const { action, id, name } = btn.dataset;
 
-    window.reject = async (id: string) => {
-      if (!confirm('Tolak dan hapus anggota ini?')) return;
-      const res = await fetch('/api/admin/approve', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ userId: id, action: 'reject' }) });
-      if (res.ok) load(); else alert('Gagal');
-    };
+      if (action === 'approve') {
+        if (!confirm('Setujui anggota ini?')) return;
+        const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'approve' }) });
+        res.ok ? load() : alert('Gagal');
+      }
+      if (action === 'reject') {
+        if (!confirm('Tolak dan hapus anggota ini?')) return;
+        const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'reject' }) });
+        res.ok ? load() : alert('Gagal');
+      }
+      if (action === 'set-password') {
+        selectedUserId = id!;
+        const nameEl = document.getElementById('modal-member-name');
+        if (nameEl) nameEl.textContent = name || '';
+        pwInput.value = '';
+        passwordModal?.classList.remove('hidden');
+      }
+    });
+
+    // --- Filter & search ---
+
+    document.getElementById('status-filters')?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('.filter-btn');
+      if (!btn) return;
+      currentStatus = btn.dataset.status || '';
+      currentPage = 1;
+      load();
+    });
+
+    document.getElementById('search-input')?.addEventListener('input', (e) => {
+      currentSearch = (e.target as HTMLInputElement).value;
+      currentPage = 1;
+      load();
+    });
+
+    // --- Password modal ---
+
+    document.getElementById('cancel-password')?.addEventListener('click', () => {
+      passwordModal?.classList.add('hidden');
+      selectedUserId = '';
+    });
+
+    document.getElementById('confirm-password')?.addEventListener('click', async () => {
+      const password = pwInput.value;
+      if (!password) { alert('Password tidak boleh kosong'); return; }
+      if (password.length < 6) { alert('Password minimal 6 karakter'); return; }
+
+      const res = await fetch('/api/admin/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: selectedUserId, password }),
+      });
+      if (res.ok) {
+        alert('Password berhasil diatur');
+        passwordModal?.classList.add('hidden');
+        selectedUserId = '';
+      } else {
+        const json = await res.json();
+        alert(json.error || 'Gagal set password');
+      }
+    });
+
+    // Expose untuk backward compat (E2E tests)
+    window.filterMembers = (s: string) => { currentStatus = s; currentPage = 1; load(); };
+    window.searchMembers = (v: string) => { currentSearch = v; currentPage = 1; load(); };
 
     load();
   </script>

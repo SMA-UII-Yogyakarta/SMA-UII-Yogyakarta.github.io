@@ -1,0 +1,39 @@
+---
+import { navItems } from '@lib/nav';
+
+interface Props {
+  role: 'maintainer' | 'member';
+}
+
+const { role } = Astro.props;
+const items = (navItems[role] || navItems.member).slice(0, 5);
+---
+
+<nav class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-t border-gray-800"
+  style="padding-bottom: env(safe-area-inset-bottom)">
+  <div class="flex">
+    {items.map(item => (
+      <a href={item.href}
+        data-nav={item.label.toLowerCase()}
+        class="bottom-nav-item flex-1 flex flex-col items-center justify-center py-2.5 gap-1 text-gray-500 transition-colors relative">
+        <div class="bottom-nav-indicator absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-blue-500 opacity-0 transition-opacity"></div>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon}/>
+        </svg>
+        <span class="text-[10px] font-medium leading-none">{item.label}</span>
+      </a>
+    ))}
+  </div>
+</nav>
+
+<script>
+  const path = window.location.pathname;
+  document.querySelectorAll('.bottom-nav-item').forEach(el => {
+    const href = el.getAttribute('href');
+    if (href && (path === href || path.startsWith(href + '/'))) {
+      el.classList.add('text-blue-400');
+      el.classList.remove('text-gray-500');
+      (el.querySelector('.bottom-nav-indicator') as HTMLElement)?.style.setProperty('opacity', '1');
+    }
+  });
+</script>

@@ -2,20 +2,26 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@db';
-import { memberCards, users } from '@db/schema';
+import { memberCards } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { requireMember } from '@lib/guards';
 import { fmtDate } from '@lib/format';
 
 const redirect = requireMember(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const [card, fullUser] = await Promise.all([
-  db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) }),
-  db.query.users.findFirst({ where: eq(users.id, user!.id) }),
-]);
+const card = await db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) });
 ---
 
 <DashboardLayout title="Member Card">
+  {card && (
+    <div slot="topbar-actions">
+      <div class="flex bg-gray-800 rounded-lg p-0.5">
+        <button id="tab-card" class="px-3 py-1 rounded-md text-xs font-medium transition bg-gray-700 text-white">Kartu</button>
+        <button id="tab-qr" class="px-3 py-1 rounded-md text-xs font-medium transition text-gray-400 hover:text-white">QR Code</button>
+      </div>
+    </div>
+  )}
+
   <PageHeader subtitle="Kartu identitas digital anggota komunitas" />
   {!card ? (
     <div class="text-center py-16">
@@ -27,7 +33,7 @@ const [card, fullUser] = await Promise.all([
     <div class="flex justify-center">
       <div class="w-full max-w-sm space-y-4">
         <!-- Card visual -->
-        <div class="bg-linear-to-br from-blue-900 to-indigo-950 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden">
+        <div id="panel-card" class="bg-linear-to-br from-blue-900 to-indigo-950 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden">
           <div class="absolute -top-8 -right-8 w-32 h-32 bg-white/5 rounded-full"></div>
           <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full"></div>
           <div class="relative z-10">
@@ -39,22 +45,22 @@ const [card, fullUser] = await Promise.all([
               <span class="text-2xl">⬡</span>
             </div>
             <div class="flex items-center gap-3 mb-6">
-              <div class="w-14 h-14 rounded-full bg-blue-500/50 flex items-center justify-center text-2xl font-bold">
-                {fullUser!.name.charAt(0).toUpperCase()}
+              <div class="w-14 h-14 rounded-full bg-blue-500/50 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                {user!.name.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <p class="font-bold text-lg leading-tight">{fullUser!.name}</p>
-                <p class="text-xs opacity-60">{fullUser!.class}</p>
+              <div class="min-w-0">
+                <p class="font-bold text-lg leading-tight truncate">{user!.name}</p>
+                <p class="text-xs opacity-60">{user!.class}</p>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mb-4">
               <div>
                 <p class="text-xs opacity-60">Card Number</p>
-                <p class="font-mono text-sm font-bold">{card.cardNumber}</p>
+                <p class="font-mono text-sm font-bold truncate">{card.cardNumber}</p>
               </div>
               <div>
                 <p class="text-xs opacity-60">NISN</p>
-                <p class="font-mono text-sm">{fullUser!.nisn}</p>
+                <p class="font-mono text-sm truncate">{user!.nisn}</p>
               </div>
             </div>
             <div class="flex justify-between items-end">
@@ -68,14 +74,38 @@ const [card, fullUser] = await Promise.all([
         </div>
 
         <!-- QR Code -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
+        <div id="panel-qr" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
           <p class="text-sm font-medium mb-4">QR Code Verifikasi</p>
           <div class="inline-block p-3 bg-white rounded-lg">
-            <img src={card.qrCode} alt="QR Code" class="w-36 h-36">
+            <img src={card.qrCode} alt="QR Code" class="w-48 h-48">
           </div>
           <p class="text-xs text-gray-500 mt-3">Tunjukkan kode ini untuk verifikasi keanggotaan</p>
         </div>
       </div>
     </div>
+
+    <script>
+      const tabCard = document.getElementById('tab-card')!;
+      const tabQr = document.getElementById('tab-qr')!;
+      const panelCard = document.getElementById('panel-card')!;
+      const panelQr = document.getElementById('panel-qr')!;
+
+      const active = 'px-3 py-1 rounded-md text-xs font-medium transition bg-gray-700 text-white';
+      const inactive = 'px-3 py-1 rounded-md text-xs font-medium transition text-gray-400 hover:text-white';
+
+      tabCard.addEventListener('click', () => {
+        panelCard.classList.remove('hidden');
+        panelQr.classList.add('hidden');
+        tabCard.className = active;
+        tabQr.className = inactive;
+      });
+
+      tabQr.addEventListener('click', () => {
+        panelQr.classList.remove('hidden');
+        panelCard.classList.add('hidden');
+        tabQr.className = active;
+        tabCard.className = inactive;
+      });
+    </script>
   )}
 </DashboardLayout>

@@ -4,16 +4,24 @@ export function escapeHtml(str: string): string {
   return str.replace(/[&<>"'/]/g, c => map[c] || c);
 }
 
-export function updateSidebarState(isCollapsed: boolean) {
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.getElementById('main-content');
+export function setSidebar(state: 'hidden' | 'minimized' | 'expanded' | 'overlay') {
+  document.documentElement.setAttribute('data-sidebar', state);
   const toggleBtn = document.getElementById('sidebar-toggle');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('title', state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar');
+  }
+  if (state === 'expanded' || state === 'minimized') {
+    localStorage.setItem('sidebar-collapsed', state === 'minimized' ? 'true' : 'false');
+  }
+  // sync sidebar-label visibility (untuk profile dropdown script di Sidebar.astro)
+  const isMin = state === 'minimized' || state === 'overlay';
+  document.querySelectorAll('.sidebar-label').forEach(el => {
+    (el as HTMLElement).style.display = isMin ? 'none' : '';
+  });
+}
 
-  sidebar?.classList.toggle('sidebar-collapsed', isCollapsed);
-  mainContent?.classList.toggle('sidebar-collapsed', isCollapsed);
-  toggleBtn?.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
-  localStorage.setItem('sidebar-collapsed', String(isCollapsed));
-  document.querySelectorAll('.sidebar-label').forEach(el => el.classList.toggle('hidden', isCollapsed));
+export function updateSidebarState(isCollapsed: boolean) {
+  setSidebar(isCollapsed ? 'minimized' : 'expanded');
 }
 
 export async function loadNotifications() {
@@ -39,33 +47,32 @@ export async function loadNotifications() {
 }
 
 export function initDashboard(_options: { role: string; userName: string }) {
-  // Sidebar state - only for desktop
-  const isDesktop = window.innerWidth >= 1024;
-  if (isDesktop) {
-    updateSidebarState(localStorage.getItem('sidebar-collapsed') === 'true');
+  const w = window.innerWidth;
+
+  // Apply correct state on load (inline script sudah set di HTML, ini untuk sync JS state)
+  if (w >= 1024) {
+    setSidebar(localStorage.getItem('sidebar-collapsed') === 'true' ? 'minimized' : 'expanded');
   }
 
+  // Toggle button
   document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-    // Only toggle collapse on desktop
-    if (window.innerWidth >= 1024) {
-      updateSidebarState(!document.getElementById('sidebar')?.classList.contains('sidebar-collapsed'));
+    const current = document.documentElement.getAttribute('data-sidebar');
+    const w = window.innerWidth;
+    if (w >= 1024) {
+      setSidebar(current === 'expanded' ? 'minimized' : 'expanded');
+    } else if (w >= 640) {
+      // Tablet: minimized ↔ overlay
+      setSidebar(current === 'overlay' ? 'minimized' : 'overlay');
     }
   });
 
-  // Mobile menu - only for mobile
-  const sidebar = document.getElementById('sidebar');
-  document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
-    sidebar?.classList.toggle('-translate-x-full');
-  });
-  
-  // Close sidebar/dropdown when clicking outside
+  // Close tablet overlay saat klik di luar
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
-    // Close mobile sidebar when clicking outside (only on mobile)
-    if (window.innerWidth < 1024 && !t.closest('#sidebar') && !t.closest('#mobile-menu-btn')) {
-      sidebar?.classList.add('-translate-x-full');
+    const current = document.documentElement.getAttribute('data-sidebar');
+    if (current === 'overlay' && !t.closest('#sidebar') && !t.closest('#sidebar-toggle')) {
+      setSidebar('minimized');
     }
-    // Close notification dropdown
     if (!t.closest('#notification-btn') && !t.closest('#notification-dropdown')) {
       document.getElementById('notification-dropdown')?.classList.add('hidden');
     }
@@ -76,7 +83,22 @@ export function initDashboard(_options: { role: string; userName: string }) {
     document.getElementById('notification-dropdown')?.classList.toggle('hidden');
   });
 
-  // Active nav highlight
+  // Responsive resize
+  let resizeTimer: ReturnType<typeof setTimeout>;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const w = window.innerWidth;
+      const current = document.documentElement.getAttribute('data-sidebar');
+      if (w < 640 && current !== 'hidden') {
+        setSidebar('hidden');
+      } else if (w >= 640 && w < 1024 && (current === 'hidden' || current === 'expanded')) {
+        setSidebar('minimized');
+      } else if (w >= 1024 && (current === 'hidden' || current === 'overlay')) {
+        setSidebar(localStorage.getItem('sidebar-collapsed') === 'true' ? 'minimized' : 'expanded');
+      }
+    }, 100);
+  });
   const currentPath = window.location.pathname;
   document.querySelectorAll('[data-nav]').forEach(el => {
     const href = el.getAttribute('href');
@@ -85,7 +107,6 @@ export function initDashboard(_options: { role: string; userName: string }) {
     }
   });
 
-  // Notification read handler
   window.markNotificationRead = async (id: string) => {
     try {
       await fetch('/api/notifications/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });

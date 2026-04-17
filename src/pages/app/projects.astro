@@ -4,283 +4,266 @@ import PageHeader from '@components/app/PageHeader.astro';
 import Modal from '@components/app/Modal.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
-const { user } = Astro.locals;
 const redirect = requireAuth(Astro); if (redirect) return redirect;
+const { user } = Astro.locals;
 const canAdd = user!.status === 'active';
 ---
 
 <DashboardLayout title="Projects">
   <PageHeader subtitle="Showcase karya anggota komunitas" actionLabel={canAdd ? "Tambah Project" : undefined} />
 
-  <!-- Meta untuk client script -->
   <div id="projects-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
-
-  <div id="projects-grid" data-testid="projects-grid">
-    <SkeletonList count={6} type="cards" />
-  </div>
+  <div id="projects-grid" data-testid="projects-grid"><SkeletonList count={6} type="cards" /></div>
 
   {canAdd && (
-    <Modal id="add-modal" title="Tambah Project">
-        <form id="project-form" class="space-y-3">
-          <input type="hidden" name="id" value="">
-          <input type="hidden" name="imageUrl" value="">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Judul *</label>
-            <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 text-gray-100">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Deskripsi</label>
-            <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 text-gray-100"></textarea>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">URL Project</label>
-            <input type="url" name="url" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 text-gray-100">
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Gambar Cover <span class="text-gray-600">(opsional, maks 2MB)</span></label>
-            <div id="image-upload-area" class="relative">
-              <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif"
-                class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-400 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-800 file:text-gray-300 hover:file:bg-gray-700 cursor-pointer">
-              <div id="image-preview" class="hidden mt-2 relative">
-                <img id="preview-img" src="" alt="Preview" class="w-full h-32 object-cover rounded-lg border border-gray-800">
-                <button type="button" id="remove-image"
-                  class="absolute top-1 right-1 bg-gray-900/80 hover:bg-red-900/80 text-gray-400 hover:text-red-400 rounded p-1 transition text-xs">
-                  ✕ Hapus
-                </button>
-              </div>
-              <p id="upload-status" class="text-xs text-gray-500 mt-1 hidden"></p>
+    <Modal id="add-modal" title="Tambah Project" maxWidth="max-w-lg">
+      <form id="project-form" class="space-y-4">
+        <input type="hidden" name="id" value="">
+        <input type="hidden" name="imageUrl" value="">
+
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Judul <span class="text-red-400">*</span></label>
+          <input type="text" name="title" required placeholder="Nama project kamu"
+            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">Deskripsi</label>
+          <textarea name="description" rows="3" placeholder="Ceritakan tentang project ini..."
+            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600 resize-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5" for="project-url">URL Project</label>
+          <input type="url" id="project-url" name="url" placeholder="https://github.com/user/repo"
+            autocomplete="url"
+            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+        </div>
+
+        <!-- Image zone: satu container untuk upload & preview -->
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5">
+            Gambar Cover <span class="text-gray-600 font-normal">· JPG, PNG, WebP · maks 2MB</span>
+          </label>
+          <div id="image-zone" class="relative h-36 rounded-xl border border-dashed border-gray-700 bg-gray-950 overflow-hidden group">
+            <label id="upload-label" class="absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-900 transition">
+              <svg class="w-8 h-8 text-gray-600 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <span class="text-xs text-gray-500 group-hover:text-gray-300 transition">Klik untuk pilih gambar</span>
+              <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+            </label>
+            <img id="preview-img" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover">
+            <div id="image-overlay" class="hidden absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition flex items-center justify-center gap-2">
+              <label class="px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 text-white rounded-lg text-xs cursor-pointer transition">
+                Ganti
+                <input type="file" id="image-input-replace" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+              </label>
+              <button type="button" id="remove-image" class="px-3 py-1.5 bg-red-900/90 hover:bg-red-800 text-red-300 rounded-lg text-xs transition">Hapus</button>
             </div>
           </div>
-          <div class="flex gap-3 pt-2">
-            <button type="submit" id="submit-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Simpan</button>
-            <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
-          </div>
-        </form>
+          <p id="upload-status" class="text-xs mt-1.5 hidden"></p>
+        </div>
+
+        <div class="flex gap-3 pt-1">
+          <button type="submit" id="submit-btn"
+            class="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition">Simpan</button>
+          <button type="button" id="close-modal"
+            class="px-5 py-2.5 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+        </div>
+      </form>
     </Modal>
   )}
 
   <script>
-    function esc(str: string): string {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
-    }
+    import { esc, unesc, renderPagination, icons, uploadImage } from '@lib/ui';
 
-    // Simpan userId dari meta tag yang di-inject server
-    const projectsMeta = document.getElementById('projects-meta') as HTMLElement | null;
-    const currentUserId = projectsMeta?.dataset.userId || '';
-    const isAdminUser = projectsMeta?.dataset.userRole === 'maintainer';
+    const meta = document.getElementById('projects-meta') as HTMLElement;
+    const currentUserId = meta.dataset.userId || '';
+    const isAdmin = meta.dataset.userRole === 'maintainer';
+    const gridEl = document.getElementById('projects-grid') as HTMLElement;
+    const modal = document.getElementById('add-modal');
+    const form = document.getElementById('project-form') as HTMLFormElement | null;
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+    const modalTitle = modal?.querySelector('h2');
+
+    // Image upload elements
+    const imageInput = document.getElementById('image-input') as HTMLInputElement | null;
+    const imageInputReplace = document.getElementById('image-input-replace') as HTMLInputElement | null;
+    const previewImg = document.getElementById('preview-img') as HTMLImageElement | null;
+    const imageOverlay = document.getElementById('image-overlay') as HTMLElement | null;
+    const uploadLabel = document.getElementById('upload-label') as HTMLElement | null;
+    const uploadStatus = document.getElementById('upload-status') as HTMLElement | null;
+    const imageUrlField = form?.querySelector('[name="imageUrl"]') as HTMLInputElement | null;
 
     let currentPage = 1;
     const PAGE_LIMIT = 12;
 
-    async function load() {
-      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
-      const res = await fetch(`/api/projects?${params}`);
-      const json = await res.json();
-      const projectList = json.data?.projects || json.data || [];
-      const total: number = json.data?.total || 0;
-      const grid = document.getElementById('projects-grid') as HTMLElement | null;
-      if (!grid) return;
+    // --- Image upload ---
 
-      if (!projectList.length) {
-        grid.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-gray-500 text-sm">Belum ada project</p></div>';
-        renderPagination(0, currentPage, PAGE_LIMIT);
-        return;
-      }
-
-      grid.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${projectList.map((p: any) => {
-        const canEdit = p.userId === currentUserId || isAdminUser;
-        return `
-          <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition">
-            <div class="aspect-video bg-gray-800 relative">
-              ${p.imageUrl
-                ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-full object-cover">`
-                : `<div class="w-full h-full flex items-center justify-center text-gray-700">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                  </div>`
-              }
-            </div>
-            <div class="p-4">
-              <div class="flex justify-between items-start gap-2 mb-1">
-                <h3 class="font-semibold">${esc(p.title)}</h3>
-                ${canEdit ? `
-                  <div class="flex gap-1 flex-shrink-0">
-                    <button onclick="window.editProject('${esc(p.id)}', '${esc(p.title)}', ${JSON.stringify(p.description || '')}, '${esc(p.url || '')}', '${esc(p.imageUrl || '')}')"
-                      class="text-gray-500 hover:text-blue-400 transition p-1" title="Edit">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button onclick="window.deleteProject('${esc(p.id)}', '${esc(p.title)}')"
-                      class="text-gray-500 hover:text-red-400 transition p-1" title="Hapus">
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                  </div>
-                ` : ''}
-              </div>
-              ${p.description ? `<p class="text-sm text-gray-400 mb-3">${esc(p.description)}</p>` : ''}
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>by ${esc(p.userName || 'Unknown')}</span>
-                ${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('')}</div>`;
-      renderPagination(total, currentPage, PAGE_LIMIT);
+    function setImagePreview(url: string) {
+      if (!imageUrlField || !previewImg || !imageOverlay || !uploadLabel) return;
+      imageUrlField.value = url;
+      previewImg.src = url;
+      previewImg.classList.remove('hidden');
+      imageOverlay.classList.remove('hidden');
+      uploadLabel.classList.add('hidden');
     }
 
-    function renderPagination(total: number, page: number, limit: number) {
-      let container = document.getElementById('projects-pagination');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'projects-pagination';
-        document.getElementById('projects-grid')?.after(container);
-      }
-      const totalPages = Math.ceil(total / limit);
-      if (total === 0 || totalPages <= 1) { container.innerHTML = ''; return; }
-      const start = (page - 1) * limit + 1;
-      const end = Math.min(page * limit, total);
-      container.className = 'flex items-center justify-between mt-6 pt-4 border-t border-gray-800';
-      container.innerHTML = `
-        <p class="text-xs text-gray-500">Menampilkan ${start}–${end} dari ${total} project</p>
-        <div class="flex gap-2">
-          <button onclick="window.projPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}
-            class="px-3 py-1.5 rounded-lg text-sm ${page <= 1 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">← Prev</button>
-          <span class="px-3 py-1.5 text-sm text-gray-400">${page} / ${totalPages}</span>
-          <button onclick="window.projPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}
-            class="px-3 py-1.5 rounded-lg text-sm ${page >= totalPages ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gray-800 text-gray-300 hover:bg-gray-700 transition'}">Next →</button>
-        </div>
-      `;
+    function resetImage() {
+      if (imageUrlField) imageUrlField.value = '';
+      if (imageInput) imageInput.value = '';
+      if (imageInputReplace) imageInputReplace.value = '';
+      if (previewImg) { previewImg.src = ''; previewImg.classList.add('hidden'); }
+      if (imageOverlay) imageOverlay.classList.add('hidden');
+      if (uploadLabel) uploadLabel.classList.remove('hidden');
+      if (uploadStatus) uploadStatus.classList.add('hidden');
+    }
+
+    async function handleFileUpload(file: File) {
+      const url = await uploadImage(file, (msg, isError) => {
+        if (!uploadStatus) return;
+        uploadStatus.textContent = msg;
+        uploadStatus.className = `text-xs mt-1.5 ${isError ? 'text-red-400' : 'text-gray-500'}`;
+        uploadStatus.classList.toggle('hidden', !msg);
+      });
+      if (url) setImagePreview(url);
+    }
+
+    imageInput?.addEventListener('change', () => { const f = imageInput.files?.[0]; if (f) handleFileUpload(f); });
+    imageInputReplace?.addEventListener('change', () => { const f = imageInputReplace.files?.[0]; if (f) handleFileUpload(f); });
+    document.getElementById('remove-image')?.addEventListener('click', resetImage);
+
+    // Auto-prepend https:// saat blur jika user lupa protokol
+    const urlInput = document.getElementById('project-url') as HTMLInputElement | null;
+    urlInput?.addEventListener('blur', () => {
+      const v = urlInput.value.trim();
+      if (v && !v.match(/^https?:\/\//)) urlInput.value = `https://${v}`;
+    });
+
+    // --- Render ---
+
+    const imgPlaceholder = `<div class="w-full h-full flex items-center justify-center text-gray-700">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    </div>`;
+
+    function renderCard(p: any): string {
+      const canEdit = p.userId === currentUserId || isAdmin;
+      return `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition">
+          <div class="aspect-video bg-gray-800">
+            ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-full object-cover">` : imgPlaceholder}
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start gap-2 mb-1">
+              <h3 class="font-semibold">${esc(p.title)}</h3>
+              ${canEdit ? `
+                <div class="flex gap-1 flex-shrink-0">
+                  <button data-action="edit"
+                    data-id="${esc(p.id)}" data-title="${esc(p.title)}"
+                    data-description="${esc(p.description || '')}" data-url="${esc(p.url || '')}"
+                    data-image-url="${esc(p.imageUrl || '')}"
+                    class="text-gray-500 hover:text-blue-400 transition p-1" title="Edit">${icons.edit}</button>
+                  <button data-action="delete" data-id="${esc(p.id)}" data-title="${esc(p.title)}"
+                    class="text-gray-500 hover:text-red-400 transition p-1" title="Hapus">${icons.trash}</button>
+                </div>` : ''}
+            </div>
+            ${p.description ? `<p class="text-sm text-gray-400 mb-3">${esc(p.description)}</p>` : ''}
+            <div class="flex items-center justify-between text-xs text-gray-500">
+              <span>by ${esc(p.userName || 'Unknown')}</span>
+              ${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    async function load() {
+      const res = await fetch(`/api/projects?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      const { data } = await res.json();
+      const projects: any[] = data?.projects || [];
+      const total: number = data?.total || 0;
+
+      gridEl.innerHTML = projects.length
+        ? '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">' + projects.map(renderCard).join('') + '</div>'
+        : '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada project</p></div>';
+
+      renderPagination('projects-pagination', 'projects-grid', total, currentPage, PAGE_LIMIT, 'project', 'window.projPage');
     }
 
     window.projPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
 
-    const modal = document.getElementById('add-modal');
-    const form = document.getElementById('project-form') as HTMLFormElement | null;
-    const submitBtn = document.getElementById('submit-btn');
-    const modalTitle = modal?.querySelector('h2');
+    // --- Modal helpers ---
 
-    // Image upload handler
-    const imageInput = document.getElementById('image-input') as HTMLInputElement | null;
-    const imagePreview = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img') as HTMLImageElement | null;
-    const removeImageBtn = document.getElementById('remove-image');
-    const uploadStatus = document.getElementById('upload-status');
-    const imageUrlField = form?.querySelector('[name="imageUrl"]') as HTMLInputElement | null;
-
-    imageInput?.addEventListener('change', async () => {
-      const file = imageInput.files?.[0];
-      if (!file) return;
-
-      // Validasi client-side
-      if (file.size > 2 * 1024 * 1024) {
-        if (uploadStatus) { uploadStatus.textContent = '✗ File terlalu besar (maks 2MB)'; uploadStatus.className = 'text-xs text-red-400 mt-1'; uploadStatus.classList.remove('hidden'); }
-        imageInput.value = '';
-        return;
-      }
-
-      if (uploadStatus) { uploadStatus.textContent = '⏳ Mengupload...'; uploadStatus.className = 'text-xs text-gray-500 mt-1'; uploadStatus.classList.remove('hidden'); }
-
-      const fd = new FormData();
-      fd.append('image', file);
-
-      const res = await fetch('/api/upload/image', { method: 'POST', body: fd });
-      if (res.ok) {
-        const json = await res.json();
-        const url = json.data?.url;
-        if (imageUrlField) imageUrlField.value = url;
-        if (previewImg) previewImg.src = url;
-        imagePreview?.classList.remove('hidden');
-        if (uploadStatus) uploadStatus.classList.add('hidden');
-      } else {
-        const json = await res.json().catch(() => ({}));
-        if (uploadStatus) { uploadStatus.textContent = `✗ ${json.error || 'Gagal upload'}`;  uploadStatus.className = 'text-xs text-red-400 mt-1'; uploadStatus.classList.remove('hidden'); }
-        imageInput.value = '';
-      }
-    });
-
-    removeImageBtn?.addEventListener('click', () => {
-      if (imageUrlField) imageUrlField.value = '';
-      if (imageInput) imageInput.value = '';
-      if (previewImg) previewImg.src = '';
-      imagePreview?.classList.add('hidden');
-    });
-
-    function resetImageUpload() {
-      if (imageUrlField) imageUrlField.value = '';
-      if (imageInput) imageInput.value = '';
-      if (previewImg) previewImg.src = '';
-      imagePreview?.classList.add('hidden');
-      if (uploadStatus) uploadStatus.classList.add('hidden');
+    function openModal(id = '', title = '', description = '', url = '', imageUrl = '') {
+      if (!form) return;
+      (form.querySelector('[name="id"]') as HTMLInputElement).value = id;
+      (form.querySelector('[name="title"]') as HTMLInputElement).value = title;
+      (form.querySelector('[name="description"]') as HTMLTextAreaElement).value = description;
+      const urlField = form.querySelector('[name="url"]') as HTMLInputElement;
+      urlField.value = url;
+      resetImage();
+      if (imageUrl) setImagePreview(imageUrl);
+      if (modalTitle) modalTitle.textContent = id ? 'Edit Project' : 'Tambah Project';
+      if (submitBtn) submitBtn.textContent = id ? 'Update' : 'Simpan';
+      modal?.classList.remove('hidden');
+      setTimeout(() => (form.querySelector('[name="title"]') as HTMLInputElement)?.focus(), 50);
     }
 
-    function openCreate() {
+    function closeModal() {
+      modal?.classList.add('hidden');
       form?.reset();
-      const idField = form?.querySelector('[name="id"]') as HTMLInputElement | null;
-      if (idField) idField.value = '';
-      resetImageUpload();
-      if (modalTitle) modalTitle.textContent = 'Tambah Project';
-      if (submitBtn) submitBtn.textContent = 'Simpan';
-      modal?.classList.remove('hidden');
+      resetImage();
     }
 
-    window.editProject = (id: string, title: string, description: string, url: string, existingImageUrl?: string) => {
-      const idField = form?.querySelector('[name="id"]') as HTMLInputElement | null;
-      const titleField = form?.querySelector('[name="title"]') as HTMLInputElement | null;
-      const descField = form?.querySelector('[name="description"]') as HTMLTextAreaElement | null;
-      const urlField = form?.querySelector('[name="url"]') as HTMLInputElement | null;
-      if (idField) idField.value = id;
-      if (titleField) titleField.value = title;
-      if (descField) descField.value = description;
-      if (urlField) urlField.value = url;
+    // --- Event delegation ---
 
-      // Tampilkan gambar yang sudah ada
-      resetImageUpload();
-      if (existingImageUrl && imageUrlField && previewImg && imagePreview) {
-        imageUrlField.value = existingImageUrl;
-        previewImg.src = existingImageUrl;
-        imagePreview.classList.remove('hidden');
+    gridEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+      if (!btn) return;
+      const { action, id, title, description, url, imageUrl } = btn.dataset;
+      if (action === 'edit') openModal(id, title, unesc(description || ''), unesc(url || ''), imageUrl || '');
+      if (action === 'delete') {
+        if (!confirm(`Hapus project "${title}"?`)) return;
+        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+        res.ok ? load() : alert('Gagal menghapus project');
       }
+    });
 
-      if (modalTitle) modalTitle.textContent = 'Edit Project';
-      if (submitBtn) submitBtn.textContent = 'Update';
-      modal?.classList.remove('hidden');
-    };
-
-    window.deleteProject = async (id: string, title: string) => {
-      if (!confirm(`Hapus project "${title}"?`)) return;
-      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-      if (res.ok) load();
-      else alert('Gagal menghapus project');
-    };
-
-    document.getElementById('open-modal')?.addEventListener('click', openCreate);
-    document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.add('hidden'));
+    document.getElementById('open-modal')?.addEventListener('click', () => openModal());
+    document.getElementById('close-modal')?.addEventListener('click', closeModal);
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form!);
-      const id = fd.get('id');
-      const isEdit = !!id;
-      const imageUrl = (fd.get('imageUrl') as string) || null;
+      const id = fd.get('id') as string;
+      const title = (fd.get('title') as string)?.trim();
+      if (!title) { alert('Judul tidak boleh kosong'); return; }
 
-      const res = await fetch(isEdit ? `/api/projects/${id}` : '/api/projects', {
-        method: isEdit ? 'PATCH' : 'POST',
+      const rawUrl = (fd.get('url') as string)?.trim() || null;
+      const url = rawUrl && !rawUrl.match(/^https?:\/\//) ? `https://${rawUrl}` : rawUrl;
+
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+
+      const res = await fetch(id ? `/api/projects/${id}` : '/api/projects', {
+        method: id ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: fd.get('title'),
-          description: fd.get('description') || null,
-          url: fd.get('url') || null,
-          imageUrl,
+          title,
+          description: (fd.get('description') as string)?.trim() || null,
+          url,
+          imageUrl: (fd.get('imageUrl') as string) || null,
         }),
       });
-      if (res.ok) {
-        modal?.classList.add('hidden');
-        form!.reset();
-        resetImageUpload();
-        load();
-      } else {
-        alert(isEdit ? 'Gagal mengupdate project' : 'Gagal menyimpan project');
+
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = id ? 'Update' : 'Simpan'; }
+
+      if (res.ok) { closeModal(); load(); }
+      else {
+        const json = await res.json().catch(() => ({}));
+        alert(json.error || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'));
       }
     });
+
+    load();
   </script>
 </DashboardLayout>

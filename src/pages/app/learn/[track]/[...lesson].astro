@@ -1,0 +1,334 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { requireAuth } from '@lib/guards';
+import { getCollection, getEntry, render } from 'astro:content';
+import { db } from '@db';
+import { learningProgress } from '@db/schema';
+import { eq } from 'drizzle-orm';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const { track, lesson } = Astro.params;
+if (!track || !lesson) return Astro.redirect('/app/learn');
+
+const lessonId = `${track}/${lesson}`;
+const entry = await getEntry('lessons', lessonId);
+if (!entry || entry.id.endsWith('/README')) return new Response(null, { status: 404 });
+
+const { user } = Astro.locals;
+const all = await getCollection('lessons');
+
+const modSlug = entry.data.module;
+const siblings = all
+  .filter(l => l.data.track === track && l.data.module === modSlug && !l.id.endsWith('/README'))
+  .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+const idx = siblings.findIndex(l => l.id === entry.id);
+const prev = siblings[idx - 1];
+const next = siblings[idx + 1];
+
+const allModules: Record<string, typeof all> = {};
+for (const l of all) {
+  if (l.data.track === track && !l.id.endsWith('/README')) {
+    const mod = l.data.module || 'other';
+    if (!allModules[mod]) allModules[mod] = [];
+    allModules[mod].push(l);
+  }
+}
+for (const mod of Object.values(allModules)) {
+  mod.sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+}
+
+const progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user!.id));
+const completedSlugs = new Set(progress.map(p => p.lessonSlug));
+const isCompleted = completedSlugs.has(entry.id);
+
+const trackEntry = await getEntry('lessons', `${track}/README`);
+const { Content } = await render(entry);
+
+const levelColor: Record<string, string> = {
+  beginner: 'bg-green-500/20 text-green-400',
+  intermediate: 'bg-yellow-500/20 text-yellow-400',
+  advanced: 'bg-red-500/20 text-red-400',
+};
+---
+
+<DashboardLayout title={entry.data.title} noPadding>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" slot="head" />
+
+  <!-- Topbar: breadcrumb sebagai title, metadata di kanan -->
+  <nav slot="title" class="flex items-center gap-1.5 text-sm min-w-0">
+    <a href="/app/learn" class="text-gray-500 hover:text-white transition flex-shrink-0">Belajar</a>
+    <span class="text-gray-700">/</span>
+    <a href={`/app/learn/${track}`} class="text-gray-500 hover:text-white transition truncate hidden sm:block max-w-28">{trackEntry?.data.title}</a>
+    <span class="text-gray-700 hidden sm:block">/</span>
+    <span class="text-gray-200 font-semibold truncate max-w-48">{entry.data.title}</span>
+  </nav>
+
+  <div slot="topbar-actions" class="hidden md:flex items-center gap-3 text-xs text-gray-500">
+    {entry.data.level && (
+      <span class={`px-2 py-0.5 rounded-full font-medium ${levelColor[entry.data.level]}`}>
+        {entry.data.level}
+      </span>
+    )}
+    {entry.data.duration && <span>⏱ {entry.data.duration}m</span>}
+    {entry.data.author && <span>@{entry.data.author}</span>}
+  </div>
+
+  <div class="flex h-full overflow-hidden">
+
+    <!-- Sidebar kiri: navigasi lesson -->
+    <aside class="w-60 flex-shrink-0 border-r border-gray-800 overflow-y-auto hidden lg:flex flex-col">
+      <div class="p-3 border-b border-gray-800">
+        <a href={`/app/learn/${track}`} class="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          {trackEntry?.data.title}
+        </a>
+      </div>
+      <div class="flex-1 overflow-y-auto p-3 space-y-4">
+        {Object.entries(allModules).map(([mod, lessons]) => {
+          const modEntry = all.find(l => l.id === `${track}/${mod}/README`);
+          return (
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 px-2">
+                {modEntry?.data.title || mod.replace(/-/g, ' ')}
+              </p>
+              <div class="space-y-0.5">
+                {lessons.map(l => {
+                  const done = completedSlugs.has(l.id);
+                  const active = l.id === entry.id;
+                  const lPath = l.id.replace(`${track}/`, '');
+                  return (
+                    <a href={`/app/learn/${track}/${lPath}`}
+                      class={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition ${active ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+                      <div class={`w-3.5 h-3.5 rounded-full border flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500 border-green-500' : active ? 'border-blue-400' : 'border-gray-600'}`}>
+                        {done && (
+                          <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        )}
+                      </div>
+                      <span class="line-clamp-2 leading-tight">{l.data.title}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+
+    <!-- Konten utama -->
+    <div class="flex-1 overflow-y-auto" id="lesson-scroll">
+      <div class="max-w-3xl mx-auto px-6 py-6">
+
+        <!-- Markdown -->
+        <div id="lesson-content" class="prose prose-invert prose-blue max-w-none
+          prose-headings:font-bold prose-headings:text-white prose-headings:scroll-mt-6
+          prose-p:text-gray-300 prose-p:leading-relaxed
+          prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+          prose-code:text-blue-300 prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
+          prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800 prose-pre:rounded-xl
+          prose-blockquote:border-l-blue-500 prose-blockquote:text-gray-400 prose-blockquote:not-italic
+          prose-strong:text-white prose-li:text-gray-300 prose-hr:border-gray-800
+          prose-h2:text-xl prose-h3:text-lg">
+          <Content />
+        </div>
+
+        <!-- Tandai selesai + navigasi -->
+        <div class="mt-10 pt-6 border-t border-gray-800 space-y-3">
+          <button id="complete-btn" data-slug={entry.id} data-completed={isCompleted ? 'true' : 'false'}
+            class={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${isCompleted ? 'bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>{isCompleted ? 'Selesai ✓' : 'Tandai Selesai'}</span>
+          </button>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1">
+              {prev ? (
+                <a href={`/app/learn/${track}/${prev.id.replace(`${track}/`, '')}`}
+                  class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                  <span class="line-clamp-1">{prev.data.title}</span>
+                </a>
+              ) : <span />}
+            </div>
+            <div class="flex-1 flex justify-end">
+              {next ? (
+                <a href={`/app/learn/${track}/${next.id.replace(`${track}/`, '')}`}
+                  class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition">
+                  <span class="line-clamp-1">{next.data.title}</span>
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </a>
+              ) : (
+                <a href={`/app/learn/${track}`}
+                  class="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition">
+                  Kembali ke track
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Sidebar kanan: Table of Contents -->
+    <aside class="w-52 flex-shrink-0 border-l border-gray-800 hidden xl:flex flex-col">
+      <div class="p-4 overflow-y-auto flex-1">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Daftar Isi</p>
+        <nav id="toc" class="space-y-1 text-xs text-gray-500"></nav>
+      </div>
+      <div class="p-4 border-t border-gray-800 space-y-3 flex-shrink-0">
+        {entry.data.tags && entry.data.tags.length > 0 && (
+          <div>
+            <p class="text-xs text-gray-600 mb-1.5">Tags</p>
+            <div class="flex flex-wrap gap-1">
+              {entry.data.tags.map(tag => (
+                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">{tag}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {entry.data.updated && (
+          <p class="text-xs text-gray-600">
+            Diperbarui: {new Date(entry.data.updated).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        )}
+      </div>
+    </aside>
+
+  </div>
+
+  <script type="module" is:inline>
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+
+  <script>
+    // Reading session tracking
+    const slug = (document.querySelector('#complete-btn') as HTMLElement | null)?.dataset.slug;
+    if (slug) {
+      let activeSeconds = 0;
+      
+      let isActive = true;
+
+      // Mulai sesi
+      fetch('/api/learn/reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, action: 'start' }),
+      });
+
+      // Hitung waktu aktif (reset saat tidak ada aktivitas 30 detik)
+      let idleTimer: ReturnType<typeof setTimeout>;
+      const resetIdle = () => {
+        if (!isActive) { isActive = true; }
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => { isActive = false; }, 30000);
+      };
+      document.addEventListener('mousemove', resetIdle);
+      document.addEventListener('scroll', resetIdle, true);
+      document.addEventListener('keydown', resetIdle);
+      resetIdle();
+
+      // Akumulasi waktu aktif setiap 5 detik
+      const ticker = setInterval(() => {
+        if (isActive) activeSeconds += 5;
+      }, 5000);
+
+      // Akhiri sesi saat meninggalkan halaman
+      const endSession = () => {
+        clearInterval(ticker);
+        fetch('/api/learn/reading', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, action: 'end', duration: activeSeconds }),
+          keepalive: true,
+        });
+      };
+      window.addEventListener('beforeunload', endSession);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) endSession();
+      });
+    }
+  </script>
+
+  <script>
+    // Table of Contents — ambil semua h2 dan h3 dari konten
+    const content = document.getElementById('lesson-content');
+    const toc = document.getElementById('toc');
+    // document.getElementById('lesson-scroll');
+
+    if (content && toc) {
+      const headings = content.querySelectorAll('h2, h3');
+      if (headings.length > 0) {
+        toc.innerHTML = Array.from(headings).map(h => {
+          const level = h.tagName === 'H2' ? '' : 'pl-3';
+          const id = h.id || h.textContent!.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+          if (!h.id) h.id = id;
+          return `<a href="#${id}" class="toc-link block py-0.5 hover:text-white transition truncate ${level}" data-id="${id}">${h.textContent}</a>`;
+        }).join('');
+
+        // Highlight heading aktif saat scroll
+        const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            const link = toc.querySelector(`[data-id="${entry.target.id}"]`);
+            if (link) link.classList.toggle('text-blue-400', entry.isIntersecting);
+          });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+
+        headings.forEach(h => observer.observe(h));
+
+        // Active state saat klik — langsung highlight sebelum scroll selesai
+        toc.addEventListener('click', (e) => {
+          const link = (e.target as Element).closest('.toc-link');
+          if (!link) return;
+          toc.querySelectorAll('.toc-link').forEach(l => l.classList.remove('text-blue-400'));
+          link.classList.add('text-blue-400');
+        });
+      } else {
+        toc.innerHTML = '<p class="text-gray-600 italic">Tidak ada heading</p>';
+      }
+    }
+
+    // Tandai selesai
+    document.addEventListener('click', async (e) => {
+      const btn = (e.target as Element).closest('#complete-btn') as HTMLButtonElement | null;
+      if (!btn) return;
+      const slug = btn.dataset.slug!;
+      const completed = btn.dataset.completed === 'true';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/learn/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, completed: !completed }),
+        });
+        if (!res.ok) throw new Error();
+        btn.dataset.completed = (!completed).toString();
+        const span = btn.querySelector('span')!;
+        if (!completed) {
+          btn.className = btn.className.replace('bg-blue-600 hover:bg-blue-500 text-white', 'bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400');
+          span.textContent = 'Selesai ✓';
+        } else {
+          btn.className = btn.className.replace('bg-green-500/20 text-green-400 hover:bg-red-500/20 hover:text-red-400', 'bg-blue-600 hover:bg-blue-500 text-white');
+          span.textContent = 'Tandai Selesai';
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</DashboardLayout>

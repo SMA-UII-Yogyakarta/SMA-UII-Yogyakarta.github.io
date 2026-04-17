@@ -2,12 +2,68 @@
 interface Props {
   id: string;
   title: string;
+  draggable?: boolean;
+  maxWidth?: string;
 }
-const { id, title } = Astro.props;
+const { id, title, draggable = false, maxWidth = 'max-w-md' } = Astro.props;
+const innerId = `${id}-inner`;
+const handleId = `${id}-handle`;
 ---
-<div id={id} class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
-    <h2 class="text-lg font-bold mb-4">{title}</h2>
-    <slot />
+
+<div
+  id={id}
+  data-inner-id={innerId}
+  data-handle-id={handleId}
+  data-draggable={draggable ? 'true' : null}
+  class={`hidden fixed inset-0 z-50 ${draggable ? 'bg-black/50' : 'bg-black/60 flex items-center justify-center p-4'}`}
+>
+  <div
+    id={innerId}
+    class={`bg-gray-900 border border-gray-800 rounded-xl w-full ${maxWidth} ${draggable ? 'absolute select-none' : 'flex flex-col max-h-[90vh]'}`}
+    style={draggable ? 'top:50%;left:50%;transform:translate(-50%,-50%)' : ''}
+  >
+    <div id={handleId} class={`flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0 ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+      <h2 class="text-lg font-bold">{title}</h2>
+      {draggable && <span class="text-gray-600 text-xs">⠿ drag</span>}
+    </div>
+    <div class="px-6 pb-6 overflow-y-auto">
+      <slot />
+    </div>
   </div>
 </div>
+
+{draggable && (
+  <script>
+    document.querySelectorAll<HTMLElement>('[data-draggable="true"]').forEach((modal) => {
+      const innerId = modal.dataset.innerId!;
+      const handleId = modal.dataset.handleId!;
+      const inner = document.getElementById(innerId) as HTMLElement | null;
+      const handle = document.getElementById(handleId);
+
+      if (!handle || !inner) return;
+
+      handle.addEventListener('mousedown', (e: MouseEvent) => {
+        const rect = inner.getBoundingClientRect();
+        inner.style.cssText = `top:${rect.top}px;left:${rect.left}px;transform:none`;
+        const ox = e.clientX - rect.left;
+        const oy = e.clientY - rect.top;
+        const onMove = (e: MouseEvent) => {
+          inner.style.left = `${e.clientX - ox}px`;
+          inner.style.top = `${e.clientY - oy}px`;
+        };
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+
+      new MutationObserver(() => {
+        if (!modal.classList.contains('hidden') && inner) {
+          inner.style.cssText = 'top:50%;left:50%;transform:translate(-50%,-50%)';
+        }
+      }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+    });
+  </script>
+)}
