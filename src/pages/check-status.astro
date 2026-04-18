@@ -24,7 +24,7 @@
 
       <div id="search-form" class="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <h1 class="text-2xl font-bold text-white mb-2">Cek Status Pendaftaran</h1>
-        <p class="text-gray-400 text-sm mb-6">Masukkan NISN atau Email untuk melihat status pendaftaranmu</p>
+        <p class="text-gray-400 text-sm mb-6">Masukkan NIS atau Email untuk melihat status pendaftaranmu</p>
         
         <div class="space-y-4">
           <div>
@@ -32,7 +32,7 @@
               type="text"
               id="identifier"
               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 text-white"
-              placeholder="NISN atau Email"
+              placeholder="NIS atau Email"
             />
             <p id="error-msg" class="text-red-400 text-sm mt-2 hidden"></p>
           </div>
@@ -55,8 +55,8 @@
 
         <div class="space-y-3 text-sm">
           <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">NISN</span>
-            <span id="result-nisn" class="font-medium text-white"></span>
+            <span class="text-gray-400">NIS</span>
+            <span id="result-nis" class="font-medium text-white"></span>
           </div>
           <div class="flex justify-between py-2 border-b border-gray-700">
             <span class="text-gray-400">Nama</span>
@@ -91,7 +91,7 @@
           id="check-another"
           class="w-full mt-6 border border-gray-700 hover:border-gray-600 text-gray-300 px-4 py-3 rounded-lg font-semibold transition"
         >
-          Cek NISN/Email Lain
+          Cek NIS/Email Lain
         </button>
       </div>
     </div>
@@ -195,7 +195,7 @@
     async function checkStatus() {
       const identifier = identifierInput.value.trim();
       if (!identifier) {
-        showError('Masukkan NISN atau Email');
+        showError('Masukkan NIS atau Email');
         return;
       }
 
@@ -233,7 +233,7 @@
         document.getElementById('status-title')!.textContent = statusInfo.title;
         document.getElementById('status-message')!.textContent = statusInfo.message;
         
-        document.getElementById('result-nisn')!.textContent = escapeHtml(data.nisn) || '-';
+        document.getElementById('result-nis')!.textContent = escapeHtml(data.nisn) || '-';
         document.getElementById('result-name')!.textContent = escapeHtml(data.name) || '-';
         document.getElementById('result-email')!.textContent = escapeHtml(data.email) || '-';
         document.getElementById('result-class')!.textContent = escapeHtml(data.class) || '-';

@@ -77,6 +77,12 @@ const user = Astro.locals.user;
   <div class="pt-20">
     <slot />
   </div>
+
+  <!-- Event: sandikodev-birthday — hapus baris ini untuk menonaktifkan -->
+  <script>
+    import { launchBirthdayEvent } from '../events/sandikodev-birthday';
+    launchBirthdayEvent();
+  </script>
   <footer class="border-t border-gray-800 mt-24 py-12">
     <div class="max-w-5xl mx-auto px-4">
       <div class="grid md:grid-cols-4 gap-8 mb-8">

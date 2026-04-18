@@ -2,15 +2,12 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from './schema';
 
-// Server-side only — TURSO_URL dan TURSO_TOKEN adalah secret server,
-// tidak boleh pakai prefix PUBLIC_ dan tidak boleh di-expose ke browser.
-// Use process.env for compatibility with test environment
-const tursoUrl = (typeof import.meta !== 'undefined' && import.meta.env?.TURSO_URL) 
-  || process.env.TURSO_URL 
-  || 'file:local.db';
-const tursoToken = (typeof import.meta !== 'undefined' && import.meta.env?.TURSO_TOKEN) 
-  || process.env.TURSO_TOKEN 
-  || '';
+// Server-side only — tidak boleh pakai prefix PUBLIC_
+// Astro membaca .env.production saat build production,
+// sehingga import.meta.env sudah berisi nilai yang benar.
+// process.env sebagai safety net untuk environment non-Astro (test, scripts).
+const tursoUrl   = import.meta.env.TURSO_URL   || process.env.TURSO_URL   || 'file:local.db';
+const tursoToken = import.meta.env.TURSO_TOKEN || process.env.TURSO_TOKEN || '';
 
 export const client = createClient({
   url: tursoUrl,

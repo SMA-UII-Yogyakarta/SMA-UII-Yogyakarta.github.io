@@ -3,8 +3,8 @@ dist/
 .astro/
 
 # Environment variables
-.env
 .env.local
+.env.*.local
 .env.production
 
 # Database

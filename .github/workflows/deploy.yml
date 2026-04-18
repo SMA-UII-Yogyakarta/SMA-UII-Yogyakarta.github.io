@@ -1,46 +1,31 @@
-name: Deploy to GitHub Pages
+name: Deploy to Awankinton
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  push:
+    branches: [main]
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
-    env:
-      TURSO_URL: ${{ secrets.TURSO_URL }}
-      TURSO_TOKEN: ${{ secrets.TURSO_TOKEN }}
-      OAUTH_GITHUB_CLIENT_ID: ${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
-      OAUTH_GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
-      PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
-      PUBLIC_SITE_NAME: SMA UII Lab
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
-      
-      - name: Install dependencies
-        run: bun install
-      
-      - name: Build
-        run: bun run build
-      
-      - uses: actions/configure-pages@v4
-      
-      - uses: actions/upload-pages-artifact@v3
+          submodules: true
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          path: dist
-      
-      - uses: actions/deploy-pages@v4
-        id: deployment
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/dev/project/smauii-dev-foundation
+            git pull origin main
+            git submodule update --init --recursive
+            docker build -t smauii-lab:latest .
+            cd /home/dev/web/instances/smauii/lab
+            docker compose up -d
+            docker image prune -f
+            echo "Deploy selesai: $(date)"

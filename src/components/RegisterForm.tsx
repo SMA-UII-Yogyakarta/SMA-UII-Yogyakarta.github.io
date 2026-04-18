@@ -9,6 +9,7 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<RegistrationStep>('verify');
   const [error, setError] = useState('');
+  const [isWarning, setIsWarning] = useState(false);
   const [hasGithub, setHasGithub] = useState<boolean | null>(null);
   const [dataConfirmed, setDataConfirmed] = useState(false);
 
@@ -59,11 +60,11 @@ export default function RegisterForm() {
 
   const verifyWithSlims = async () => {
     if (!nisn.trim()) {
-      setError('NISN harus diisi');
+      setError('NIS harus diisi');
       return;
     }
 
-    setError('');
+    setError(''); setIsWarning(false);
     setLoading(true);
     setHasGithub(null);
     setDataConfirmed(false);
@@ -74,7 +75,7 @@ export default function RegisterForm() {
       const checkResult = await checkResponse.json();
       
       if (!checkResponse.ok && checkResult.code === 'USER_EXISTS') {
-        setError('User dengan NISN/NIS/Email ini sudah terdaftar');
+        setError('User dengan NIS/Email ini sudah terdaftar');
         return;
       }
 
@@ -89,30 +90,32 @@ export default function RegisterForm() {
 
       if (!response.ok) {
         if (result.code === 'MEMBER_NOT_FOUND') {
-          setError('NISN tidak ditemukan di SLiMS');
+          setError('NIS tidak ditemukan di database perpustakaan SMA UII');
           return;
         }
         throw new Error(result.error || 'Verifikasi gagal');
       }
 
       if (data.isPending) {
-        setError('Anggota ini dalam status pending');
+        setError('Anggota ini dalam status pending di perpustakaan');
         return;
       }
 
-      if (data.isExpired) {
-        setError(`Keanggotaan expired pada ${data.expiredAt}`);
-        return;
-      }
+      // Expired membership = warning saja, bukan blokir
+      // Keanggotaan perpustakaan ≠ keanggotaan Digital Lab
+      const expiredWarning = data.isExpired
+        ? `Catatan: keanggotaan perpustakaan kamu expired sejak ${data.expiredAt}. Silakan perpanjang ke perpustakaan.`
+        : '';
 
       setFormData(prev => ({
         ...prev,
-        nisn: data.nisn || nisn.trim(),
-        nis: data.nis || data.nisn || nisn.trim(),
-        name: data.name,
+        nisn: data.nis || nisn.trim(),  // SLiMS tidak punya NISN, pakai NIS
+        nis:  data.nis || nisn.trim(),
+        name: data.name || '',
         email: data.email || '',
-        class: data.class,
+        class: '',  // SLiMS tidak menyimpan kelas — user isi manual
       }));
+      if (expiredWarning) { setError(expiredWarning); setIsWarning(true); } else { setIsWarning(false); }
       setStep('data');
 
     } catch (err) {
@@ -127,6 +130,7 @@ export default function RegisterForm() {
     
     if (step === 'data') {
       if (!formData.email) newErrors.email = 'Email harus diisi';
+      if (!formData.class) newErrors.class = 'Kelas harus diisi';
     } else if (step === 'tracks') {
       if (formData.tracks.length === 0) newErrors.tracks = 'Pilih minimal 1 track';
     }
@@ -231,11 +235,13 @@ export default function RegisterForm() {
         ))}
       </div>
 
-      {/* Step 1: Verify NISN */}
+      {/* Step 1: Verify NIS */}
       {step === 'verify' && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Verifikasi NISN</h3>
-          <p className="text-gray-400 text-sm mb-4">Masukkan NISN untuk verifikasi data siswa dari SLiMS</p>
+          <h3 className="font-bold mb-4">Verifikasi NIS</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            Masukkan NIS (Nomor Induk Siswa) untuk verifikasi data dari perpustakaan SMA UII
+          </p>
           
           <div className="mb-4">
             <input
@@ -246,10 +252,10 @@ export default function RegisterForm() {
                 setError('');
               }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-              placeholder="Masukkan NISN"
+              placeholder="Masukkan NIS (contoh: 1763)"
               maxLength={10}
             />
-            {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+            {error && <p className={`text-xs mt-1 ${isWarning ? 'text-yellow-400' : 'text-red-400'}`}>{error}</p>}
           </div>
 
           <button
@@ -294,13 +300,20 @@ export default function RegisterForm() {
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Kelas</label>
-              <input
-                type="text"
+              <label className="block text-sm font-medium mb-2">Kelas <span className="text-red-400">*</span></label>
+              <select
                 value={formData.class}
-                readOnly
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 opacity-70"
-              />
+                onChange={(e) => setFormData(prev => ({ ...prev, class: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">-- Pilih Kelas --</option>
+                {['X IPA 1','X IPA 2','X IPS 1','X IPS 2',
+                  'XI IPA 1','XI IPA 2','XI IPS 1','XI IPS 2',
+                  'XII IPA 1','XII IPA 2','XII IPS 1','XII IPS 2'].map(k => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+              {errors.class && <p className="text-red-400 text-xs mt-1">{errors.class}</p>}
             </div>
 
             {/* Confirmation Checkbox */}
@@ -457,7 +470,7 @@ export default function RegisterForm() {
             
             <div className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">NISN</span>
+                <span className="text-gray-400">NIS</span>
                 <span className="font-medium">{formData.nisn}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">

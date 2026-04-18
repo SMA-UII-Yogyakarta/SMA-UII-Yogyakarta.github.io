@@ -13,7 +13,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Validation
     if (!identifier) {
-      return createErrorResponse('NISN, NIS, atau Email harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
+      return createErrorResponse('NIS atau Email harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
     }
 
     if (!password) {
@@ -30,7 +30,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     if (!user) {
-      return createErrorResponse('NISN/NIS/Email tidak ditemukan', 401, { code: 'USER_NOT_FOUND' });
+      return createErrorResponse('NIS/Email tidak ditemukan', 401, { code: 'USER_NOT_FOUND' });
     }
 
     // Check if password hash exists

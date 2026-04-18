@@ -1,0 +1,106 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import { requireAuth } from '@lib/guards';
+
+const redirect = requireAuth(Astro);
+if (redirect) return redirect;
+
+const { user } = Astro.locals;
+const birthday = new Date('2026-04-22');
+const today = new Date();
+const daysLeft = Math.ceil((birthday.getTime() - today.getTime()) / 86400000);
+const isBirthday = daysLeft <= 0 && daysLeft > -1;
+---
+
+<DashboardLayout title="About">
+  <div class="max-w-2xl mx-auto py-8 px-4">
+
+    <!-- Easter egg header -->
+    <div class="text-center mb-10">
+      {isBirthday ? (
+        <div class="text-6xl mb-4 animate-bounce">🎂</div>
+      ) : (
+        <div class="text-6xl mb-4">🥚</div>
+      )}
+      <p class="text-xs text-gray-600 uppercase tracking-widest mb-2">Easter Egg</p>
+      <h1 class="text-3xl font-bold mb-3">
+        {isBirthday ? 'Selamat Ulang Tahun! 🎉' : 'Kamu menemukan sesuatu...'}
+      </h1>
+      {!isBirthday && daysLeft > 0 && (
+        <p class="text-gray-400 text-sm">
+          <span class="text-blue-400 font-semibold">{daysLeft} hari</span> lagi menuju 22 April 🎂
+        </p>
+      )}
+    </div>
+
+    <!-- Cerita -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 space-y-4 text-gray-300 leading-relaxed">
+      <p>
+        Platform ini bukan proyek kantor, bukan tugas kuliah, bukan startup yang dikejar investor.
+        Ini adalah <span class="text-white font-medium">hadiah ulang tahun yang saya buat untuk diri sendiri</span> —
+        dan untuk siapapun yang mau belajar.
+      </p>
+      <p>
+        Idenya sederhana: saya ingin ada tempat di mana pelajar Indonesia bisa belajar teknologi
+        secara serius — dengan konten yang bisa diaudit, komunitas yang nyata, dan jalur yang jelas
+        dari "tidak tahu apa-apa" sampai "bisa berkontribusi ke proyek nyata".
+      </p>
+      <p>
+        SMA UII Yogyakarta adalah instansi pertama tempat ini diterapkan — bukan karena yang lain
+        tidak layak, tapi karena di sinilah saya bisa mulai dengan paling konkret.
+        Tapi visinya lebih besar dari itu: <span class="text-white font-medium">seluruh sekolah di Indonesia</span>.
+        Ini adalah bentuk kecintaan saya kepada tanah air dan kontribusi kecil saya kepada dunia pendidikan.
+      </p>
+      <p>
+        Semua kode dan konten open source. Fork, adaptasi, terapkan di sekolahmu —
+        dengan satu syarat: <span class="text-white font-medium">cantumkan kredit</span>,
+        agar ekosistem pendidikan digital Indonesia bisa tumbuh bersama, bukan sendiri-sendiri.
+      </p>
+      <p class="text-gray-500 text-sm italic">
+        — Dibangun dengan ❤️ dan banyak kopi, April 2026
+      </p>
+    </div>
+
+    <!-- Stack -->
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+      <h2 class="font-semibold mb-4 text-sm text-gray-400 uppercase tracking-wider">Dibangun dengan</h2>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        {[
+          ['⚡', 'Astro 6', 'SSR Framework'],
+          ['🎨', 'Tailwind v4', 'Styling'],
+          ['🗄️', 'Turso + Drizzle', 'Database'],
+          ['🔐', 'Lucia v3', 'Auth'],
+          ['📝', 'Markdown + GitHub', 'Konten'],
+          ['🚀', 'Bun', 'Runtime'],
+        ].map(([icon, name, desc]) => (
+          <div class="flex items-center gap-2 text-gray-400">
+            <span>{icon}</span>
+            <div>
+              <span class="text-white text-xs font-medium">{name}</span>
+              <span class="text-gray-600 text-xs ml-1">— {desc}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="flex gap-3 justify-center text-sm">
+      <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
+        class="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:border-blue-500/50 transition text-gray-400 hover:text-white">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        GitHub Org
+      </a>
+      <a href="/learn"
+        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition text-white">
+        Mulai Belajar →
+      </a>
+    </div>
+
+    <p class="text-center text-xs text-gray-700 mt-8">
+      Hanya {user?.name?.split(' ')[0] ?? 'kamu'} dan beberapa orang yang tahu halaman ini ada. 🤫
+    </p>
+  </div>
+</DashboardLayout>
