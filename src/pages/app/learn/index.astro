@@ -99,15 +99,33 @@ weeks.forEach((week, i) => {
 <DashboardLayout title="Belajar">
   <PageHeader subtitle="Pilih track yang ingin kamu pelajari" />
 
+  <!-- Search & Filter -->
+  <div class="flex gap-3 mb-5 flex-wrap">
+    <input id="track-search" type="text" placeholder="Cari track..."
+      class="flex-1 min-w-40 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600" />
+    <div class="flex gap-2">
+      {['Semua','Pemula','Menengah','Lanjutan'].map(f => (
+        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
+      ))}
+    </div>
+  </div>
+
   <div class="flex gap-6 items-start">
     <!-- Track cards -->
     <div class="flex-1 min-w-0">
       <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
         {trackStats.map(({ track, trackSlug, total, completed }) => {
           const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const lessons = all.filter(l => l.data.track === trackSlug && !l.id.endsWith('/README'));
+          const levels = lessons.map(l => l.data.level).filter(Boolean);
+          const hasAdvanced = levels.includes('advanced');
+          const hasIntermediate = levels.includes('intermediate');
+          const dominantLevel = hasAdvanced ? 'Lanjutan' : hasIntermediate ? 'Menengah' : 'Pemula';
           return (
             <a href={`/app/learn/${trackSlug}`}
-              class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
+              data-title={track.data.title.toLowerCase()}
+              data-level={dominantLevel}
+              class="track-card bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
               <div class="flex items-start gap-3 mb-4">
                 <span class="text-3xl flex-shrink-0">{track.data.icon}</span>
                 <div class="flex-1 min-w-0">
@@ -171,4 +189,35 @@ weeks.forEach((week, i) => {
       </div>
     </div>
   </div>
+  <script>
+    let activeFilter = 'Semua';
+    const search = document.getElementById('track-search') as HTMLInputElement;
+    const cards = document.querySelectorAll<HTMLElement>('.track-card');
+
+    function applyFilter() {
+      const q = search.value.toLowerCase();
+      cards.forEach(card => {
+        const matchSearch = !q || card.dataset.title?.includes(q);
+        const matchLevel = activeFilter === 'Semua' || card.dataset.level === activeFilter;
+        card.style.display = matchSearch && matchLevel ? '' : 'none';
+      });
+    }
+
+    search.addEventListener('input', applyFilter);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = (btn as HTMLElement).dataset.filter!;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.toggle('bg-blue-600', (b as HTMLElement).dataset.filter === activeFilter);
+          b.classList.toggle('border-blue-600', (b as HTMLElement).dataset.filter === activeFilter);
+          b.classList.toggle('text-white', (b as HTMLElement).dataset.filter === activeFilter);
+          b.classList.toggle('text-gray-400', (b as HTMLElement).dataset.filter !== activeFilter);
+          b.classList.toggle('bg-gray-900', (b as HTMLElement).dataset.filter !== activeFilter);
+          b.classList.toggle('border-gray-800', (b as HTMLElement).dataset.filter !== activeFilter);
+        });
+        applyFilter();
+      });
+    });
+  </script>
 </DashboardLayout>
