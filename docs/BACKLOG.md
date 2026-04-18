@@ -28,6 +28,23 @@ Terakhir diperbarui: 2026-04-18
 
 ---
 
+## ✅ Selesai
+
+| Item | Keterangan |
+|------|-----------|
+| 1.1 Expired membership → warning | Fixed |
+| 1.2 Label NISN → NIS | Fixed |
+| 1.3 Dropdown kelas wajib | Fixed |
+| 1.4 Submodule pointer | Fixed |
+| 2.1 Rate limiting SLiMS API | Fixed |
+| 2.2 CI/CD GitHub Actions | Fixed |
+| 2.3 Mobile profile nav | Fixed |
+| 2.5 Production Turso DB | Fixed |
+| Env management | Fixed — .env.production via build args |
+| Commit messages | Fixed — English, no infra details |
+
+---
+
 ## 🔴 Prioritas 1 — Bug & Blocker
 
 > Harus selesai sebelum user pertama masuk. Setiap item ini bisa menyebabkan
