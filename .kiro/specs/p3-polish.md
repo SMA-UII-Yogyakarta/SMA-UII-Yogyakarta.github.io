@@ -13,13 +13,15 @@ tapi belum diverifikasi di staging dan belum di-deploy ke production.
 
 ## Status
 
-| Item | Kode | Staging | Production |
+| Item | Kode | Verified | Production |
 |------|------|---------|-----------|
-| 3.1 Toast notification | ✅ | ❌ | ❌ |
-| 3.3 Search & filter tracks | ✅ | ❌ | ❌ |
-| 3.4 Module progress bars | ✅ | ❌ | ❌ |
-| 2.4 Mobile lesson drawer | ✅ | ❌ | ❌ |
-| 3.2 Carousel "Terakhir Dipelajari" | ✅ | ❌ | ❌ |
+| 3.1 Toast notification | ✅ | ✅ | ⏳ deploy |
+| 3.3 Search & filter tracks | ✅ | ✅ | ⏳ deploy |
+| 3.4 Module progress bars | ✅ | ✅ | ⏳ deploy |
+| 2.4 Mobile lesson drawer | ✅ | ✅ | ⏳ deploy |
+| 3.2 Carousel "Terakhir Dipelajari" | ✅ | ✅ | ⏳ deploy |
+
+**Semua P3 selesai di kode. Siap deploy production via manual trigger GitHub Actions.**
 
 > Semua item sudah ada di kode dan sudah diverifikasi/diperbaiki (2026-04-19):
 > - Toast: durasi 2500ms, fade in/out smooth, z-index 9999, script dikonsolidasi ke satu block

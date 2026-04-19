@@ -1,8 +1,12 @@
 name: Deploy to Awankinton
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Alasan deploy ke production'
+        required: true
+        default: 'Release fitur baru'
 
 jobs:
   deploy:
@@ -29,3 +33,4 @@ jobs:
             docker compose up -d
             docker image prune -f
             echo "Deploy selesai: $(date)"
+            echo "Alasan: ${{ github.event.inputs.reason }}"
