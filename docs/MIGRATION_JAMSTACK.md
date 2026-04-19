@@ -1,8 +1,11 @@
 # Migrasi Arsitektur: Astro SSR → JAMstack
 
-**Tanggal:** 2026-04-15  
-**Status:** Dokumen Perencanaan  
+**Tanggal:** 2026-04-15
+**Status:** 📋 Roadmap Aktif — dijadwalkan di Milestone 4 (Q3 2026)
+**Prasyarat:** smauii-dev-api (Milestone 3) harus selesai dan stabil dulu
 **Tujuan:** Migrasi dari Astro SSR monolith ke JAMstack (Astro Static + Hono API di Cloudflare Workers)
+
+> Lihat `docs/ROADMAP.md` untuk konteks lengkap dan urutan milestone.
 
 ---
 

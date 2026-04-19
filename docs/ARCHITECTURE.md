@@ -29,11 +29,12 @@ Benar secara logika, tapi error message bisa lebih informatif + redirect ke `/ch
 #### 5. Tidak ada auth guard server-side di halaman `/app/*`
 Semua halaman `/app/*` hanya guard client-side (fetch `/api/auth/me` lalu redirect). Jika JS lambat/gagal, halaman ter-render tanpa auth.
 
-#### 6. Deploy workflow build SSR tapi target GitHub Pages (static)
-`astro.config.mjs` pakai `output: 'server'` + Node adapter, tapi `deploy.yml` upload ke GitHub Pages yang hanya support static files. Ini **tidak akan berjalan**.
+#### 6. ~~Deploy workflow build SSR tapi target GitHub Pages (static)~~
+**RESOLVED** — Deploy sekarang ke Awankinton via SSH + Docker, bukan GitHub Pages.
+Lihat `docs/ROADMAP.md` untuk rencana migrasi ke GitHub Pages di masa depan (Milestone 4).
 
-#### 7. API routes tidak bisa di GitHub Pages
-GitHub Pages hanya serve static files. Semua `/api/*` tidak akan berfungsi.
+#### 7. ~~API routes tidak bisa di GitHub Pages~~
+**RESOLVED** — Sama dengan poin 6. Saat ini SSR di Awankinton.
 
 ---
 

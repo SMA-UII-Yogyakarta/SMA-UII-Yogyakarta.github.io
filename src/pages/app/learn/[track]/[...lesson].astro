@@ -220,7 +220,7 @@ const levelColor: Record<string, string> = {
 
   <!-- Mobile lesson nav drawer -->
   <div id="lesson-nav-overlay" class="lg:hidden hidden fixed inset-0 z-50 bg-black/60">
-    <div class="absolute left-0 top-0 bottom-0 w-72 bg-gray-900 border-r border-gray-800 overflow-y-auto">
+    <div id="lesson-nav-panel" class="absolute left-0 top-0 bottom-0 w-72 bg-gray-900 border-r border-gray-800 overflow-y-auto">
       <div class="p-3 border-b border-gray-800 flex items-center justify-between">
         <a href={`/app/learn/${track}`} class="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +286,15 @@ const levelColor: Record<string, string> = {
       toast.style.opacity = '0';
 
       if (type === 'success') {
-        toast.innerHTML = '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' + message;
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icon.setAttribute('class', 'w-4 h-4 shrink-0');
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('stroke', 'currentColor');
+        icon.setAttribute('viewBox', '0 0 24 24');
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+        const text = document.createTextNode(message);
+        toast.appendChild(icon);
+        toast.appendChild(text);
       } else {
         toast.textContent = message;
       }
@@ -305,7 +313,7 @@ const levelColor: Record<string, string> = {
 
     // Mobile lesson nav drawer
     const overlay = document.getElementById('lesson-nav-overlay');
-    const drawerPanel = overlay?.querySelector('div') as HTMLElement | null;
+    const drawerPanel = document.getElementById('lesson-nav-panel') as HTMLElement | null;
 
     function openDrawer() {
       if (!overlay || !drawerPanel) return;

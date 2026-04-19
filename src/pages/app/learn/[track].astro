@@ -33,7 +33,9 @@ const totalReadSeconds = trackSessions.reduce((sum, s) => sum + (s.duration ?? 0
 const totalReadMinutes = Math.round(totalReadSeconds / 60);
 
 // Streak — hari berturut-turut belajar (semua track)
-const allSessions = await db.select().from(readingSessions).where(eq(readingSessions.userId, user!.id));
+const streakCutoff = Date.now() - 366 * 24 * 60 * 60 * 1000;
+const allSessions = await db.select().from(readingSessions)
+  .where(and(eq(readingSessions.userId, user!.id), gte(readingSessions.startedAt, streakCutoff)));
 const activeDays = new Set(allSessions.map(s => new Date(s.startedAt).toDateString()));
 let streak = 0;
 const today = new Date();

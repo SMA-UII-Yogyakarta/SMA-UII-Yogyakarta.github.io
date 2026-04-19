@@ -7,18 +7,19 @@
 - **Database:** Turso (libSQL/SQLite) via Drizzle ORM
 - **Auth:** Lucia v3 + `@lucia-auth/adapter-drizzle`; GitHub OAuth via Arctic
 - **Validation:** Zod
-- **Password hashing:** `@node-rs/argon2`
+- **Password hashing:** `@node-rs/argon2` (foundation SSR) / `bcryptjs` (smauii-dev-api CF Workers)
 - **IDs:** nanoid
 - **QR codes:** qrcode
 
 ## Runtime & Package Manager
 
-- **Runtime:** Node.js ≥ 22.12.0; scripts run with **Bun** (preferred) or `tsx` for Node fallback
-- **Package manager:** **pnpm** (use pnpm, not npm or yarn)
+- **Runtime:** Node.js ≥ 22.12.0
+- **Package manager:** **Bun** — gunakan `bun`, bukan `pnpm`, `npm`, atau `yarn`
+- Scripts dijalankan dengan `bun run <script>`
 
 ## Path Aliases
 
-Always use these aliases — never use deep relative imports (`../../../`):
+Selalu gunakan alias ini — jangan gunakan relative import dalam (`../../../`):
 
 ```
 @/*           → src/*
@@ -30,45 +31,45 @@ Always use these aliases — never use deep relative imports (`../../../`):
 @styles/*     → src/styles/*
 ```
 
-Use relative imports only within the same directory.
+Gunakan relative import hanya dalam direktori yang sama.
 
 ## Common Commands
 
 ```bash
-# Dev server (run manually in terminal)
-pnpm dev
+# Dev server (jalankan manual di terminal — jangan via agent)
+bun run dev
 
 # Build
-pnpm build
+bun run build
 
 # Preview production build
-pnpm preview
+bun run preview
+
+# Type check — harus 0 errors, 0 warnings, 0 hints sebelum commit
+bun run check
 
 # Database
-pnpm db:generate       # generate migration from schema changes
-pnpm db:push           # push schema directly (dev only)
-pnpm db:migrate        # run migrations
-pnpm db:seed           # seed basic data
-pnpm db:seed:enhanced  # seed with richer data
-pnpm db:studio         # open Drizzle Studio
+bun run db:push           # push schema langsung (dev only)
+bun run db:studio         # buka Drizzle Studio
+bun run db:setup:enhanced # reset + seed database preview
 
 # Tests
-pnpm test              # unit tests (Bun test runner)
-pnpm test:e2e          # Playwright e2e tests
-pnpm test:all          # both
+bun test                  # unit tests
+bun run test:e2e          # Playwright e2e tests
+bun run ci                # full CI pipeline lokal
 ```
 
 ## Testing
 
 - **Unit:** Bun's built-in test runner (`bun test`)
-- **E2E:** Playwright (`playwright.config.ts`)
+- **E2E:** Playwright (`playwright.config.ts`) — port 5174 untuk test isolation
 
 ## Environment Variables
 
-Stored in `.env` (see `.env.example`). Key vars:
+Tersimpan di `.env` (lihat `.env.example`). Variabel utama:
 
-- `TURSO_URL` — Turso database URL (no `PUBLIC_` prefix — server-only)
-- `TURSO_TOKEN` — Turso auth token (server-only, never expose to client)
+- `TURSO_URL` — Turso database URL (tanpa prefix `PUBLIC_` — server-only)
+- `TURSO_TOKEN` — Turso auth token (server-only, jangan expose ke client)
 - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — GitHub OAuth app credentials
 
-Never use `PUBLIC_` prefix for secrets or database credentials.
+**Jangan pernah** gunakan prefix `PUBLIC_` untuk secrets atau database credentials.
