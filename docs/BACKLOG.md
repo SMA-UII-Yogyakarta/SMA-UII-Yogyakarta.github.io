@@ -45,7 +45,54 @@ Terakhir diperbarui: 2026-04-18
 
 ---
 
-## 🔴 Prioritas 1 — Bug & Blocker
+## 🔴 Prioritas 0 — Workflow & Infrastruktur Dev (Harus Diperbaiki Dulu)
+
+> Item ini harus diselesaikan sebelum mengerjakan fitur apapun.
+> Workflow yang salah akan menyebabkan deploy production yang tidak terkontrol.
+
+### 0.1 Deploy Workflow Trigger Otomatis ke Production
+
+**Masalah:** `.github/workflows/deploy.yml` saat ini trigger otomatis saat push
+ke `main`. Ini berbahaya — setiap merge ke main langsung deploy ke production
+tanpa audit staging terlebih dahulu.
+
+**Fix:**
+```yaml
+# .github/workflows/deploy.yml
+on:
+  workflow_dispatch:  # ubah ke manual trigger
+    inputs:
+      reason:
+        description: 'Alasan deploy ke production'
+        required: true
+```
+
+**File:** `.github/workflows/deploy.yml`
+
+---
+
+### 0.2 Branch Protection Rules Belum Di-setup
+
+**Masalah:** Tidak ada proteksi di branch `main` dan `develop`. Siapapun bisa
+push langsung tanpa PR dan tanpa CI pass.
+
+**Fix di GitHub:** Settings → Branches → Add rule:
+- Branch: `main` → Require PR, Require CI pass, No direct push
+- Branch: `develop` → Require PR, Require CI pass, No direct push
+
+---
+
+### 0.3 Staging Environment Belum Ada
+
+**Masalah:** Tidak ada environment staging. Fitur langsung dari dev ke production
+tanpa ada tempat untuk audit.
+
+**Fix:** Setup `lab-dev.localhost` untuk staging lokal.
+Detail di `docs/WORKFLOW.md` bagian 6.
+
+---
+
+
 
 > Harus selesai sebelum user pertama masuk. Setiap item ini bisa menyebabkan
 > user tidak bisa mendaftar atau pengalaman yang membingungkan.

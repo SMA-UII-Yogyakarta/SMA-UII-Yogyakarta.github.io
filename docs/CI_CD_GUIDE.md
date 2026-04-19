@@ -1,174 +1,208 @@
-# CI/CD Configuration - Complete Guide
+# CI/CD Configuration — Complete Guide
+
+> **Lihat juga:** `docs/WORKFLOW.md` untuk gambaran lengkap alur kerja dari
+> development hingga production.
+
+---
+
+## ⚠️ Masalah yang Diketahui (Harus Diperbaiki)
+
+Deploy workflow saat ini **trigger otomatis saat push ke `main`** — ini salah.
+Deploy ke production harus selalu manual dan hanya setelah audit di staging.
+
+**Fix yang dibutuhkan di `.github/workflows/deploy.yml`:**
+```yaml
+# Ubah dari:
+on:
+  push:
+    branches: [main]
+
+# Menjadi:
+on:
+  workflow_dispatch:  # manual trigger only
+    inputs:
+      reason:
+        description: 'Alasan deploy'
+        required: true
+```
+
+---
 
 ## 🔄 Workflows
 
-### 1. **Test Workflow** (`.github/workflows/test.yml`)
+### 1. Test Workflow (`.github/workflows/test.yml`)
 
-Runs on:
-- Push to `main` or `develop`
-- Pull requests to `main` or `develop`
+Berjalan otomatis pada:
+- Push ke `main` atau `develop`
+- Pull request ke `main` atau `develop`
 
-**Jobs:**
+**Jobs (berurutan):**
 
-#### Unit Tests
-- Runtime: ~10 seconds
-- Runs: `bun test`
-- Tests: Format utilities, helpers, guards
+#### Unit Tests (~10 detik)
+```bash
+bun test tests/unit
+```
+Menguji: format utilities, helpers, guards
 
-#### E2E Tests
-- Runtime: ~90 seconds
-- Runs: `bun run test:e2e`
-- Tests: Full user flows (auth, members, projects, etc.)
-- Database: Fresh seed before tests
-- Browser: Chromium only (for speed)
+#### Type Check (~15 detik)
+```bash
+bun run check  # astro check
+```
+Memvalidasi: TypeScript types, Astro components
 
-#### Type Check
-- Runtime: ~15 seconds
-- Runs: `bun run astro check`
-- Validates: TypeScript types, Astro components
+#### E2E Tests (~90 detik) — hanya jika unit tests pass
+```bash
+bun run test:e2e
+```
+Menguji: full user flows (auth, members, progress, dll)
+Database: `smauiilab-prev` (Turso preview — bukan production)
+Browser: Chromium only (untuk kecepatan)
 
-**Total Runtime:** ~2 minutes
+**Total runtime: ~2 menit**
 
-### 2. **Deploy Workflow** (`.github/workflows/deploy.yml`)
+**Jika CI gagal → PR tidak bisa di-merge.**
 
-Trigger: Manual only (`workflow_dispatch`)
+---
+
+### 2. Deploy Workflow (`.github/workflows/deploy.yml`)
+
+> ⚠️ Saat ini trigger otomatis — harus diubah ke manual. Lihat bagian atas.
+
+**Target:** Server Awankinton via SSH
 
 **Steps:**
-1. Install Bun
-2. Install dependencies
-3. Build static site
-4. Deploy to GitHub Pages
+1. Checkout repo + submodules (butuh `GH_TOKEN`)
+2. SSH ke server
+3. `git pull origin main`
+4. `git submodule update --init --recursive`
+5. `docker build -t smauii-lab:latest .`
+6. `docker compose up -d`
+7. `docker image prune -f`
 
-**Runtime:** ~60 seconds
+**Runtime:** ~3-5 menit (tergantung perubahan)
 
-## 🔐 Required Secrets
+---
 
-Configure in GitHub Settings → Secrets and variables → Actions:
+## 🔐 GitHub Secrets yang Dibutuhkan
+
+Configure di: GitHub repo → Settings → Secrets and variables → Actions
 
 ```bash
+# Server SSH
+SERVER_HOST          # IP server Awankinton
+SERVER_USER          # username SSH (dev)
+SSH_PRIVATE_KEY      # private key SSH (tanpa passphrase)
+
 # Database (Turso)
-TURSO_URL=libsql://[database-name]-[org].turso.io
-TURSO_TOKEN=eyJhbGc...
+TURSO_URL            # libsql://smauiilab-prev-sandikodev.aws-ap-northeast-1.turso.io
+TURSO_TOKEN          # auth token Turso
 
 # OAuth (GitHub)
-OAUTH_GITHUB_CLIENT_ID=Ov23li...
-OAUTH_GITHUB_CLIENT_SECRET=1234567890abcdef...
+OAUTH_GITHUB_CLIENT_ID
+OAUTH_GITHUB_CLIENT_SECRET
 
-# Site Config (for deploy)
-PUBLIC_SITE_URL=https://your-domain.com
+# Misc
+GH_TOKEN             # GitHub token untuk checkout submodule private
+PUBLIC_SITE_URL      # https://lab.smauiiyk.sch.id
 ```
 
-## 📊 Test Database Strategy
+---
 
-### Development/Preview Database
-- Name: `smauiilab-prev`
-- Purpose: CI/CD testing
-- Reset: Before each test run
-- Data: Seeded with `seed-enhanced.ts`
+## 📊 Database Strategy
 
-### Production Database
-- Name: `smauiilab-prod`
-- Purpose: Live application
-- Protected: Not used in CI/CD
-- Backup: Regular snapshots
+| Database | Nama Turso | Digunakan untuk |
+|----------|-----------|----------------|
+| Preview | `smauiilab-prev-sandikodev` | Development, CI, staging |
+| Production | `smauiilab-sandikodev` | Production only |
 
-## ✅ Pre-merge Checklist
+**Aturan:** Database production **tidak pernah** dipakai di CI/CD.
+Semua test menggunakan database preview yang bisa di-reset kapan saja.
 
-Before merging to `main`:
+---
 
-- [ ] All tests passing (43/44 minimum)
-- [ ] Type check passing
-- [ ] No console errors in E2E tests
-- [ ] Database migrations tested
-- [ ] Environment variables documented
+## 📊 Status Tests Saat Ini
 
-## 🚀 Deployment Process
+```
+✅ Unit Tests:     3/3 passing (100%)
+✅ E2E Tests:     43/44 passing (97.7%)
+⚠️  Flaky Tests:   1 — projects grid visibility (timing issue)
+✅ Type Check:    Passing (0 errors, 0 warnings)
 
-### Automatic (Recommended)
+Total CI Time:    ~2 menit
+```
+
+---
+
+## ✅ Pre-Push Checklist
+
+Wajib sebelum push ke remote:
+
 ```bash
-# 1. Merge to main
-git checkout main
-git merge develop
-git push origin main
-
-# 2. Tests run automatically
-# 3. If tests pass, manually trigger deploy workflow
+bun run check   # harus 0 errors, 0 warnings, 0 hints
+bun run build   # harus berhasil tanpa error
 ```
 
-### Manual
+## ✅ Pre-Merge Checklist (PR ke develop)
+
+```
+[ ] bun run check: 0 errors, 0 warnings, 0 hints
+[ ] bun run build: berhasil
+[ ] Test manual di browser
+[ ] Fitur baru punya test (jika applicable)
+[ ] Tidak ada console.log yang tertinggal
+[ ] Tidak ada hardcoded credential atau URL
+[ ] Submodule pointer di-update jika ada perubahan konten
+```
+
+---
+
+## 🚀 Menjalankan CI Lokal
+
 ```bash
-# 1. Build locally
-bun run build
+# Full pipeline (seperti CI)
+bun run ci
 
-# 2. Test build
-bun run preview
+# Individual
+bun test                    # unit tests
+bun run test:e2e           # E2E tests
+bun run check              # type check
 
-# 3. Deploy via GitHub Actions
-# Go to Actions → Deploy to GitHub Pages → Run workflow
+# Debug
+bun run test:e2e:ui        # E2E dengan Playwright UI
+bunx playwright show-report # lihat laporan terakhir
 ```
+
+---
 
 ## 🐛 Troubleshooting
 
-### Tests Failing in CI but Pass Locally
+| Masalah | Penyebab | Solusi |
+|---------|---------|--------|
+| Tests gagal di CI tapi pass lokal | State database berbeda | `bun run db:setup:enhanced` |
+| E2E timeout | Server startup lambat | Naikkan timeout di `playwright.config.ts` ke 180000 |
+| Type error setelah pull | Types belum di-sync | `bun run astro sync` |
+| Submodule kosong di CI | `GH_TOKEN` tidak di-set | Tambahkan secret `GH_TOKEN` |
+| Flaky test projects grid | Timing issue | Jalankan ulang, atau tambahkan `waitForLoadState` |
 
-**Cause:** Database state differences
-
-**Fix:**
-```bash
-# Reset local database to match CI
-bun run db:setup:enhanced
-bun run test:e2e
-```
-
-### E2E Tests Timeout
-
-**Cause:** Slow network or server startup
-
-**Fix:** Increase timeout in `playwright.config.ts`:
-```typescript
-webServer: {
-  timeout: 180000, // 3 minutes
-}
-```
-
-### Type Check Fails
-
-**Cause:** Missing type definitions
-
-**Fix:**
-```bash
-# Regenerate types
-bun run astro sync
-bun run astro check
-```
+---
 
 ## 📈 Performance Optimization
 
-### Current Metrics
-- Unit tests: 10s
-- E2E tests: 90s
-- Type check: 15s
-- **Total: ~2 minutes**
+**Saat ini:**
+- Unit tests: ~10s
+- E2E tests: ~90s
+- Type check: ~15s
+- **Total: ~2 menit**
 
-### Optimization Ideas
-1. **Parallel E2E tests** - Split by feature (requires DB isolation)
-2. **Cache Playwright browsers** - Save ~20s
-3. **Incremental type checking** - Only changed files
-4. **Test sharding** - Split tests across multiple workers
+**Optimasi yang bisa dilakukan:**
+1. Cache Playwright browsers di CI → hemat ~20s
+2. Parallel E2E tests → butuh DB isolation per worker
+3. Incremental type checking → hanya file yang berubah
+4. Test sharding → split tests ke multiple workers
 
-## 🔄 Continuous Improvement
+---
 
-### Monitoring
-- Track test duration trends
-- Monitor flaky test rate
-- Review failed test patterns
-
-### Maintenance
-- Update dependencies monthly
-- Review and remove obsolete tests
-- Optimize slow tests
-
-## 📝 Adding New Tests
+## 📝 Menambahkan Test Baru
 
 ### Unit Test
 ```typescript
@@ -191,23 +225,28 @@ test('should do something', async ({ page }) => {
 });
 ```
 
-## 🎯 Success Criteria
+---
 
-- ✅ All tests pass consistently
-- ✅ Total CI time < 3 minutes
-- ✅ Flaky test rate < 5%
-- ✅ Type safety enforced
-- ✅ Automated deployment ready
+## 🎯 Roadmap CI/CD
 
-## 📞 Support
+### Segera (harus diperbaiki)
+- [ ] Ubah deploy workflow ke manual trigger (`workflow_dispatch`)
+- [ ] Tambahkan branch protection rules di GitHub (`main` dan `develop`)
+- [ ] Pisahkan deploy staging (develop) dan production (main)
 
-Issues with CI/CD? Check:
-1. GitHub Actions logs
-2. Playwright HTML report (artifact)
-3. Test results (artifact)
-4. This documentation
+### Jangka Menengah
+- [ ] Fix flaky projects grid test
+- [ ] Cache Playwright browsers di CI
+- [ ] Tambahkan data-testid attributes untuk selector yang stabil
+- [ ] Setup test coverage reporting
+
+### Jangka Panjang
+- [ ] Visual regression testing
+- [ ] API contract tests
+- [ ] Performance benchmarks
+- [ ] Load testing
 
 ---
 
-**Last Updated:** 2026-04-15  
-**Status:** ✅ Production Ready
+**Terakhir diperbarui:** 2026-04-19
+**Status:** ⚠️ Perlu perbaikan deploy workflow (lihat bagian atas)

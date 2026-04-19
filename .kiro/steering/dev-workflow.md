@@ -1,63 +1,92 @@
 # Development Workflow
 
-## Daily Workflow
+> **Package manager: `bun`** — bukan `pnpm`. Semua command menggunakan `bun`.
+
+---
+
+## Branch Strategy
+
+```
+main      ← production only, protected — tidak ada direct push
+develop   ← staging/integration — tidak ada direct push
+feat/*    ← fitur baru, PR ke develop
+fix/*     ← bug fix, PR ke develop
+hotfix/*  ← urgent fix, PR ke main + develop
+```
+
+**Aturan:** Tidak ada yang boleh push langsung ke `main` atau `develop`.
+Semua perubahan melalui PR. CI harus pass sebelum merge.
+
+---
+
+## Alur Kerja Harian
 
 ```bash
-# 1. Start dev server (run manually in terminal — never via agent)
-pnpm dev
+# 1. Mulai dari develop yang terbaru
+git checkout develop && git pull origin develop
+
+# 2. Buat branch baru
+git checkout -b feat/nama-fitur
+
+# 3. Jalankan dev server (manual di terminal — jangan via agent)
+bun run dev
 # → http://localhost:4321
 
-# 2. After schema changes
-pnpm db:generate   # generate migration
-pnpm db:push       # apply to dev database
+# 4. Setelah selesai — wajib sebelum push
+bun run check   # harus 0 errors, 0 warnings, 0 hints
+bun run build   # harus berhasil
 
-# 3. Reset + reseed database
-pnpm db:seed:enhanced
-
-# 4. Type check
-pnpm astro check
-
-# 5. Run tests
-pnpm test          # unit tests
-pnpm test:e2e      # E2E (requires dev server running)
+# 5. Push dan buat PR ke develop
+git push origin feat/nama-fitur
 ```
 
 ---
 
-## Adding a New Feature — Checklist
+## Checklist Sebelum Push (Wajib)
 
-### New API endpoint
-1. Create file in `src/pages/api/[category]/[name].ts`
-2. Add Zod schema to `src/lib/validation.ts`
-3. Follow template in `api-patterns.md`
-4. Add to endpoint reference table in `api-patterns.md`
-5. Test manually via browser or curl
+```bash
+bun run check   # 0 errors, 0 warnings, 0 hints
+bun run build   # build berhasil tanpa error
+```
 
-### New dashboard page
-1. Create `src/pages/app/[name].astro`
-2. Add correct guard (see `auth-guards.md` → Page Guard Assignment)
-3. Use `DashboardLayout` with appropriate page type pattern (see `ui-patterns.md`)
-4. Add nav item to `src/lib/nav.ts` if needed
-5. Update guard matrix in `auth-guards.md`
+Jika salah satu gagal, jangan push. Fix dulu.
 
-### New database table
-1. Add table definition to `src/db/schema.ts`
-2. Add relations
-3. Export the inferred type at bottom of schema file
-4. Run `pnpm db:generate` then `pnpm db:push`
+---
+
+## Menambahkan Fitur Baru
+
+### API endpoint baru
+1. Buat file di `src/pages/api/[category]/[name].ts`
+2. Tambahkan Zod schema ke `src/lib/validation.ts`
+3. Ikuti template di `api-patterns.md`
+4. Tambahkan ke tabel referensi endpoint di `api-patterns.md`
+5. Test manual via browser atau curl
+
+### Halaman dashboard baru
+1. Buat `src/pages/app/[name].astro`
+2. Tambahkan guard yang benar (lihat `auth-guards.md`)
+3. Gunakan `DashboardLayout` dengan pola yang sesuai (lihat `ui-patterns.md`)
+4. Tambahkan nav item ke `src/lib/nav.ts` jika perlu
+5. Update guard matrix di `auth-guards.md`
+
+### Tabel database baru
+1. Tambahkan definisi tabel ke `src/db/schema.ts`
+2. Tambahkan relasi
+3. Export inferred type di bagian bawah schema file
+4. Jalankan `bun run db:push`
 5. Update `database-schema.md`
 
-### New reusable component
-- Server-rendered UI → `src/components/app/[Name].astro`
-- Needs client interactivity → `src/components/[Name].tsx`
-- Dashboard-specific → `src/components/app/`
+### Komponen reusable baru
+- UI server-rendered → `src/components/app/[Name].astro`
+- Butuh client interactivity → `src/components/[Name].tsx`
+- Spesifik dashboard → `src/components/app/`
 
 ---
 
 ## Environment Variables
 
 ```bash
-# .env (copy from .env.example)
+# .env (copy dari .env.example)
 TURSO_URL=libsql://...
 TURSO_TOKEN=...
 GITHUB_CLIENT_ID=...
@@ -65,44 +94,60 @@ GITHUB_CLIENT_SECRET=...
 PUBLIC_SITE_URL=http://localhost:4321
 ```
 
-Rules:
-- **Never** use `PUBLIC_` prefix for secrets or DB credentials
-- `PUBLIC_SITE_URL` is the only `PUBLIC_` var — used for OAuth callback URL
-- All other vars are server-only
+**Aturan:**
+- **Jangan pernah** gunakan prefix `PUBLIC_` untuk secrets atau DB credentials
+- `PUBLIC_SITE_URL` adalah satu-satunya var dengan `PUBLIC_` — digunakan untuk OAuth callback
+- Semua var lain adalah server-only
+
+---
+
+## Database Commands
+
+```bash
+bun run db:push            # push schema ke Turso preview
+bun run db:studio          # buka Drizzle Studio di browser
+bun run db:setup:enhanced  # reset + seed ulang database preview
+```
+
+**Database preview** (`smauiilab-prev-sandikodev`) digunakan untuk development dan CI.
+**Database production** (`smauiilab-sandikodev`) tidak pernah disentuh di development.
 
 ---
 
 ## Git Conventions
 
 ```bash
-# Branch naming
-feat/[feature-name]
-fix/[bug-name]
-refactor/[what]
-docs/[what]
+# Nama branch
+feat/nama-fitur
+fix/nama-bug
+refactor/nama-komponen
+docs/nama-dokumen
+chore/nama-task
 
-# Commit messages (Bahasa Indonesia ok)
-feat: tambah notifikasi otomatis saat approve member
-fix: perbaiki TypeScript error di settings.astro
-refactor: ekstrak helper createNotification ke lib/notifications.ts
+# Commit messages — English, conventional commits
+feat: add toast notification for lesson completion
+fix: mobile drawer not closing on backdrop click
+chore: update smauii-dev-content submodule pointer
+docs: update deployment guide
+refactor: extract lesson progress calculation to helper
 ```
 
 ---
 
-## File Naming Conventions
+## Konvensi Penamaan File
 
-| Type | Convention | Example |
-|------|-----------|---------|
+| Tipe | Konvensi | Contoh |
+|------|---------|--------|
 | Astro pages | kebab-case | `check-status.astro` |
 | Astro components | PascalCase | `PageHeader.astro` |
 | React components | PascalCase | `RegisterForm.tsx` |
-| API routes | `index.ts` or action name | `index.ts`, `approve.ts` |
+| API routes | `index.ts` atau nama action | `index.ts`, `approve.ts` |
 | Lib utilities | kebab-case | `api-utils.ts`, `dashboard-init.ts` |
 | Scripts | kebab-case | `seed-enhanced.ts` |
 
 ---
 
-## Import Order Convention
+## Urutan Import
 
 ```ts
 // 1. Astro/framework
@@ -121,64 +166,58 @@ import { requireAuth } from '@lib/guards';
 
 // 5. External packages
 import { nanoid } from 'nanoid';
-import QRCode from 'qrcode';
 import { z } from 'zod';
 ```
 
 ---
 
-## Debugging Tips
+## Debugging
 
-### Check current user session
 ```bash
+# Cek session user saat ini
 curl -s http://localhost:4321/api/auth/me \
-  -H "Cookie: <paste cookie from browser DevTools>"
-```
+  -H "Cookie: <paste cookie dari browser DevTools>"
 
-### Check database state
-```bash
-pnpm db:studio
-# → opens https://local.drizzle.studio
-```
+# Cek state database
+bun run db:studio
+# → buka https://local.drizzle.studio
 
-### Check API response
-```bash
+# Cek API response
 curl -s -X POST http://localhost:4321/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"identifier":"0000000001","password":"test123"}' | jq
+
+# Reset semua
+bun run db:setup:enhanced
 ```
 
-### Reset everything
-```bash
-bun run scripts/drop-tables.ts
-pnpm db:push
-pnpm db:seed:enhanced
-```
+---
+
+## Akun Testing
+
+Selalu gunakan akun ini untuk testing manual — jangan buat data siswa nyata di dev:
+
+| Role | Identifier | Password |
+|------|-----------|----------|
+| Maintainer | `0000000001` | `test123` |
+| Active Member | `1234567890` | `test123` |
+| Active Member | `1234567891` | `test123` |
+| Pending Member | `1234567895` | (tidak ada) |
+
+Reset: `bun run db:setup:enhanced`
 
 ---
 
 ## Production Deployment
 
-App runs as Node.js SSR server (not static):
-- Build: `pnpm build`
-- Output: `dist/` with `dist/server/entry.mjs`
+App berjalan sebagai Node.js SSR server (bukan static):
+- Build: `bun run build`
+- Output: `dist/` dengan `dist/server/entry.mjs`
 - Start: `node dist/server/entry.mjs`
-- Port: set via `PORT` env var (default 4321)
+- Port: via env var `PORT` (default 4321)
 
-**Not compatible with GitHub Pages** — requires a Node.js server.  
-Recommended: Cloudflare Pages (SSR via Workers) or any VPS/container.
+**Tidak kompatibel dengan GitHub Pages** — butuh Node.js server.
+Deploy via Docker ke Awankinton. Detail di `docs/DEPLOYMENT_AWANKINTON.md`.
 
----
-
-## Testing Accounts
-
-Always use these for manual testing — never create real student data in dev:
-
-| Role | NISN | Password |
-|------|------|----------|
-| Maintainer | `0000000001` | `test123` |
-| Active Member | `1234567890` | `test123` |
-| Active Member | `1234567891` | `test123` |
-| Pending Member | `1234567895` | (none) |
-
-Reseed: `pnpm db:seed:enhanced`
+**Deploy production hanya via manual trigger GitHub Actions** — tidak pernah
+langsung dari terminal. Tidak pernah tanpa audit di staging terlebih dahulu.
