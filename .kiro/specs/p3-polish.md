@@ -19,7 +19,11 @@ tapi belum diverifikasi di staging dan belum di-deploy ke production.
 | 3.3 Search & filter tracks | ✅ | ❌ | ❌ |
 | 3.4 Module progress bars | ✅ | ❌ | ❌ |
 | 2.4 Mobile lesson drawer | ✅ | ❌ | ❌ |
-| 3.2 Carousel "Terakhir Dipelajari" | ❌ | — | — |
+| 3.2 Carousel "Terakhir Dipelajari" | ✅ | ❌ | ❌ |
+
+> Semua item sudah ada di kode. Bug `lastRead` (field tidak ada di schema) sudah difix → pakai `startedAt`.
+> Toast "undo" (untandai selesai) sudah ditambahkan.
+> Siap untuk staging audit dan deploy production.
 
 ---
 

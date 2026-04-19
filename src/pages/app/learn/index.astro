@@ -7,6 +7,8 @@ import { db } from '@db';
 import { learningProgress, readingSessions } from '@db/schema';
 import { eq, gte } from 'drizzle-orm';
 
+import { desc } from 'drizzle-orm';
+
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
@@ -26,6 +28,25 @@ const trackStats = trackEntries.map(track => {
   const completed = lessons.filter(l => completedSlugs.has(l.id)).length;
   return { track, trackSlug, total: lessons.length, completed };
 });
+
+// Terakhir dipelajari — max 3 lesson unik, sorted by startedAt desc
+const recentSessions = await db.select().from(readingSessions)
+  .where(eq(readingSessions.userId, user!.id))
+  .orderBy(desc(readingSessions.startedAt))
+  .limit(20);
+
+const seenSlugs = new Set<string>();
+const recentLessons = recentSessions
+  .filter(s => { if (seenSlugs.has(s.lessonSlug)) return false; seenSlugs.add(s.lessonSlug); return true; })
+  .slice(0, 3)
+  .map(s => {
+    const lesson = all.find(l => l.id === s.lessonSlug);
+    if (!lesson) return null;
+    const trackSlug = lesson.data.track ?? lesson.id.split('/')[0];
+    const trackEntry = trackEntries.find(t => t.id === `${trackSlug}/README`);
+    return { lesson, trackSlug, trackTitle: trackEntry?.data.title ?? trackSlug, trackIcon: trackEntry?.data.icon ?? '📚', lastRead: s.startedAt };
+  })
+  .filter(Boolean) as { lesson: typeof all[0]; trackSlug: string; trackTitle: string; trackIcon: string; lastRead: number }[];
 
 // Contribution graph
 const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
@@ -98,6 +119,31 @@ weeks.forEach((week, i) => {
 
 <DashboardLayout title="Belajar">
   <PageHeader subtitle="Pilih track yang ingin kamu pelajari" />
+
+  <!-- Terakhir Dipelajari -->
+  {recentLessons.length > 0 && (
+    <section class="mb-6">
+      <h2 class="text-sm font-semibold text-gray-400 mb-3">Terakhir Dipelajari</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {recentLessons.map(({ lesson, trackSlug, trackTitle, trackIcon }) => {
+          const lessonPath = lesson.id.replace(`${trackSlug}/`, '');
+          return (
+            <a href={`/app/learn/${trackSlug}/${lessonPath}`}
+              class="bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-xl p-4 transition group flex flex-col gap-2">
+              <div class="flex items-center gap-2 text-xs text-gray-500">
+                <span>{trackIcon}</span>
+                <span>{trackTitle}</span>
+              </div>
+              <p class="text-sm font-medium text-gray-200 group-hover:text-white transition line-clamp-2">
+                {lesson.data.title}
+              </p>
+              <span class="text-xs text-blue-400 mt-auto">Lanjutkan →</span>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  )}
 
   <!-- Search & Filter -->
   <div class="flex gap-3 mb-5 flex-wrap">

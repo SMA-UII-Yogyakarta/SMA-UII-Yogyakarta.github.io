@@ -3,7 +3,7 @@
 **Dokumen ini adalah sumber kebenaran tunggal untuk semua pekerjaan yang tersisa.**
 Update setiap kali item selesai atau ada prioritas baru.
 
-Terakhir diperbarui: 2026-04-18
+Terakhir diperbarui: 2026-04-19
 
 ---
 
@@ -39,9 +39,14 @@ Terakhir diperbarui: 2026-04-18
 | 2.1 Rate limiting SLiMS API | Fixed |
 | 2.2 CI/CD GitHub Actions | Fixed |
 | 2.3 Mobile profile nav | Fixed |
+| 2.4 Mobile lesson drawer | Fixed — drawer slide dari kiri, tombol "Materi" di topbar |
 | 2.5 Production Turso DB | Fixed |
 | Env management | Fixed — .env.production via build args |
 | Commit messages | Fixed — English, no infra details |
+| 3.1 Toast notification tandai selesai | Fixed — toast hijau + toast abu undo |
+| 3.2 Carousel "Terakhir Dipelajari" | Fixed — grid 3 kolom, max 3 lesson |
+| 3.3 Search & filter tracks | Fixed — real-time search + filter chip level |
+| 3.4 Progress bar per modul | Fixed — mini progress bar di accordion header |
 
 ---
 
@@ -238,63 +243,6 @@ daftar lesson. Trigger: tombol "Daftar Materi" di topbar lesson page.
 2. Jalankan `bun run db:push` ke database baru
 3. Update `TURSO_URL` dan `TURSO_AUTH_TOKEN` di `.env` production
 4. Rebuild dan redeploy container
-
----
-
-## 🟢 Prioritas 3 — Polish & Enhancement
-
-> Meningkatkan kualitas pengalaman pengguna. Dikerjakan setelah Prioritas 1 & 2 selesai.
-
-### 3.1 Toast Notification saat Tandai Selesai
-
-**Masalah:** Saat tombol "Tandai Selesai" diklik, tidak ada feedback visual
-yang memuaskan selain perubahan warna tombol.
-
-**Solusi:** Tambahkan toast notification kecil di pojok layar:
-"✓ Materi ditandai selesai!" yang muncul 2 detik lalu hilang.
-
----
-
-### 3.2 Carousel "Terakhir Dipelajari" di `/app/learn`
-
-**Masalah:** Fitur ini dihapus karena menyebabkan layout overflow.
-Root cause: `flex` container tanpa `max-width` yang proper.
-
-**Solusi yang benar:**
-- Gunakan `grid` bukan `flex` untuk carousel
-- Atau gunakan library carousel yang sudah handle overflow (Embla, Swiper)
-- Batasi jumlah item yang di-render (max 5, bukan semua)
-
----
-
-### 3.3 Search & Filter di `/app/learn`
-
-**Masalah:** Dengan 9 track, user perlu bisa filter berdasarkan level atau
-mencari track tertentu.
-
-**Solusi:** Tambahkan search input dan filter chip di atas track cards.
-Filter: Semua | Pemula | Menengah | Lanjutan
-
----
-
-### 3.4 Progress per Modul di Halaman Track
-
-**Masalah:** Di `/app/learn/[track]`, panel kanan hanya menampilkan progress
-keseluruhan track. Tidak ada breakdown per modul.
-
-**Solusi:** Tambahkan mini progress bar per modul di accordion header.
-
----
-
-### 3.5 Capstone Project per Modul
-
-**Masalah:** Setiap modul di `smauii-dev-content` belum punya lesson capstone
-(`99-proyek-*.md`). Format sudah didefinisikan di `CONTRIBUTING.md`.
-
-**Prioritas modul untuk capstone:**
-1. `software-engineering/01-git-github` → proyek: setup GitHub profile
-2. `software-engineering/04-framework-modern` → proyek: portfolio pribadi
-3. `peta-karir/03-freelance-pertama` → proyek: proposal klien pertama
 
 ---
 

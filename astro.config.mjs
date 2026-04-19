@@ -22,8 +22,5 @@ export default defineConfig({
     resolve: {
       dedupe: ['react', 'react-dom'],
     },
-    css: {
-      transformer: 'postcss', // skip lightningcss yang tidak support all:vars
-    },
   }
 });
