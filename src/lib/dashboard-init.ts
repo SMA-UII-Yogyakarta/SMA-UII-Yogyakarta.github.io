@@ -13,11 +13,9 @@ export function setSidebar(state: 'hidden' | 'minimized' | 'expanded' | 'overlay
   if (state === 'expanded' || state === 'minimized') {
     localStorage.setItem('sidebar-collapsed', state === 'minimized' ? 'true' : 'false');
   }
-  // sync sidebar-label visibility (untuk profile dropdown script di Sidebar.astro)
-  const isMin = state === 'minimized' || state === 'overlay';
-  document.querySelectorAll('.sidebar-label').forEach(el => {
-    (el as HTMLElement).style.display = isMin ? 'none' : '';
-  });
+  // Show backdrop only when overlay
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (backdrop) backdrop.classList.toggle('hidden', state !== 'overlay');
 }
 
 export function updateSidebarState(isCollapsed: boolean) {
@@ -66,11 +64,11 @@ export function initDashboard(_options: { role: string; userName: string }) {
     }
   });
 
-  // Close tablet overlay saat klik di luar
+  // Close overlay saat klik backdrop atau di luar sidebar
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
     const current = document.documentElement.getAttribute('data-sidebar');
-    if (current === 'overlay' && !t.closest('#sidebar') && !t.closest('#sidebar-toggle')) {
+    if (current === 'overlay' && (t.id === 'sidebar-backdrop' || (!t.closest('#sidebar') && !t.closest('#sidebar-toggle')))) {
       setSidebar('minimized');
     }
     if (!t.closest('#notification-btn') && !t.closest('#notification-dropdown')) {

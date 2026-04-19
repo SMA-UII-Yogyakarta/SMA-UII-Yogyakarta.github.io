@@ -51,23 +51,25 @@ const userEmail = user?.email ?? '';
     :root[data-sidebar="overlay"]   #main-content { margin-left: 4rem; }
 
     /* ── Label visibility ── */
-    :root[data-sidebar="minimized"] #sidebar .sidebar-label,
-    :root[data-sidebar="overlay"]   #sidebar .sidebar-label { display: none; }
-    :root[data-sidebar="expanded"]  #sidebar .sidebar-label { display: unset; }
+    :root[data-sidebar="minimized"] #sidebar .sidebar-label { display: none; }
+    :root[data-sidebar="expanded"]  #sidebar .sidebar-label,
+    :root[data-sidebar="overlay"]   #sidebar .sidebar-label { display: unset; }
 
-    /* ── Nav items minimized ── */
-    :root[data-sidebar="minimized"] #sidebar-nav,
-    :root[data-sidebar="overlay"]   #sidebar-nav { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
-    :root[data-sidebar="minimized"] #sidebar-nav a,
-    :root[data-sidebar="overlay"]   #sidebar-nav a { justify-content: center; padding: 0; width: 2.5rem; height: 2.5rem; margin: 0 auto; }
-    :root[data-sidebar="minimized"] #sidebar-header,
-    :root[data-sidebar="overlay"]   #sidebar-header { padding: 1rem 0.5rem; }
-    :root[data-sidebar="minimized"] #sidebar-header a,
-    :root[data-sidebar="overlay"]   #sidebar-header a { justify-content: center; }
-    :root[data-sidebar="minimized"] #sidebar-user,
-    :root[data-sidebar="overlay"]   #sidebar-user { padding: 0.5rem; }
-    :root[data-sidebar="minimized"] #sidebar-user button,
-    :root[data-sidebar="overlay"]   #sidebar-user button { justify-content: center; padding: 0.5rem; }
+    /* ── Nav items: minimized = icon only ── */
+    :root[data-sidebar="minimized"] #sidebar-nav { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
+    :root[data-sidebar="minimized"] #sidebar-nav a { justify-content: center; padding: 0; width: 2.5rem; height: 2.5rem; margin: 0 auto; }
+    :root[data-sidebar="minimized"] #sidebar-header { padding: 1rem 0.5rem; }
+    :root[data-sidebar="minimized"] #sidebar-header a { justify-content: center; }
+    :root[data-sidebar="minimized"] #sidebar-user { padding: 0.5rem; }
+    :root[data-sidebar="minimized"] #sidebar-user button { justify-content: center; padding: 0.5rem; }
+
+    /* ── Nav items: overlay = full expanded (explicit reset) ── */
+    :root[data-sidebar="overlay"] #sidebar-nav { padding: 1rem; display: flex; flex-direction: column; gap: 0.25rem; }
+    :root[data-sidebar="overlay"] #sidebar-nav a { justify-content: flex-start; padding: 0.625rem 0.75rem; width: auto; height: auto; margin: 0; }
+    :root[data-sidebar="overlay"] #sidebar-header { padding: 0 0.75rem; }
+    :root[data-sidebar="overlay"] #sidebar-header a { justify-content: flex-start; }
+    :root[data-sidebar="overlay"] #sidebar-user { padding: 1rem; }
+    :root[data-sidebar="overlay"] #sidebar-user button { justify-content: flex-start; padding: 0.5rem; }
 
     #main-content { transition: margin-left 0.3s; }
     #sidebar { transition: width 0.3s, transform 0.3s; }
