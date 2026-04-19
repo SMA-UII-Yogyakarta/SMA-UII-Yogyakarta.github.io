@@ -56,10 +56,10 @@ Terakhir diperbarui: 2026-04-19
 **Status: ✅ SELESAI** — diubah ke `workflow_dispatch` dengan input `reason`
 
 ### 0.2 Branch Protection Rules Belum Di-setup
-**Status: ⏳ MANUAL** — harus dilakukan di GitHub UI:
-- Settings → Branches → Add rule
-- Branch `main`: Require PR, Require CI pass, No direct push
-- Branch `develop`: Require PR, Require CI pass, No direct push
+**Status: ✅ SELESAI** — `main` dan `develop` protected via GitHub API:
+- Require PR dengan 1 approver
+- Require CI pass (Unit Tests + Type Check)
+- No force push, no direct push
 
 ### 0.3 Staging Environment Belum Ada
 **Status: 📖 TERDOKUMENTASI** — lihat `docs/WORKFLOW.md` bagian 6 untuk setup `lab-dev.localhost`
