@@ -21,8 +21,12 @@ tapi belum diverifikasi di staging dan belum di-deploy ke production.
 | 2.4 Mobile lesson drawer | ✅ | ❌ | ❌ |
 | 3.2 Carousel "Terakhir Dipelajari" | ✅ | ❌ | ❌ |
 
-> Semua item sudah ada di kode. Bug `lastRead` (field tidak ada di schema) sudah difix → pakai `startedAt`.
-> Toast "undo" (untandai selesai) sudah ditambahkan.
+> Semua item sudah ada di kode dan sudah diverifikasi/diperbaiki (2026-04-19):
+> - Toast: durasi 2500ms, fade in/out smooth, z-index 9999, script dikonsolidasi ke satu block
+> - Mobile drawer: animasi slide + fade dengan requestAnimationFrame
+> - Search empty state: "Tidak ada track yang cocok" saat hasil kosong
+> - Tailwind v4: semua `flex-shrink-0` → `shrink-0` (0 warnings)
+> - `bun run check`: 0 errors, 0 warnings, 0 hints
 > Siap untuk staging audit dan deploy production.
 
 ---

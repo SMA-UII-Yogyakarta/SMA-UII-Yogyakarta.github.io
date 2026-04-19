@@ -123,10 +123,10 @@ const levelColor: Record<string, string> = {
                     <div class={`h-full rounded-full ${modCompleted === lessons.length && lessons.length > 0 ? 'bg-green-500' : 'bg-blue-500'}`}
                       style={`width: ${lessons.length > 0 ? Math.round(modCompleted/lessons.length*100) : 0}%`}></div>
                   </div>
-                  <span class="text-xs text-gray-500 flex-shrink-0">{modCompleted}/{lessons.length}</span>
+                  <span class="text-xs text-gray-500 shrink-0">{modCompleted}/{lessons.length}</span>
                 </div>
               </div>
-              <svg class="w-4 h-4 text-gray-500 chevron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 text-gray-500 chevron shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </summary>
@@ -137,7 +137,7 @@ const levelColor: Record<string, string> = {
                 return (
                   <a href={`/app/learn/${track}/${lessonPath}`}
                     class={`flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition ${li < lessons.length - 1 ? 'border-b border-gray-800' : ''}`}>
-                    <div class={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center ${done ? 'bg-green-500 border-green-500' : 'border-gray-600'}`}>
+                    <div class={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center ${done ? 'bg-green-500 border-green-500' : 'border-gray-600'}`}>
                       {done && (
                         <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
@@ -147,7 +147,7 @@ const levelColor: Record<string, string> = {
                     <span class={`flex-1 text-sm ${done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
                       {lesson.data.title}
                     </span>
-                    <div class="flex items-center gap-3 text-xs flex-shrink-0">
+                    <div class="flex items-center gap-3 text-xs shrink-0">
                       {lesson.data.level && (
                         <span class={`capitalize ${levelColor[lesson.data.level] || 'text-gray-500'}`}>
                           {lesson.data.level}
