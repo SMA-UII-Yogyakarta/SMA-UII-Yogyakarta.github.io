@@ -11,7 +11,62 @@ const { role, userName, userEmail } = Astro.props;
 const items = navItems[role] || navItems.member;
 ---
 
-<aside id="sidebar" class="bg-gray-900 border-r border-gray-800 flex flex-col fixed h-full transition-all duration-300 z-50">
+<style is:global>
+  /* ═══════════════════════════════════════════════════════════════
+     SIDEBAR STATE SYSTEM
+     State diset via: document.documentElement.setAttribute('data-sidebar', state)
+     
+     States:
+       hidden    — mobile (<640px), sidebar off-screen
+       minimized — tablet (640-1023px) default, atau desktop collapsed: icon only, 4rem
+       expanded  — desktop (≥1024px) default: full sidebar, 16rem
+       overlay   — tablet saat hamburger diklik: full sidebar di atas konten, 16rem
+     
+     CSS-only approach — jangan manipulasi .sidebar-label via JS inline style
+     karena inline style mengalahkan CSS rules (specificity lebih tinggi).
+  ═══════════════════════════════════════════════════════════════ */
+
+  /* ── Sidebar width & position ── */
+  :root[data-sidebar="hidden"]    #sidebar { width: 16rem; transform: translateX(-100%); }
+  :root[data-sidebar="minimized"] #sidebar { width: 4rem;  transform: translateX(0); }
+  :root[data-sidebar="expanded"]  #sidebar { width: 16rem; transform: translateX(0); }
+  :root[data-sidebar="overlay"]   #sidebar { width: 16rem; transform: translateX(0); z-index: 60; }
+
+  /* ── Main content margin (mengikuti lebar sidebar) ── */
+  :root[data-sidebar="hidden"]    #main-content { margin-left: 0; }
+  :root[data-sidebar="minimized"] #main-content { margin-left: 4rem; }
+  :root[data-sidebar="expanded"]  #main-content { margin-left: 16rem; }
+  :root[data-sidebar="overlay"]   #main-content { margin-left: 4rem; }
+
+  /* ── Label visibility: hidden di minimized, tampil di expanded & overlay ── */
+  :root[data-sidebar="minimized"] #sidebar .sidebar-label { display: none; }
+  :root[data-sidebar="expanded"]  #sidebar .sidebar-label,
+  :root[data-sidebar="overlay"]   #sidebar .sidebar-label { display: unset; }
+
+  /* ── Nav items: minimized = icon only, centered ── */
+  :root[data-sidebar="minimized"] #sidebar-nav { padding: 0.5rem; }
+  :root[data-sidebar="minimized"] #sidebar-nav a { justify-content: center; padding: 0; width: 2.5rem; height: 2.5rem; margin: 0 auto; }
+  :root[data-sidebar="minimized"] #sidebar-header { padding: 1rem 0.5rem; }
+  :root[data-sidebar="minimized"] #sidebar-header a { justify-content: center; }
+  :root[data-sidebar="minimized"] #sidebar-user { padding: 0.5rem; }
+  :root[data-sidebar="minimized"] #sidebar-user button { justify-content: center; padding: 0.5rem; }
+
+  /* ── Nav items: overlay = full expanded, reset ke nilai normal ── */
+  :root[data-sidebar="overlay"] #sidebar-nav a { justify-content: flex-start; padding: 0.625rem 0.75rem; width: auto; height: auto; margin: 0; }
+  :root[data-sidebar="overlay"] #sidebar-header { padding: 0 0.75rem; }
+  :root[data-sidebar="overlay"] #sidebar-header a { justify-content: flex-start; }
+  :root[data-sidebar="overlay"] #sidebar-user { padding: 1rem; }
+  :root[data-sidebar="overlay"] #sidebar-user button { justify-content: flex-start; padding: 0.5rem; }
+
+  /* ── Transitions ── */
+  #sidebar       { transition: width 0.3s, transform 0.3s; }
+  #main-content  { transition: margin-left 0.3s; }
+</style>
+
+<!-- Backdrop: muncul saat overlay, klik untuk tutup sidebar -->
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-[55] hidden"></div>
+
+<aside id="sidebar" class="bg-gray-900 border-r border-gray-800 flex flex-col fixed h-full z-[60]">
   <div id="sidebar-header" class="h-16 px-3 border-b border-gray-800 flex items-center justify-center transition-all duration-300">
     <a href="/" class="font-bold text-white flex items-center gap-2 whitespace-nowrap">
       <span class="text-blue-400 text-xl flex-shrink-0">⬡</span> 
@@ -35,43 +90,61 @@ const items = navItems[role] || navItems.member;
     ))}
   </nav>
 
-  <div class="p-4 border-t border-gray-800" id="sidebar-user">
+  <div class="p-4 border-t border-gray-800 relative" id="sidebar-user">
     <button id="profile-dropdown-btn" class="w-full flex items-center gap-3 hover:bg-gray-800 p-2 rounded-lg transition group">
-      <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 group-hover:ring-2 group-hover:ring-blue-500 transition">
+      <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-blue-500 transition">
         {userName.charAt(0).toUpperCase()}
       </div>
       <div class="flex-1 min-w-0 sidebar-label text-left">
         <p class="text-sm font-medium truncate">{userName}</p>
         <p class="text-xs text-gray-500 truncate">{userEmail}</p>
       </div>
-      <svg class="w-4 h-4 text-gray-400 sidebar-label flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-gray-400 sidebar-label shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
       </svg>
     </button>
 
+    <!-- Dropdown: inline saat expanded/overlay, popup saat minimized -->
     <div id="profile-dropdown" class="hidden mt-2 space-y-1">
       {role !== 'maintainer' && (
       <a href="/app/profile" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
         </svg>
         Profile
       </a>
       )}
       <a href="/app/settings" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         Settings
       </a>
       <form action="/api/auth/logout" method="POST">
         <button id="logout-btn" type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
           Logout
         </button>
       </form>
+    </div>
+
+    <!-- Popup saat minimized (icon-only) — muncul di kanan sidebar -->
+    <div id="profile-popup" class="hidden fixed bottom-4 left-[4.5rem] z-[70] bg-gray-900 border border-gray-800 rounded-xl shadow-xl w-56">
+      <div class="p-3 border-b border-gray-800">
+        <p class="text-sm font-medium truncate">{userName}</p>
+        <p class="text-xs text-gray-500 truncate">{userEmail}</p>
+      </div>
+      <div class="p-1.5 space-y-0.5">
+        {role !== 'maintainer' && (
+        <a href="/app/profile" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">Profile</a>
+        )}
+        <a href="/app/settings" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">Settings</a>
+        <form action="/api/auth/logout" method="POST">
+          <button type="submit" class="w-full text-left px-3 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">Logout</button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -81,67 +154,32 @@ const items = navItems[role] || navItems.member;
   </a>
 </aside>
 
-<!-- Profile Modal (for collapsed sidebar) -->
-<div id="profile-modal" class="hidden fixed bottom-0 left-16 z-50 mb-4 ml-2">
-  <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-xl w-64">
-    <div class="p-4 border-b border-gray-800 flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-        {userName.charAt(0).toUpperCase()}
-      </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium truncate">{userName}</p>
-        <p class="text-xs text-gray-500 truncate">{userEmail}</p>
-      </div>
-    </div>
-    <div class="p-2 space-y-1">
-      {role !== 'maintainer' && (
-      <a href="/app/profile" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-        Profile
-      </a>
-      )}
-      <a href="/app/settings" class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        Settings
-      </a>
-      <form action="/api/auth/logout" method="POST">
-        <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
-          Logout
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script>
   const profileBtn = document.getElementById('profile-dropdown-btn');
   const profileDropdown = document.getElementById('profile-dropdown');
-  const profileModal = document.getElementById('profile-modal');
+  const profilePopup = document.getElementById('profile-popup');
 
-  profileBtn?.addEventListener('click', () => {
+  function isMinimized() {
     const state = document.documentElement.getAttribute('data-sidebar');
-    const isMinimized = state === 'minimized' || state === 'overlay';
-    if (isMinimized) {
-      profileModal?.classList.toggle('hidden');
+    return state === 'minimized';
+  }
+
+  profileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (isMinimized()) {
+      profilePopup?.classList.toggle('hidden');
+      profileDropdown?.classList.add('hidden');
     } else {
       profileDropdown?.classList.toggle('hidden');
+      profilePopup?.classList.add('hidden');
     }
   });
 
-  // Close modal when clicking outside
   document.addEventListener('click', (e) => {
-    if (profileModal && !profileModal.classList.contains('hidden')) {
-      const target = e.target as HTMLElement;
-      if (!profileModal.contains(target) && !profileBtn?.contains(target)) {
-        profileModal.classList.add('hidden');
-      }
+    const target = e.target as HTMLElement;
+    if (!profileBtn?.contains(target)) {
+      profileDropdown?.classList.add('hidden');
+      profilePopup?.classList.add('hidden');
     }
   });
 </script>
