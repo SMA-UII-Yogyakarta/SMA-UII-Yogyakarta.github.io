@@ -125,14 +125,23 @@ weeks.forEach((week, i) => {
     <section class="mb-6">
       <h2 class="text-sm font-semibold text-gray-400 mb-3">Terakhir Dipelajari</h2>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {recentLessons.map(({ lesson, trackSlug, trackTitle, trackIcon }) => {
+        {recentLessons.map(({ lesson, trackSlug, trackTitle, trackIcon, lastRead }) => {
           const lessonPath = lesson.id.replace(`${trackSlug}/`, '');
+          const minsAgo = Math.round((Date.now() - lastRead) / 60000);
+          const timeLabel = minsAgo < 60
+            ? `${minsAgo} menit lalu`
+            : minsAgo < 1440
+            ? `${Math.round(minsAgo / 60)} jam lalu`
+            : `${Math.round(minsAgo / 1440)} hari lalu`;
           return (
             <a href={`/app/learn/${trackSlug}/${lessonPath}`}
               class="bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-xl p-4 transition group flex flex-col gap-2">
-              <div class="flex items-center gap-2 text-xs text-gray-500">
-                <span>{trackIcon}</span>
-                <span>{trackTitle}</span>
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                  <span>{trackIcon}</span>
+                  <span>{trackTitle}</span>
+                </div>
+                <span class="text-xs text-gray-600 shrink-0">{timeLabel}</span>
               </div>
               <p class="text-sm font-medium text-gray-200 group-hover:text-white transition line-clamp-2">
                 {lesson.data.title}
@@ -159,6 +168,9 @@ weeks.forEach((week, i) => {
   <div class="flex gap-6 items-start">
     <!-- Track cards -->
     <div class="flex-1 min-w-0">
+      <div id="tracks-empty" class="hidden py-12 text-center">
+        <p class="text-gray-500 text-sm">Tidak ada track yang cocok</p>
+      </div>
       <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr))">
         {trackStats.map(({ track, trackSlug, total, completed }) => {
           const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -173,7 +185,7 @@ weeks.forEach((week, i) => {
               data-level={dominantLevel}
               class="track-card bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
               <div class="flex items-start gap-3 mb-4">
-                <span class="text-3xl flex-shrink-0">{track.data.icon}</span>
+                <span class="text-3xl shrink-0">{track.data.icon}</span>
                 <div class="flex-1 min-w-0">
                   <h2 class="font-semibold group-hover:text-blue-400 transition">{track.data.title}</h2>
                   <p class="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{track.data.description}</p>
@@ -198,7 +210,7 @@ weeks.forEach((week, i) => {
     </div>
 
     <!-- Contribution graph (xl+) -->
-    <div class="hidden xl:block w-72 flex-shrink-0">
+    <div class="hidden xl:block w-72 shrink-0">
       <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 sticky top-0" style="max-height: calc(100vh - 56px - 2rem); overflow-y: auto">
         <div class="mb-4">
           <h2 class="font-semibold">Aktivitas Belajar</h2>
@@ -239,14 +251,19 @@ weeks.forEach((week, i) => {
     let activeFilter = 'Semua';
     const search = document.getElementById('track-search') as HTMLInputElement;
     const cards = document.querySelectorAll<HTMLElement>('.track-card');
+    const emptyState = document.getElementById('tracks-empty');
 
     function applyFilter() {
       const q = search.value.toLowerCase();
+      let visibleCount = 0;
       cards.forEach(card => {
         const matchSearch = !q || card.dataset.title?.includes(q);
         const matchLevel = activeFilter === 'Semua' || card.dataset.level === activeFilter;
-        card.style.display = matchSearch && matchLevel ? '' : 'none';
+        const visible = !!(matchSearch && matchLevel);
+        card.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
       });
+      if (emptyState) emptyState.classList.toggle('hidden', visibleCount > 0);
     }
 
     search.addEventListener('input', applyFilter);
