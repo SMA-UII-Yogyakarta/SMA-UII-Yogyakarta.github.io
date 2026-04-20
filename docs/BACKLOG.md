@@ -273,12 +273,15 @@ Implementasi saat Laravel siap.
 
 ### 5.3 Integrasi Data Kelas Siswa
 
-SLiMS tidak punya data kelas. Akan tersedia di pangkalan data terpusat.
+**Status: ✅ SELESAI (workaround)** — SLiMS tidak punya data kelas. Solusi sementara: field `class` diisi user secara manual saat registrasi via dropdown. Data tersimpan di DB Digital Lab (`users.class`).
+
+**Integrasi penuh:** Menunggu **Aksesekolah.id** (SaaS multi-tenant sistem sekolah digital) siap dikonsumsi. Aksesekolah.id akan menyediakan data kelas siswa secara terpusat untuk semua sekolah tenant, termasuk SMA UII.
 
 ### 5.4 NISN sebagai Identifier
 
-Saat ini menggunakan NIS karena SLiMS tidak punya NISN.
-Pangkalan data terpusat akan punya NISN — perlu migrasi field di DB.
+**Status: 🔒 BLOCKED** — SLiMS hanya punya NIS (4 digit), tidak punya NISN. Label di UI sudah menggunakan "NIS" sejak P1.2.
+
+**Integrasi penuh:** Menunggu **Aksesekolah.id** yang akan menyediakan NISN sebagai identifier terpusat. Saat tersedia, perlu migrasi field di DB Digital Lab dari `nis` ke `nisn`.
 
 ---
 
