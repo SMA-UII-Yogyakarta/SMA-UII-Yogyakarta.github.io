@@ -1,5 +1,32 @@
 # Security Patterns
 
+## ⚠️ Aturan Informasi Sensitif di Dokumentasi
+
+**Jangan pernah tulis di file yang akan di-commit:**
+- IP address server spesifik
+- Nama container/service/network internal spesifik
+- Path direktori server spesifik
+- Database URL yang mengandung nama akun atau organisasi
+- Token, API key, password dalam bentuk apapun
+- Username/email akun server yang tidak dipublikasikan
+
+**Gunakan alias generik di semua dokumentasi:**
+
+| Alias | Artinya |
+|-------|---------|
+| `db-preview` | Database development/CI |
+| `db-production` | Database production |
+| `app-container` | Container Docker aplikasi |
+| `reverse-proxy` | nginx reverse proxy |
+| `proxy-network` | Docker network ke reverse proxy |
+| `internal-network` | Docker network internal |
+| `your-domain` | Domain production |
+| `your-db` | URL database |
+
+Hook `sensitive-info-guard` akan otomatis scan setiap kali docs diubah.
+
+---
+
 ## Environment Variables
 
 ### Aturan Ketat

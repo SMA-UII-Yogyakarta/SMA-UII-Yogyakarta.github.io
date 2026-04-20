@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "name": "Docs Sync Reminder",
+  "description": "Pastikan dokumentasi tetap sinkron saat ada perubahan arsitektur, dependency, atau deployment",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "astro.config.mjs",
+      "package.json",
+      "src/db/schema.ts",
+      ".github/workflows/*.yml",
+      "Dockerfile",
+      "docker-compose.yml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File konfigurasi atau infrastruktur telah diubah. Periksa apakah dokumentasi berikut perlu diupdate:\n\n| File yang diubah | Docs yang mungkin perlu update |\n|-----------------|--------------------------------|\n| `astro.config.mjs` | `.kiro/steering/tech.md`, `docs/ARCHITECTURE.md` |\n| `package.json` (dependencies) | `.kiro/steering/tech.md` |\n| `src/db/schema.ts` | `.kiro/steering/database-schema.md` |\n| `.github/workflows/*.yml` | `docs/WORKFLOW.md`, `docs/CI_CD_GUIDE.md` |\n| `Dockerfile` | `docs/DEPLOYMENT_AWANKINTON.md` |\n| `docker-compose.yml` | `docs/DEPLOYMENT_AWANKINTON.md` |\n\nAturan sinkronisasi:\n1. Jika ada dependency baru → update `.kiro/steering/tech.md`\n2. Jika ada perubahan command → update semua docs yang menyebut command tersebut\n3. Jika ada perubahan schema → update `database-schema.md`\n4. Gunakan terminologi alias (db-production, app-container, dll) — JANGAN nama spesifik infrastruktur\n\nLaporkan docs mana yang perlu diupdate dan apa yang perlu diubah. Tawarkan untuk melakukan update jika diperlukan."
+  }
+}

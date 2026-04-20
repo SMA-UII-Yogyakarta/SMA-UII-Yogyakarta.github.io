@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "name": "Sensitive Info Guard",
+  "description": "Cegah informasi sensitif infrastruktur bocor ke dokumentasi atau kode yang akan di-commit",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "docs/**/*.md",
+      ".kiro/steering/*.md",
+      ".kiro/specs/*.md",
+      "README.md",
+      "CONTRIBUTING.md",
+      "**/*.yml",
+      "**/*.yaml",
+      "**/*.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "File dokumentasi atau konfigurasi telah diubah. Lakukan security scan untuk memastikan tidak ada informasi sensitif yang bocor.\n\nPola yang DILARANG ada di file yang akan di-commit:\n\n**Infrastruktur & Network:**\n- IP address private (RFC 1918: 10.x, 172.16-31.x, 192.168.x)\n- Nama container atau service internal yang spesifik milik infrastruktur ini\n- Nama Docker network internal yang spesifik\n- Port yang tidak dipublikasikan secara resmi\n- Path direktori server yang spesifik\n\n**Credentials & Secrets:**\n- Token, API key, password dalam bentuk apapun\n- Database URL yang mengandung nama akun atau organisasi spesifik\n- OAuth client ID atau secret\n- SSH key atau fingerprint\n\n**Identitas:**\n- Username akun server\n- Email pribadi yang tidak dipublikasikan\n- Nama instance atau tenant spesifik milik klien\n\n**Yang BOLEH ada:**\n- Domain publik yang memang dipublikasikan\n- Alias terminologi standar (lihat .kiro/steering/security.md)\n- Placeholder generik seperti: your-domain, your-token, your-db\n- Nama produk atau brand yang memang dipublikasikan\n\nJika ditemukan pelanggaran:\n1. Laporkan baris dan file yang bermasalah\n2. Sarankan penggantian dengan alias yang sesuai dari security.md\n3. JANGAN commit sampai semua pelanggaran diperbaiki\n\nJika tidak ada pelanggaran, cukup konfirmasi bahwa file aman."
+  }
+}

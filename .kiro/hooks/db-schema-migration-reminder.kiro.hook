@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "File schema database telah diubah. Periksa apakah perubahan ini memerlukan migration baru dengan `pnpm db:generate`. Jika ada perubahan tabel (tambah kolom, ubah tipe, tambah tabel baru), ingatkan user untuk menjalankan `pnpm db:generate` lalu `pnpm db:push`. Jangan jalankan otomatis — hanya ingatkan dan jelaskan apa yang berubah."
+    "prompt": "File schema database telah diubah. Periksa apakah perubahan ini memerlukan migration baru dengan `bun run db:generate`. Jika ada perubahan tabel (tambah kolom, ubah tipe, tambah tabel baru), ingatkan user untuk menjalankan `bun run db:generate` lalu `bun run db:push`. Jangan jalankan otomatis — hanya ingatkan dan jelaskan apa yang berubah."
   }
 }

@@ -13,7 +13,7 @@
   },
   "then": {
     "type": "runCommand",
-    "command": "pnpm astro check 2>&1 | tail -30",
+    "command": "bun run check 2>&1 | tail -30",
     "timeout": 60
   }
 }
