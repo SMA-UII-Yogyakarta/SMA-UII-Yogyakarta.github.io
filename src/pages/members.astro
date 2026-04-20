@@ -142,7 +142,7 @@ import Layout from '../layouts/Layout.astro';
         <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-12">
           <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
             <div class="text-2xl font-bold text-blue-400">${stats.maintainers}</div>
             <div class="text-xs text-gray-400">Maintainer</div>
@@ -170,7 +170,7 @@ import Layout from '../layouts/Layout.astro';
           <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
             <span class="text-blue-400">⚡</span> Maintainer
           </h2>
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             ${maintainerCards}
           </div>
         </section>
@@ -180,7 +180,7 @@ import Layout from '../layouts/Layout.astro';
           <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
             <span class="text-green-400">●</span> Anggota Aktif
           </h2>
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             ${memberCards}
           </div>
         </section>
@@ -190,7 +190,7 @@ import Layout from '../layouts/Layout.astro';
           <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
             <span class="text-orange-400">🎓</span> Alumni & Mentor
           </h2>
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
             ${alumniCards}
           </div>
         </section>
