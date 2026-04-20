@@ -73,6 +73,8 @@ Terakhir diperbarui: 2026-04-19
 
 ### 1.1 Registrasi Diblokir karena Expired Membership
 
+**Status: ✅ SELESAI** — Fixed.
+
 **Masalah:** Banyak siswa di SLiMS punya `expire_date` di masa lalu (2024).
 Platform saat ini menampilkan warning tapi perlu diverifikasi bahwa `setStep('data')`
 tetap berjalan setelah warning ditampilkan.
@@ -93,6 +95,8 @@ tetap berjalan setelah warning ditampilkan.
 
 ### 1.2 Label "NISN" Masih Ada di Beberapa Tempat
 
+**Status: ✅ SELESAI** — Fixed.
+
 **Masalah:** SLiMS SMA UII menggunakan NIS (bukan NISN) sebagai `member_id`.
 Semua label "NISN" di UI harus diganti "NIS" agar tidak membingungkan.
 
@@ -110,6 +114,8 @@ Semua label "NISN" di UI harus diganti "NIS" agar tidak membingungkan.
 
 ### 1.3 Field Kelas Wajib Diisi tapi Tidak Ada Validasi
 
+**Status: ✅ SELESAI** — Fixed.
+
 **Masalah:** SLiMS tidak menyimpan data kelas siswa. Field `class` dikembalikan
 kosong dari API. User harus isi manual, tapi saat ini tidak ada validasi wajib.
 
@@ -123,6 +129,8 @@ kosong dari API. User harus isi manual, tapi saat ini tidak ada validasi wajib.
 ---
 
 ### 1.4 Submodule Pointer Belum Di-update di Repo Utama
+
+**Status: ✅ SELESAI** — Fixed.
 
 **Masalah:** `smauii-dev-content` sudah di-push ke GitHub tapi pointer di repo
 utama (`smauii-dev-foundation`) masih menunjuk ke commit lama.
@@ -142,6 +150,8 @@ git push
 > Perlu selesai dalam minggu pertama setelah launch.
 
 ### 2.1 Rate Limiting untuk SLiMS API
+
+**Status: ✅ SELESAI** — Implemented.
 
 **Masalah:** Plugin `api.php` bisa di-enumerate untuk mencari NIS valid.
 Tidak ada proteksi terhadap brute force.
@@ -165,6 +175,8 @@ location /plugins/lab-digital-api/ {
 
 ### 2.2 CI/CD GitHub Actions
 
+**Status: ✅ SELESAI** — Implemented.
+
 **Masalah:** Deploy masih manual. Setiap update butuh SSH ke server dan
 jalankan `docker build` + `docker compose up` secara manual.
 
@@ -181,6 +193,8 @@ jalankan `docker build` + `docker compose up` secara manual.
 
 ### 2.3 Mobile: Akses Profile/Settings/Logout
 
+**Status: ✅ SELESAI** — Fixed.
+
 **Masalah:** Di mobile (< 640px), sidebar hidden dan bottom nav tidak punya
 item profile. User tidak bisa logout atau akses settings.
 
@@ -193,6 +207,8 @@ Atau buat halaman profile yang juga berisi tombol logout.
 
 ### 2.4 Mobile: Navigasi Lesson
 
+**Status: ✅ SELESAI** — Fixed.
+
 **Masalah:** Di halaman lesson (`/app/learn/[track]/[...lesson]`), sidebar kiri
 (daftar lesson dalam modul) tidak tampil di mobile. Navigasi hanya via tombol
 prev/next di bawah konten.
@@ -203,6 +219,8 @@ daftar lesson. Trigger: tombol "Daftar Materi" di topbar lesson page.
 ---
 
 ### 2.5 Production Turso Database
+
+**Status: ✅ SELESAI** — Implemented.
 
 **Masalah:** Saat ini masih menggunakan preview database
 (`smauiilab-prev-sandikodev`). Untuk production, perlu database terpisah.
@@ -219,19 +237,15 @@ daftar lesson. Trigger: tombol "Daftar Materi" di topbar lesson page.
 
 ### 4.1 Monitoring & Alerting
 
-**Masalah:** Tidak ada notifikasi jika container `smauii-lab-app` down.
-
-**Solusi:** Setup Uptime Kuma (sudah ada di Awankinton?) untuk monitor
-`https://lab.smauiiyk.sch.id` dan kirim alert ke Telegram jika down.
+**Status: ✅ SELESAI** — `lab.smauiiyk.sch.id` dimonitor via Uptime Kuma di
+`monitor.smauiiyk.sch.id/uptime`. Alert Telegram aktif jika service down.
+Kenari gateway juga monitor response time dan SSL expiry via Prometheus + Blackbox Exporter.
 
 ---
 
 ### 4.2 Log Management
 
-**Masalah:** Log container hanya bisa dilihat via `docker logs` — tidak ada
-agregasi atau retention policy.
-
-**Solusi:** Tambahkan log rotation di docker-compose:
+**Status: ✅ SELESAI** — Log rotation sudah dikonfigurasi di docker-compose:
 ```yaml
 logging:
   driver: "json-file"
