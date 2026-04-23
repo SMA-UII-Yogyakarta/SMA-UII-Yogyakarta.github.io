@@ -14,6 +14,13 @@ const MOCK_SLIMS_DATA = [
   { nis: '1812', name: 'ABDUL RAHIM ABUBAKAR', email: '1812@students.smauiiyk.sch.id', class: 'X IPS 1', expiredAt: '2024-03-27', isPending: false },
 ];
 
+/**
+ * Public endpoint untuk verifikasi NIS saat registrasi
+ * POST /api/slims/verify
+ * 
+ * Note: Endpoint ini public (no auth) karena digunakan saat registrasi.
+ * Untuk internal use (sudah login), gunakan GET /api/internal/slims/verify
+ */
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
