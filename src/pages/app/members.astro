@@ -20,6 +20,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     </div>
     <input type="text" id="search-input" data-testid="member-search"
       placeholder="Cari nama, email, NISN..."
+      autocomplete="off"
       class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500">
   </div>
 
@@ -114,12 +115,12 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       if (action === 'approve') {
         if (!confirm('Setujui anggota ini?')) return;
         const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'approve' }) });
-        res.ok ? load() : alert('Gagal');
+        if (res.ok) { currentStatus = ''; currentPage = 1; load(); } else alert('Gagal');
       }
       if (action === 'reject') {
         if (!confirm('Tolak dan hapus anggota ini?')) return;
         const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'reject' }) });
-        res.ok ? load() : alert('Gagal');
+        if (res.ok) { currentStatus = ''; currentPage = 1; load(); } else alert('Gagal');
       }
       if (action === 'set-password') {
         selectedUserId = id!;

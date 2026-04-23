@@ -5,6 +5,7 @@ import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 import { nanoid } from 'nanoid';
 import { notifyAllActiveMembers } from '@lib/notifications';
+import { sendAnnouncementEmail } from '@lib/email';
 
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
@@ -54,6 +55,17 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     // Notifikasi broadcast ke semua active members
     await notifyAllActiveMembers(`📢 Pengumuman baru: ${title}`);
+
+    // Kirim email ke semua active members
+    const activeMembers = await db.select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.status, 'active'));
+    
+    await Promise.allSettled(
+      activeMembers
+        .filter(m => m.email)
+        .map(m => sendAnnouncementEmail(m.email!, title, content))
+    );
 
     return createSuccessResponse({ id, success: true });
   } catch (error) {

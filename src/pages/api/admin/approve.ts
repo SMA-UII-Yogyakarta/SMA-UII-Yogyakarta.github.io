@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 import { createNotification } from '@lib/notifications';
+import { sendApprovalEmail } from '@lib/email';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { user } = locals;
@@ -32,6 +33,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
       // Notifikasi ke member yang diapprove
       await createNotification(userId, `Selamat! Akun kamu telah disetujui. Kartu anggota sudah tersedia.`);
+      // Kirim email approval
+      if (targetUser.email) {
+        await sendApprovalEmail(targetUser.email, targetUser.name).catch(err => 
+          console.error('Failed to send approval email:', err)
+        );
+      }
       return createSuccessResponse({ success: true, message: 'User approved successfully' });
 
     } else if (action === 'reject') {

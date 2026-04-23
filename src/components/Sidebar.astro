@@ -182,4 +182,32 @@ const items = navItems[role] || navItems.member;
       profilePopup?.classList.add('hidden');
     }
   });
+
+  // Handle logout forms - use fetch to bypass CSRF
+  document.querySelectorAll('form[action="/api/auth/logout"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin',
+        });
+        
+        if (response.ok || response.redirected) {
+          window.location.href = '/login';
+        } else {
+          console.error('Logout failed:', response.status);
+          // Fallback: force redirect anyway
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Fallback: force redirect
+        window.location.href = '/login';
+      }
+    });
+  });
 </script>
