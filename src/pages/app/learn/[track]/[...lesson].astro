@@ -129,19 +129,19 @@ const levelColor: Record<string, string> = {
     </aside>
 
     <!-- Konten utama -->
-    <div class="flex-1 overflow-y-auto" id="lesson-scroll">
-      <div class="max-w-3xl mx-auto px-6 py-6">
+    <div class="flex-1 overflow-y-auto" id="lesson-scroll" style="padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6">
 
         <!-- Markdown -->
-        <div id="lesson-content" class="prose prose-invert prose-blue max-w-none
+        <div id="lesson-content" class="prose prose-invert prose-blue max-w-none overflow-x-hidden
           prose-headings:font-bold prose-headings:text-white prose-headings:scroll-mt-6
           prose-p:text-gray-300 prose-p:leading-relaxed
           prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
           prose-code:text-blue-300 prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
-          prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800 prose-pre:rounded-xl
+          prose-pre:bg-gray-900 prose-pre:border prose-pre:border-gray-800 prose-pre:rounded-xl prose-pre:overflow-x-auto
           prose-blockquote:border-l-blue-500 prose-blockquote:text-gray-400 prose-blockquote:not-italic
           prose-strong:text-white prose-li:text-gray-300 prose-hr:border-gray-800
-          prose-h2:text-xl prose-h3:text-lg">
+          prose-h2:text-xl prose-h3:text-lg prose-table:overflow-x-auto">
           <Content />
         </div>
 

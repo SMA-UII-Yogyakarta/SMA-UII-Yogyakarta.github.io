@@ -18,6 +18,19 @@ input, select, textarea {
   font-size: max(16px, 1em);
 }
 
+/* Prose table — scroll horizontal di mobile */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prose pre — scroll horizontal di mobile */
+.prose pre {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Tap highlight — hilangkan default biru di mobile */
 * {
   -webkit-tap-highlight-color: transparent;
