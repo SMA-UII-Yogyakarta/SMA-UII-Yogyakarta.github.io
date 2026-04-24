@@ -158,8 +158,8 @@ weeks.forEach((week, i) => {
       autocomplete="off"
       class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600" />
     <div class="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none;">
-      {['Semua','Pemula','Menengah','Lanjutan'].map(f => (
-        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
+      {['Semua','Pemula','Menengah','Lanjutan','🏆 Olimpiade'].map(f => (
+        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : f === '🏆 Olimpiade' ? 'bg-gray-900 border-amber-700/50 text-amber-400 hover:border-amber-500' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
       ))}
     </div>
   </div>
@@ -178,15 +178,20 @@ weeks.forEach((week, i) => {
           const hasAdvanced = levels.includes('advanced');
           const hasIntermediate = levels.includes('intermediate');
           const dominantLevel = hasAdvanced ? 'Lanjutan' : hasIntermediate ? 'Menengah' : 'Pemula';
+          const hasOlimpiade = lessons.some(l => l.data.tags?.includes('olimpiade'));
           return (
             <a href={`/app/learn/${trackSlug}`}
               data-title={track.data.title.toLowerCase()}
               data-level={dominantLevel}
+              data-olimpiade={hasOlimpiade ? 'true' : 'false'}
               class="track-card bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
               <div class="flex items-start gap-3 mb-4">
                 <span class="text-3xl shrink-0">{track.data.icon}</span>
                 <div class="flex-1 min-w-0">
-                  <h2 class="font-semibold group-hover:text-blue-400 transition">{track.data.title}</h2>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="font-semibold group-hover:text-blue-400 transition">{track.data.title}</h2>
+                    {hasOlimpiade && <span class="text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded font-medium">🏆 Olimpiade</span>}
+                  </div>
                   <p class="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{track.data.description}</p>
                 </div>
               </div>
@@ -257,7 +262,10 @@ weeks.forEach((week, i) => {
       let visibleCount = 0;
       cards.forEach(card => {
         const matchSearch = !q || card.dataset.title?.includes(q);
-        const matchLevel = activeFilter === 'Semua' || card.dataset.level === activeFilter;
+        const isOlimpiade = activeFilter === '🏆 Olimpiade';
+        const matchLevel = activeFilter === 'Semua' || isOlimpiade
+          ? (isOlimpiade ? card.dataset.olimpiade === 'true' : true)
+          : card.dataset.level === activeFilter;
         const visible = !!(matchSearch && matchLevel);
         card.style.display = visible ? '' : 'none';
         if (visible) visibleCount++;
@@ -271,12 +279,18 @@ weeks.forEach((week, i) => {
       btn.addEventListener('click', () => {
         activeFilter = (btn as HTMLElement).dataset.filter!;
         document.querySelectorAll('.filter-btn').forEach(b => {
-          b.classList.toggle('bg-blue-600', (b as HTMLElement).dataset.filter === activeFilter);
-          b.classList.toggle('border-blue-600', (b as HTMLElement).dataset.filter === activeFilter);
-          b.classList.toggle('text-white', (b as HTMLElement).dataset.filter === activeFilter);
-          b.classList.toggle('text-gray-400', (b as HTMLElement).dataset.filter !== activeFilter);
-          b.classList.toggle('bg-gray-900', (b as HTMLElement).dataset.filter !== activeFilter);
-          b.classList.toggle('border-gray-800', (b as HTMLElement).dataset.filter !== activeFilter);
+          const f = (b as HTMLElement).dataset.filter!;
+          const isActive = f === activeFilter;
+          const isOlimpiade = f === '🏆 Olimpiade';
+          if (isActive && isOlimpiade) {
+            b.className = 'filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation bg-amber-500/20 border-amber-500 text-amber-400';
+          } else if (isActive) {
+            b.className = 'filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation bg-blue-600 border-blue-600 text-white';
+          } else if (isOlimpiade) {
+            b.className = 'filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation bg-gray-900 border-amber-700/50 text-amber-400 hover:border-amber-500';
+          } else {
+            b.className = 'filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50';
+          }
         });
         applyFilter();
       });
