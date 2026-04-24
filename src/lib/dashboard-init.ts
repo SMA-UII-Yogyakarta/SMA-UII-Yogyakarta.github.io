@@ -52,13 +52,13 @@ export function initDashboard(_options: { role: string; userName: string }) {
     setSidebar(localStorage.getItem('sidebar-collapsed') === 'true' ? 'minimized' : 'expanded');
   }
 
-  // Toggle button
+  // Toggle button — tablet dan desktop only (mobile pakai BottomNav)
   document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
     const current = document.documentElement.getAttribute('data-sidebar');
     const w = window.innerWidth;
     if (w >= 1024) {
       setSidebar(current === 'expanded' ? 'minimized' : 'expanded');
-    } else if (w >= 640) {
+    } else {
       // Tablet: minimized ↔ overlay
       setSidebar(current === 'overlay' ? 'minimized' : 'overlay');
     }

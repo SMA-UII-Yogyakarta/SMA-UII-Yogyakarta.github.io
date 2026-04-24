@@ -15,18 +15,22 @@ const handleId = `${id}-handle`;
   data-inner-id={innerId}
   data-handle-id={handleId}
   data-draggable={draggable ? 'true' : null}
-  class={`hidden fixed inset-0 z-50 ${draggable ? 'bg-black/50' : 'bg-black/60 flex items-center justify-center p-4'}`}
+  class={`hidden fixed inset-0 z-50 bg-black/60 ${draggable ? '' : 'sm:flex sm:items-center sm:justify-center sm:p-4'}`}
 >
   <div
     id={innerId}
-    class={`bg-gray-900 border border-gray-800 rounded-xl w-full ${maxWidth} ${draggable ? 'absolute select-none' : 'flex flex-col max-h-[90vh]'}`}
+    class={`bg-gray-900 border border-gray-800 w-full ${maxWidth} ${draggable ? 'absolute select-none' : 'flex flex-col max-h-[90vh] rounded-t-2xl sm:rounded-xl fixed bottom-0 left-0 right-0 sm:static sm:bottom-auto sm:left-auto sm:right-auto'}`}
     style={draggable ? 'top:50%;left:50%;transform:translate(-50%,-50%)' : ''}
   >
-    <div id={handleId} class={`flex items-center justify-between px-6 pt-6 pb-4 flex-shrink-0 ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-      <h2 class="text-lg font-bold">{title}</h2>
-      {draggable && <span class="text-gray-600 text-xs">⠿ drag</span>}
+    <!-- Drag handle — mobile only -->
+    <div class="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
+      <div class="w-10 h-1 bg-gray-700 rounded-full"></div>
     </div>
-    <div class="px-6 pb-6 overflow-y-auto">
+    <div id={handleId} class={`flex items-center justify-between px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0 ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+      <h2 class="text-lg font-bold">{title}</h2>
+      {draggable && <span class="hidden sm:block text-gray-600 text-xs">⠿ drag</span>}
+    </div>
+    <div class="px-6 pb-6 overflow-y-auto" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom))">
       <slot />
     </div>
   </div>

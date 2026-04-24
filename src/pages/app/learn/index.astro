@@ -153,12 +153,13 @@ weeks.forEach((week, i) => {
   )}
 
   <!-- Search & Filter -->
-  <div class="flex gap-3 mb-5 flex-wrap">
+  <div class="flex flex-col sm:flex-row gap-3 mb-5">
     <input id="track-search" type="text" placeholder="Cari track..."
-      class="flex-1 min-w-40 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600" />
-    <div class="flex gap-2">
+      autocomplete="off"
+      class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600" />
+    <div class="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none;">
       {['Semua','Pemula','Menengah','Lanjutan'].map(f => (
-        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
+        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap flex-shrink-0 touch-manipulation ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
       ))}
     </div>
   </div>

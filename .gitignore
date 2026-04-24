@@ -28,6 +28,12 @@ Thumbs.db
 ai.chat
 *.chat
 
+# Context — instance-specific, not for public repo
+context/ACTIVE.md
+context/DECISIONS.md
+context/INTEGRATIONS.md
+context/README.md
+
 # Build artifacts
 *.out
 *.o

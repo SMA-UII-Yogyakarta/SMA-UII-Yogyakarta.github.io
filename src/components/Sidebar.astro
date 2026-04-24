@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { role, userName, userEmail } = Astro.props;
-const items = navItems[role] || navItems.member;
+const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.maintainer) : navItems.member;
 ---
 
 <style is:global>
@@ -78,9 +78,10 @@ const items = navItems[role] || navItems.member;
     {items.map(item => (
       <a 
         href={item.href} 
-        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition text-gray-400 hover:text-white" 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition text-gray-400 hover:text-white touch-manipulation" 
         data-nav={item.label.toLowerCase()}
         title={item.label}
+        style="min-height:44px;"
       >
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={item.icon}/>

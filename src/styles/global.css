@@ -14,4 +14,17 @@
 /* Input, select, textarea — ikuti tema gelap */
 input, select, textarea {
   color-scheme: dark;
+  /* Prevent iOS auto-zoom — font-size minimum 16px */
+  font-size: max(16px, 1em);
+}
+
+/* Tap highlight — hilangkan default biru di mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scroll di semua scroll container */
+.overflow-y-auto, .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
