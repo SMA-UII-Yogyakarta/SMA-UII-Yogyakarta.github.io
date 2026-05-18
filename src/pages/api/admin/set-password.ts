@@ -4,6 +4,7 @@ import { users } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { setPasswordSchema } from '@lib/validation';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { user } = locals;
@@ -12,9 +13,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const { userId, password } = await request.json();
-    if (!userId || !password) return createErrorResponse('Missing required fields', 400);
-    if (password.length < 6) return createErrorResponse('Password minimal 6 karakter', 400, { code: 'PASSWORD_TOO_SHORT' });
+    const body = await request.json();
+    const parsed = setPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+
+    const { userId, password } = parsed.data;
 
     const targetUser = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!targetUser) return createErrorResponse('User not found', 404);

@@ -9,6 +9,7 @@ export const users = sqliteTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   githubUsername: text('github_username'),
+  avatarUrl: text('avatar_url'),
   githubId: text('github_id'),
   passwordHash: text('password_hash'),
   class: text('class').notNull(),
@@ -136,7 +137,10 @@ export const announcements = sqliteTable('announcements', {
   content: text('content').notNull(),
   createdBy: text('created_by').notNull().references(() => users.id),
   createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
-});
+  isPinned: integer('is_pinned').notNull().default(0), // boolean
+}, (table) => [
+  index('idx_announcements_created_at').on(table.createdAt),
+]);
 
 // Announcements relations
 export const announcementsRelations = relations(announcements, ({ one }) => ({

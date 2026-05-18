@@ -23,6 +23,39 @@ export const trackOptions = [
   { value: 'software', label: '💻 Software Engineering' },
 ];
 
+export const activityTypeOptions = [
+  'contribution', 'event', 'workshop', 'meeting', 'other',
+] as const;
+
+export const createActivitySchema = z.object({
+  type: z.enum(activityTypeOptions, { message: 'Tipe tidak valid' }),
+  title: z.string().min(1, 'Judul harus diisi').max(200, 'Judul maksimal 200 karakter'),
+  description: z.string().optional(),
+  url: z.string().optional(),
+});
+
+export const approveUserSchema = z.object({
+  userId: z.string().min(1, 'User ID harus diisi'),
+  action: z.enum(['approve', 'reject'], { message: 'Action tidak valid' }),
+});
+
+export const setPasswordSchema = z.object({
+  userId: z.string().min(1, 'User ID harus diisi'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+});
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(1, 'Nama tidak boleh kosong').max(100, 'Nama maksimal 100 karakter').optional(),
+  githubUsername: z.string().optional(),
+  avatarUrl: z.string().url('URL avatar tidak valid').optional().or(z.literal('')),
+});
+
+export const readingSessionSchema = z.object({
+  slug: z.string().min(1, 'Slug harus diisi'),
+  action: z.enum(['start', 'end'], { message: 'Action tidak valid' }),
+  duration: z.number().optional(),
+});
+
 export const classOptions = [
   'X IPA 1', 'X IPA 2', 'X IPA 3', 'X IPA 4',
   'X IPS 1', 'X IPS 2', 'X IPS 3',

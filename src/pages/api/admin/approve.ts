@@ -5,8 +5,9 @@ import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { approveUserSchema } from '@lib/validation';
 import { createNotification } from '@lib/notifications';
-import { sendApprovalEmail } from '@lib/email';
+import { sendApprovalEmail, sendRejectionEmail } from '@lib/email';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { user } = locals;
@@ -15,9 +16,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const { userId, action } = await request.json();
-    if (!userId || !action) return createErrorResponse('Missing required fields', 400);
+    const body = await request.json();
+    const parsed = approveUserSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
 
+    const { userId, action } = parsed.data;
     const targetUser = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!targetUser) return createErrorResponse('User not found', 404);
 
@@ -42,6 +48,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return createSuccessResponse({ success: true, message: 'User approved successfully' });
 
     } else if (action === 'reject') {
+      if (targetUser.email) {
+        sendRejectionEmail(targetUser.email, targetUser.name).catch(err =>
+          console.error('Failed to send rejection email:', err)
+        );
+      }
       await db.transaction(async (tx) => {
         await tx.delete(memberTracks).where(eq(memberTracks.userId, userId));
         await tx.delete(sessions).where(eq(sessions.userId, userId));

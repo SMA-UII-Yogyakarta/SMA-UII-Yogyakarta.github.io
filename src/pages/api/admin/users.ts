@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '@db';
-import { users, memberTracks, memberCards, sessions } from '@db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { users, memberTracks, memberCards, sessions, activities, projects, notifications, learningProgress, readingSessions } from '@db/schema';
+import { eq, inArray, and } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
 export const GET: APIRoute = async ({ url, locals }) => {
@@ -29,14 +29,30 @@ export const GET: APIRoute = async ({ url, locals }) => {
       });
     }
 
-    let whereCondition;
-    if (status) whereCondition = eq(users.status, status);
-    else if (role) whereCondition = eq(users.role, role);
+    const track = url.searchParams.get('track');
+    const userClass = url.searchParams.get('class');
 
-    const allUsers = await db.query.users.findMany({
-      where: whereCondition,
+    const conditions = [];
+    if (status) conditions.push(eq(users.status, status));
+    if (role) conditions.push(eq(users.role, role));
+    if (userClass) conditions.push(eq(users.class, userClass));
+
+    let allUsers = await db.query.users.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
       orderBy: (users, { desc }) => [desc(users.joinedAt)],
     });
+
+    if (track && allUsers.length > 0) {
+      const userIds = allUsers.map(u => u.id);
+      const trackUsers = await db.query.memberTracks.findMany({
+        where: and(
+          inArray(memberTracks.userId, userIds),
+          eq(memberTracks.track, track)
+        ),
+      });
+      const trackUserIds = new Set(trackUsers.map(t => t.userId));
+      allUsers = allUsers.filter(u => trackUserIds.has(u.id));
+    }
 
     const userIds = allUsers.map(u => u.id);
     const allTracks = userIds.length > 0
@@ -72,6 +88,12 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     const targetUser = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!targetUser) return createErrorResponse('User not found', 404);
 
+    const VALID_ROLES = ['member', 'maintainer', 'alumni'] as const;
+    const VALID_STATUSES = ['pending', 'active', 'inactive'] as const;
+
+    if (role && !VALID_ROLES.includes(role)) return createErrorResponse('Role tidak valid', 422);
+    if (status && !VALID_STATUSES.includes(status)) return createErrorResponse('Status tidak valid', 422);
+
     const updateData: Record<string, unknown> = {};
     if (status) updateData.status = status;
     if (role) updateData.role = role;
@@ -102,6 +124,11 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
     if (userId === user.id) return createErrorResponse('Cannot delete your own account', 400);
 
     await db.transaction(async (tx) => {
+      await tx.delete(activities).where(eq(activities.userId, userId));
+      await tx.delete(projects).where(eq(projects.userId, userId));
+      await tx.delete(notifications).where(eq(notifications.userId, userId));
+      await tx.delete(learningProgress).where(eq(learningProgress.userId, userId));
+      await tx.delete(readingSessions).where(eq(readingSessions.userId, userId));
       await tx.delete(memberTracks).where(eq(memberTracks.userId, userId));
       await tx.delete(sessions).where(eq(sessions.userId, userId));
       await tx.delete(memberCards).where(eq(memberCards.userId, userId));

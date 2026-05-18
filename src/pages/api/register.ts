@@ -5,6 +5,7 @@ import { registerSchema } from '@lib/validation';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { sendRegistrationEmail } from '@lib/email';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -59,6 +60,10 @@ export const POST: APIRoute = async ({ request }) => {
         });
       }
     });
+
+    sendRegistrationEmail(validated.email, validated.name).catch(err =>
+      console.error('Failed to send registration email:', err)
+    );
 
     return createSuccessResponse({
       success: true,

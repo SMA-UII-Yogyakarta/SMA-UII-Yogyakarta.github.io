@@ -3,6 +3,7 @@ import { users, memberTracks, memberCards } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { updateProfileSchema } from '@lib/validation';
 
 export const GET: APIRoute = async ({ locals }) => {
   const { user: sessionUser } = locals;
@@ -40,9 +41,23 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
   if (!sessionUser) return createErrorResponse('Unauthorized', 401);
 
   try {
-    const { name, githubUsername } = await request.json();
-    if (name) await db.update(users).set({ name }).where(eq(users.id, sessionUser.id));
-    if (githubUsername !== undefined) await db.update(users).set({ githubUsername }).where(eq(users.id, sessionUser.id));
+    const body = await request.json();
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 422);
+    }
+
+    const { name, githubUsername, avatarUrl } = parsed.data;
+    if (name !== undefined) {
+      await db.update(users).set({ name }).where(eq(users.id, sessionUser.id));
+    }
+    if (githubUsername !== undefined) {
+      await db.update(users).set({ githubUsername: githubUsername || null }).where(eq(users.id, sessionUser.id));
+    }
+    if (avatarUrl !== undefined) {
+      await db.update(users).set({ avatarUrl: avatarUrl || null }).where(eq(users.id, sessionUser.id));
+    }
     return createSuccessResponse({ success: true });
   } catch (error) {
     console.error('Failed to update profile:', error);
