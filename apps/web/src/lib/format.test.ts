@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { fmtDate } from '../../apps/web/src/lib/format';
+import { fmtDate } from './format';
 
 describe('Format utilities', () => {
   test('fmtDate formats timestamp correctly', () => {
