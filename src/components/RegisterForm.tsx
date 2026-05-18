@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { registerSchema, trackOptions, type RegisterInput } from '@lib/validation';
+import { registerSchema, trackOptions, classOptions, type RegisterInput } from '@lib/validation';
 import type { ZodError } from 'zod';
 
 type RegistrationStep = 'verify' | 'data' | 'github' | 'tracks' | 'confirm';
@@ -202,7 +202,7 @@ export default function RegisterForm() {
               Pendaftaranmu sedang diproses. Tunggu persetujuan dari maintainer.
             </p>
             <a 
-              href="/dashboard" 
+              href={`/success?nisn=${encodeURIComponent(formData.nisn)}`} 
               className="inline-block bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold transition text-lg"
             >
               Lihat Status Pendaftaran →
@@ -307,9 +307,7 @@ export default function RegisterForm() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
               >
                 <option value="">-- Pilih Kelas --</option>
-                {['X IPA 1','X IPA 2','X IPS 1','X IPS 2',
-                  'XI IPA 1','XI IPA 2','XI IPS 1','XI IPS 2',
-                  'XII IPA 1','XII IPA 2','XII IPS 1','XII IPS 2'].map(k => (
+                {classOptions.map(k => (
                   <option key={k} value={k}>{k}</option>
                 ))}
               </select>

@@ -6,13 +6,30 @@ import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const canAdd = user!.status === 'active';
+const canAdd = user!.status === 'active' && user!.role !== 'alumni';
 ---
 
 <DashboardLayout title="Projects">
   <PageHeader subtitle="Showcase karya anggota komunitas" actionLabel={canAdd ? "Tambah Project" : undefined} />
 
   <div id="projects-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
+
+  <!-- Search & filter -->
+  <div class="flex flex-wrap gap-3 mb-4">
+    <div class="relative flex-1 min-w-[200px]">
+      <input type="text" id="search-input" placeholder="Cari project..."
+        class="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
+    {user!.role === 'maintainer' && (
+      <select id="user-filter" class="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition text-gray-300">
+        <option value="">Semua Member</option>
+      </select>
+    )}
+  </div>
+
   <div id="projects-grid" data-testid="projects-grid"><SkeletonList count={6} type="cards" /></div>
 
   {canAdd && (
@@ -97,6 +114,8 @@ const canAdd = user!.status === 'active';
     const imageUrlField = form?.querySelector('[name="imageUrl"]') as HTMLInputElement | null;
 
     let currentPage = 1;
+    let searchQuery = '';
+    let userIdFilter = '';
     const PAGE_LIMIT = 12;
 
     // --- Image upload ---
@@ -178,7 +197,10 @@ const canAdd = user!.status === 'active';
     }
 
     async function load() {
-      const res = await fetch(`/api/projects?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
+      if (searchQuery) params.set('q', searchQuery);
+      if (userIdFilter) params.set('userId', userIdFilter);
+      const res = await fetch(`/api/projects?${params}`);
       const { data } = await res.json();
       const projects: any[] = data?.projects || [];
       const total: number = data?.total || 0;
@@ -263,6 +285,42 @@ const canAdd = user!.status === 'active';
         alert(json.error || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'));
       }
     });
+
+    // Search input
+    const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+    let searchTimer: ReturnType<typeof setTimeout>;
+    searchInput?.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        searchQuery = searchInput.value.trim();
+        currentPage = 1;
+        load();
+      }, 300);
+    });
+
+    // User filter (maintainer only)
+    const userFilter = document.getElementById('user-filter') as HTMLSelectElement | null;
+    if (userFilter && isAdmin) {
+      // Fetch users for dropdown
+      fetch('/api/admin/users')
+        .then(r => r.json())
+        .then(res => {
+          const users = res.data?.users || [];
+          users.forEach((u: any) => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `${u.name} (${u.nis})`;
+            userFilter.appendChild(opt);
+          });
+        })
+        .catch(() => {});
+
+      userFilter.addEventListener('change', () => {
+        userIdFilter = userFilter.value;
+        currentPage = 1;
+        load();
+      });
+    }
 
     load();
   </script>

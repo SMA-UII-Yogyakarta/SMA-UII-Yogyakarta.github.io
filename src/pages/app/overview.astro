@@ -75,8 +75,13 @@ const { user } = Astro.locals;
         }
 
         const statsBody = await statsRes.json();
-        const { stats, pendingUsers } = statsBody.data;
+        const { members, activitiesThisMonth, activitiesByType, trackPopularity, totalProjects, recentMembers, pendingUsers } = statsBody.data;
         const announcements = annRes.ok ? ((await annRes.json()).data?.announcements || []).slice(0, 3) : [];
+
+        const statusBadge = (status: string) => {
+          const colors: Record<string, string> = { active: 'bg-green-500/20 text-green-400', pending: 'bg-yellow-500/20 text-yellow-400', inactive: 'bg-red-500/20 text-red-400' };
+          return `<span class="px-1.5 py-0.5 rounded text-xs font-medium ${colors[status] || 'bg-gray-500/20 text-gray-400'}">${esc(status)}</span>`;
+        };
 
         const pendingHtml = pendingUsers.length === 0
           ? '<p class="text-gray-500 text-center py-4 text-sm">Tidak ada pendaftaran baru</p>'
@@ -93,6 +98,44 @@ const { user } = Astro.locals;
             </div>
           `).join('');
 
+        const maxTrackCount = trackPopularity.length > 0 ? trackPopularity[0].count : 1;
+        const trackBarsHtml = trackPopularity.length === 0
+          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada data track</p>'
+          : trackPopularity.map((t: any) => `
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400 w-24 shrink-0 truncate" title="${esc(t.track)}">${esc(t.track)}</span>
+              <div class="flex-1 bg-gray-800 rounded-full h-3.5 overflow-hidden">
+                <div class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width:${Math.max(2, Math.round((t.count / maxTrackCount) * 100))}%"></div>
+              </div>
+              <span class="text-xs text-gray-400 w-8 text-right font-mono">${t.count}</span>
+            </div>
+          `).join('');
+
+        const maxTypeCount = activitiesByType.length > 0 ? activitiesByType[0].count : 1;
+        const typeBarsHtml = activitiesByType.length === 0
+          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada aktivitas bulan ini</p>'
+          : activitiesByType.map((a: any) => `
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-gray-400 w-20 shrink-0 truncate capitalize">${esc(a.type)}</span>
+              <div class="flex-1 bg-gray-800 rounded-full h-3.5 overflow-hidden">
+                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width:${Math.max(2, Math.round((a.count / maxTypeCount) * 100))}%"></div>
+              </div>
+              <span class="text-xs text-gray-400 w-8 text-right font-mono">${a.count}</span>
+            </div>
+          `).join('');
+
+        const recentHtml = recentMembers.length === 0
+          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada anggota</p>'
+          : recentMembers.map((m: any) => `
+            <div class="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
+              <span class="text-sm">${esc(m.name)}</span>
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-400">${new Date(m.joinedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                ${statusBadge(m.status)}
+              </div>
+            </div>
+          `).join('');
+
         const annHtml = announcements.length === 0
           ? '<p class="text-gray-500 text-sm">Belum ada pengumuman</p>'
           : announcements.map((a: any) => `
@@ -103,6 +146,43 @@ const { user } = Astro.locals;
           `).join('');
 
         content.innerHTML = `
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">👥</span>
+                <span class="text-xs text-gray-400">Total Members</span>
+              </div>
+              <p class="text-2xl font-bold">${members.total}</p>
+              <p class="text-xs text-gray-500">${members.pending} pending · ${members.inactive} inactive</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">✅</span>
+                <span class="text-xs text-gray-400">Active</span>
+              </div>
+              <p class="text-2xl font-bold text-green-400">${members.active}</p>
+              <p class="text-xs text-gray-500">Anggota aktif</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">📊</span>
+                <span class="text-xs text-gray-400">Activities</span>
+              </div>
+              <p class="text-2xl font-bold text-blue-400">${activitiesThisMonth}</p>
+              <p class="text-xs text-gray-500">Bulan ini</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">🚀</span>
+                <span class="text-xs text-gray-400">Projects</span>
+              </div>
+              <p class="text-2xl font-bold text-purple-400">${totalProjects}</p>
+              <p class="text-xs text-gray-500">Total proyek</p>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <a href="/app/members" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
               <div class="text-2xl mb-1">👥</div>
@@ -126,26 +206,28 @@ const { user } = Astro.locals;
             </a>
           </div>
 
-          <div class="grid lg:grid-cols-3 gap-6 mb-6">
+          <!-- Track Popularity & Activity Stats -->
+          <div class="grid lg:grid-cols-2 gap-6 mb-6">
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h2 class="font-bold mb-3">Statistik</h2>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="bg-gray-950 rounded-lg p-3 text-center">
-                  <div class="text-2xl font-bold text-yellow-400">${stats.pendingApproval}</div>
-                  <p class="text-xs text-gray-400">Pending</p>
-                </div>
-                <div class="bg-gray-950 rounded-lg p-3 text-center">
-                  <div class="text-2xl font-bold text-green-400">${stats.activeMembers}</div>
-                  <p class="text-xs text-gray-400">Aktif</p>
-                </div>
-                <div class="bg-gray-950 rounded-lg p-3 text-center col-span-2">
-                  <div class="text-2xl font-bold">${stats.allUsers}</div>
-                  <p class="text-xs text-gray-400">Total Anggota</p>
-                </div>
-              </div>
+              <h2 class="font-bold mb-4">Popularitas Track</h2>
+              <div class="space-y-3">${trackBarsHtml}</div>
             </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <h2 class="font-bold mb-4">Aktivitas Bulan Ini</h2>
+              <div class="space-y-3">${typeBarsHtml}</div>
+            </div>
+          </div>
 
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 lg:col-span-2">
+          <!-- Recent Members & Announcements -->
+          <div class="grid lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+              <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold">Anggota Terbaru</h2>
+                <a href="/app/members" class="text-blue-400 text-xs hover:text-blue-300">Lihat semua →</a>
+              </div>
+              <div>${recentHtml}</div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <div class="flex justify-between items-center mb-3">
                 <h2 class="font-bold">Pengumuman Terbaru</h2>
                 <a href="/app/announcements" class="text-blue-400 text-xs hover:text-blue-300">Lihat semua →</a>
@@ -154,6 +236,7 @@ const { user } = Astro.locals;
             </div>
           </div>
 
+          <!-- Pending Approvals -->
           <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <div class="flex justify-between items-center mb-3">
               <h2 class="font-bold">Menunggu Persetujuan (${pendingUsers.length})</h2>

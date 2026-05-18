@@ -1,13 +1,25 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import PageHeader from '@components/app/PageHeader.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import Modal from '@components/app/Modal.astro';
 import { requireMaintainer } from '@lib/guards';
+import { trackOptions, classOptions } from '@lib/validation';
 const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 ---
 
 <DashboardLayout title="Members">
-  <p class="text-gray-400 text-sm mb-4">Kelola dan pantau seluruh anggota komunitas</p>
+  <PageHeader subtitle="Kelola dan pantau seluruh anggota komunitas" />
+
+  <!-- Track filter chips -->
+  <div class="flex flex-wrap gap-2 mb-3" id="track-filters" data-testid="track-filters">
+    <button data-track="" data-testid="filter-track-all"
+      class="track-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua Track</button>
+    {trackOptions.map(opt => (
+      <button data-track={opt.value} data-testid={`filter-track-${opt.value}`}
+        class="track-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">{opt.label.replace(/^[^\s]+\s/, '')}</button>
+    ))}
+  </div>
 
   <div class="flex flex-col sm:flex-row gap-3 mb-4">
     <div class="flex gap-2" id="status-filters" data-testid="member-filters">
@@ -18,6 +30,11 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       <button data-status="active" data-testid="filter-active"
         class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Active</button>
     </div>
+    <select id="class-filter" data-testid="class-filter"
+      class="px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+      <option value="">Semua Kelas</option>
+      {classOptions.map(c => (<option value={c}>{c}</option>))}
+    </select>
     <input type="text" id="search-input" data-testid="member-search"
       placeholder="Cari nama, email, NISN..."
       autocomplete="off"
@@ -25,6 +42,13 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
   </div>
 
   <div id="members-content" data-testid="members-list"><SkeletonList count={5} /></div>
+
+  <!-- Member Detail Modal -->
+  <Modal id="detail-modal" title="Detail Anggota" draggable>
+    <div id="detail-content" class="space-y-3">
+      <!-- Populated by JS -->
+    </div>
+  </Modal>
 
   <Modal id="password-modal" title="Set Password Anggota" draggable>
     <p class="text-sm text-gray-400 mb-4">Set password untuk: <span id="modal-member-name" class="text-white font-medium"></span></p>
@@ -41,9 +65,13 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
     const contentEl = document.getElementById('members-content') as HTMLElement;
     const passwordModal = document.getElementById('password-modal');
+    const detailModal = document.getElementById('detail-modal');
     const pwInput = document.getElementById('new-password') as HTMLInputElement;
+    const classFilter = document.getElementById('class-filter') as HTMLSelectElement;
 
     let currentStatus = '';
+    let currentTrack = '';
+    let currentClass = '';
     let currentSearch = '';
     let currentPage = 1;
     let selectedUserId = '';
@@ -57,7 +85,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
     function renderMember(m: any): string {
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition cursor-pointer" data-action="view-detail" data-id="${m.id}">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
               ${esc(m.name).charAt(0).toUpperCase()}
@@ -68,7 +96,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
               ${m.tracks?.length ? `<p class="text-xs text-gray-500">${(m.tracks as string[]).map(esc).join(', ')}</p>` : ''}
             </div>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="flex items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
             <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">${esc(m.status)}</span>
             ${m.status === 'pending' ? `
               <button data-action="approve" data-id="${m.id}"
@@ -85,15 +113,23 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     async function load() {
       const params = new URLSearchParams({ admin: '1', page: String(currentPage), limit: String(PAGE_LIMIT) });
       if (currentStatus) params.set('status', currentStatus);
+      if (currentTrack) params.set('track', currentTrack);
+      if (currentClass) params.set('class', currentClass);
       if (currentSearch) params.set('search', currentSearch);
 
       const { data } = await fetch(`/api/members?${params}`).then(r => r.json());
       const { members = [], total = 0, page = 1, limit = PAGE_LIMIT } = data || {};
 
-      // Update filter buttons
+      // Update status filter buttons
       document.querySelectorAll<HTMLElement>('.filter-btn').forEach(btn => {
         const active = btn.dataset.status === currentStatus;
         btn.className = `filter-btn px-3 py-1.5 rounded-lg text-sm transition ${active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
+      });
+
+      // Update track filter buttons
+      document.querySelectorAll<HTMLElement>('.track-btn').forEach(btn => {
+        const active = btn.dataset.track === currentTrack;
+        btn.className = `track-btn px-3 py-1.5 rounded-lg text-sm transition ${active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
       });
 
       contentEl.innerHTML = members.length
@@ -112,15 +148,53 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       if (!btn) return;
       const { action, id, name } = btn.dataset;
 
+      if (action === 'view-detail') {
+        const res = await fetch(`/api/admin/users?id=${id}`);
+        const { data } = await res.json();
+        if (data?.user) {
+          const detailContent = document.getElementById('detail-content');
+          if (detailContent) {
+            detailContent.innerHTML = `
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg">${esc(data.user.name).charAt(0).toUpperCase()}</div>
+                <div>
+                  <p class="font-semibold text-white">${esc(data.user.name)}</p>
+                  <p class="text-xs text-gray-400">${esc(data.user.email)}</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <p class="text-gray-400">NISN:</p><p class="text-white">${esc(data.user.nisn || '-')}</p>
+                <p class="text-gray-400">NIS:</p><p class="text-white">${esc(data.user.nis || '-')}</p>
+                <p class="text-gray-400">Kelas:</p><p class="text-white">${esc(data.user.class || '-')}</p>
+                <p class="text-gray-400">Status:</p><p class="text-white">${esc(data.user.status)}</p>
+                <p class="text-gray-400">Role:</p><p class="text-white">${esc(data.user.role)}</p>
+                <p class="text-gray-400">Track:</p><p class="text-white">${data.tracks?.length ? data.tracks.map(esc).join(', ') : '-'}</p>
+                <p class="text-gray-400">Bergabung:</p><p class="text-white">${data.user.joinedAt ? new Date(data.user.joinedAt).toLocaleDateString('id-ID') : '-'}</p>
+              </div>
+              <p class="text-xs text-gray-400 mt-4">Disetujui oleh: ${data.user.approvedBy ? esc(data.user.approvedBy) : 'Belum disetujui'}</p>
+              ${data.user.status === 'active' && data.user.role !== 'maintainer' ? `
+                <div class="border-t border-gray-800 pt-3 mt-4">
+                  <button data-action="toggle-alumni" data-id="${esc(data.user.id)}" data-name="${esc(data.user.name)}" data-role="${esc(data.user.role)}"
+                    class="w-full py-2 rounded-lg text-sm font-medium transition ${data.user.role === 'alumni' ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-gray-800 hover:bg-gray-700 text-yellow-400'}">
+                    ${data.user.role === 'alumni' ? 'Kembalikan ke Member' : 'Jadikan Alumni'}
+                  </button>
+                  ${data.user.role !== 'alumni' ? '<p class="text-xs text-gray-500 mt-2 text-center">Alumni tidak bisa log aktivitas baru</p>' : ''}
+                </div>
+              ` : ''}
+            `;
+          }
+          detailModal?.classList.remove('hidden');
+        }
+      }
       if (action === 'approve') {
         if (!confirm('Setujui anggota ini?')) return;
         const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'approve' }) });
-        if (res.ok) { currentStatus = ''; currentPage = 1; load(); } else alert('Gagal');
+        if (res.ok) { currentPage = 1; load(); } else alert('Gagal');
       }
       if (action === 'reject') {
         if (!confirm('Tolak dan hapus anggota ini?')) return;
         const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'reject' }) });
-        if (res.ok) { currentStatus = ''; currentPage = 1; load(); } else alert('Gagal');
+        if (res.ok) { currentPage = 1; load(); } else alert('Gagal');
       }
       if (action === 'set-password') {
         selectedUserId = id!;
@@ -128,6 +202,17 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
         if (nameEl) nameEl.textContent = name || '';
         pwInput.value = '';
         passwordModal?.classList.remove('hidden');
+      }
+      if (action === 'toggle-alumni') {
+        const role = btn.dataset.role === 'alumni' ? 'member' : 'alumni';
+        if (!confirm(`${role === 'alumni' ? 'Jadikan' : 'Kembalikan'} ${esc(name || '')} sebagai ${role}?`)) return;
+        const res = await fetch('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: id, role }),
+        });
+        if (res.ok) { detailModal?.classList.add('hidden'); load(); }
+        else { const json = await res.json().catch(() => ({})); alert(json.error || 'Gagal mengubah role'); }
       }
     });
 
@@ -137,6 +222,20 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       const btn = (e.target as HTMLElement).closest<HTMLElement>('.filter-btn');
       if (!btn) return;
       currentStatus = btn.dataset.status || '';
+      currentPage = 1;
+      load();
+    });
+
+    document.getElementById('track-filters')?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('.track-btn');
+      if (!btn) return;
+      currentTrack = btn.dataset.track || '';
+      currentPage = 1;
+      load();
+    });
+
+    classFilter?.addEventListener('change', (e) => {
+      currentClass = (e.target as HTMLSelectElement).value;
       currentPage = 1;
       load();
     });

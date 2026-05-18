@@ -15,6 +15,7 @@ const user = Astro.locals.user;
 const role = (user?.role as 'maintainer' | 'member') ?? 'member';
 const userName = user?.name ?? '';
 const userEmail = user?.email ?? '';
+const userAvatarUrl = user?.avatarUrl ?? null;
 ---
 
 <!DOCTYPE html>
@@ -80,20 +81,19 @@ const userEmail = user?.email ?? '';
     /* Desktop/tablet: reset padding bottom (no BottomNav) */
     @media (min-width: 640px) {
       #dashboard-content { padding-bottom: 1rem !important; }
-    }
-  </style>
+    }  </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased overflow-hidden">
   <div class="flex h-dvh"  style="height: 100dvh">
-    <Sidebar role={role} userName={userName} userEmail={userEmail} />
+    <Sidebar role={role} userName={userName} userEmail={userEmail} userAvatarUrl={userAvatarUrl} />
 
     <main id="main-content" class="flex-1 flex flex-col">
-      <Topbar userName={userName}>
+      <Topbar userName={userName} userAvatarUrl={userAvatarUrl}>
         <Fragment slot="title"><slot name="title">{title}</slot></Fragment>
         <slot name="topbar-actions" slot="actions" />
       </Topbar>
 
-      <div class={noPadding ? 'flex-1 overflow-hidden' : 'flex-1 overflow-y-auto p-4'} id="dashboard-content" style="-webkit-overflow-scrolling: touch; padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))">
+      <div class={noPadding ? 'flex-1 overflow-hidden' : 'flex-1 overflow-y-auto p-4'} id="dashboard-content" style="-webkit-overflow-scrolling: touch;">
         <slot />
       </div>
     </main>

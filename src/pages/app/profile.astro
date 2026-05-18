@@ -2,7 +2,7 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@db';
-import { memberTracks, memberCards } from '@db/schema';
+import { users, memberTracks, memberCards } from '@db/schema';
 import { eq } from 'drizzle-orm';
 import { requireMember } from '@lib/guards';
 import { fmtDate } from '@lib/format';
@@ -11,9 +11,10 @@ import { STATUS_COLORS } from '@lib/constants';
 const redirect = requireMember(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
 
-const [tracks, card] = await Promise.all([
+const [tracks, card, approver] = await Promise.all([
   db.select({ track: memberTracks.track }).from(memberTracks).where(eq(memberTracks.userId, user!.id)),
   db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) }),
+  user!.approvedBy ? db.query.users.findFirst({ where: eq(users.id, user!.approvedBy) }) : null,
 ]);
 ---
 
@@ -22,9 +23,23 @@ const [tracks, card] = await Promise.all([
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Avatar + status -->
     <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col items-center text-center self-start">
-      <div class="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold mb-4">
-        {user!.name.charAt(0).toUpperCase()}
+      <div id="avatar-container" class="relative mb-4">
+        {user!.avatarUrl ? (
+          <img src={user!.avatarUrl} alt={user!.name} class="w-20 h-20 rounded-full object-cover" />
+        ) : (
+          <div class="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+            {user!.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <button id="avatar-upload-btn" class="absolute bottom-0 right-0 w-7 h-7 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-full flex items-center justify-center transition" title="Ganti foto profil">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </button>
+        <input type="file" id="avatar-input" accept="image/*" class="hidden" />
       </div>
+      <p id="avatar-status" class="text-xs text-gray-500 mb-2 h-4"></p>
       <h2 class="text-xl font-bold mb-1 truncate w-full">{user!.name}</h2>
       <p class="text-sm text-gray-400 mb-3 truncate w-full">{user!.email}</p>
       <span class={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[user!.status] || 'text-gray-400 bg-gray-800'}`}>
@@ -65,6 +80,23 @@ const [tracks, card] = await Promise.all([
         </div>
       </div>
 
+      {user!.status === 'active' && approver && (
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <h3 class="font-semibold mb-3 text-sm text-gray-400 uppercase tracking-wider">Informasi Keanggotaan</h3>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-green-600/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm text-gray-400">Disetujui oleh</p>
+              <p class="font-medium">{approver.name}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <h3 class="font-semibold mb-3 text-sm text-gray-400 uppercase tracking-wider">Track Minat</h3>
         {tracks.length > 0 ? (
@@ -92,3 +124,84 @@ const [tracks, card] = await Promise.all([
     </div>
   </div>
 </DashboardLayout>
+
+<script>
+  const uploadBtn = document.getElementById('avatar-upload-btn');
+  const fileInput = document.getElementById('avatar-input') as HTMLInputElement;
+  const statusEl = document.getElementById('avatar-status');
+  const avatarContainer = document.getElementById('avatar-container');
+
+  function setStatus(msg: string, isError: boolean) {
+    if (statusEl) {
+      statusEl.textContent = msg;
+      statusEl.className = `text-xs mb-2 h-4 ${isError ? 'text-red-400' : 'text-gray-500'}`;
+    }
+  }
+
+  uploadBtn?.addEventListener('click', () => fileInput?.click());
+
+  fileInput?.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setStatus('File terlalu besar (maks 2MB)', true);
+      return;
+    }
+
+    setStatus('Mengupload...', false);
+
+    try {
+      // Upload image
+      const fd = new FormData();
+      fd.append('image', file);
+      const uploadRes = await fetch('/api/upload/image', { method: 'POST', body: fd });
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        setStatus(err.error || 'Gagal upload', true);
+        return;
+      }
+      const uploadData = await uploadRes.json();
+      const avatarUrl = uploadData.data?.url;
+      if (!avatarUrl) {
+        setStatus('Gagal mendapatkan URL', true);
+        return;
+      }
+
+      // Save to profile
+      const saveRes = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl }),
+      });
+      if (!saveRes.ok) {
+        setStatus('Gagal menyimpan', true);
+        return;
+      }
+
+      // Update UI
+      if (avatarContainer) {
+        const currentAvatar = avatarContainer.querySelector('img');
+        if (currentAvatar) {
+          currentAvatar.src = avatarUrl;
+        } else {
+          const placeholder = avatarContainer.querySelector('.w-20.h-20');
+          if (placeholder) {
+            const img = document.createElement('img');
+            img.src = avatarUrl;
+            img.alt = 'Avatar';
+            img.className = 'w-20 h-20 rounded-full object-cover';
+            placeholder.replaceWith(img);
+          }
+        }
+      }
+      setStatus('Foto profil diperbarui', false);
+      // Reload to update sidebar/topbar
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      setStatus('Terjadi kesalahan', true);
+      console.error(e);
+    }
+  });
+</script>

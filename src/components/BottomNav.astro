@@ -9,7 +9,7 @@ const { role } = Astro.props;
 const items = (navItems[role] || navItems.member).slice(0, 5);
 ---
 
-<nav class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-t border-gray-800"
+<nav id="bottom-nav" class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-t border-gray-800"
   style="padding-bottom: env(safe-area-inset-bottom)">
   <div class="flex">
     {items.map(item => (

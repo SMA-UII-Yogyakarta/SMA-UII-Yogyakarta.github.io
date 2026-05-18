@@ -50,13 +50,25 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
     // --- Render ---
 
+    // Pin icon SVGs
+    const pinIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4 10 1.5 1.5"/><path d="m19 10-1.5 1.5"/><path d="M12 10a4 4 0 0 1 4 4v2a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2a4 4 0 0 1 4-4Z"/></svg>`;
+    const pinFilledIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="m4 10 1.5 1.5"/><path d="m19 10-1.5 1.5"/><path d="M12 10a4 4 0 0 1 4 4v2a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2a4 4 0 0 1 4-4Z"/></svg>`;
+
     function renderCard(a: any): string {
+      const isPinned = a.isPinned === 1 || a.isPinned === true;
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition ${isPinned ? 'border-yellow-600/30' : ''}">
           <div class="flex justify-between items-start mb-2 gap-3">
-            <h3 class="font-semibold">${esc(a.title)}</h3>
+            <div class="flex items-center gap-2">
+              <h3 class="font-semibold">${esc(a.title)}</h3>
+              ${isPinned ? '<span class="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded-full flex items-center gap-1">📌 Pinned</span>' : ''}
+            </div>
             <div class="flex items-center gap-2 flex-shrink-0">
               <span class="text-xs text-gray-500">${fmtDate(a.createdAt, true)}</span>
+              <button data-action="pin" data-id="${esc(a.id)}" data-pinned="${isPinned ? '1' : '0'}"
+                class="${isPinned ? 'text-yellow-400' : 'text-gray-500'} hover:text-yellow-400 transition p-1" title="${isPinned ? 'Unpin' : 'Pin'}">
+                ${isPinned ? pinFilledIcon : pinIcon}
+              </button>
               <button data-action="edit" data-id="${esc(a.id)}" data-title="${esc(a.title)}" data-content="${esc(a.content)}"
                 class="text-gray-500 hover:text-blue-400 transition p-1" title="Edit">${icons.edit}</button>
               <button data-action="delete" data-id="${esc(a.id)}" data-title="${esc(a.title)}"
@@ -104,7 +116,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     listEl.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
       if (!btn) return;
-      const { action, id, title, content } = btn.dataset;
+      const { action, id, title, content, pinned } = btn.dataset;
 
       if (action === 'edit') {
         openModal(id, title, unesc(content!));
@@ -112,6 +124,14 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
         if (!confirm(`Hapus pengumuman "${title}"?`)) return;
         const res = await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
         res.ok ? load() : alert('Gagal menghapus');
+      } else if (action === 'pin') {
+        const newPinState = pinned === '1' ? 0 : 1;
+        const res = await fetch(`/api/announcements/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPinned: newPinState }),
+        });
+        res.ok ? load() : alert('Gagal mengubah pin status');
       }
     });
 

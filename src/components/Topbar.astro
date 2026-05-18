@@ -1,12 +1,13 @@
 ---
 interface Props {
   userName?: string;
+  userAvatarUrl?: string | null;
 }
-const { userName = '' } = Astro.props;
+const { userName = '', userAvatarUrl = null } = Astro.props;
 const initial = userName.charAt(0).toUpperCase() || '?';
 ---
 
-<header class="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800 px-4 h-14 flex items-center justify-between">
+<header id="topbar" class="sticky top-0 z-40 bg-gray-950/80 backdrop-blur border-b border-gray-800 px-4 h-14 flex items-center justify-between">
   <div class="flex items-center gap-3 min-w-0">
     <button id="sidebar-toggle" class="hidden sm:flex text-gray-400 hover:text-white hover:bg-gray-800 p-2 rounded-lg transition flex-shrink-0 touch-manipulation items-center justify-center" title="Toggle sidebar" style="min-width:44px;min-height:44px;">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,8 +27,12 @@ const initial = userName.charAt(0).toUpperCase() || '?';
     </button>
 
     <!-- Avatar — mobile only, buka profile dropdown -->
-    <button id="topbar-profile-btn" class="sm:hidden w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 touch-manipulation hover:ring-2 hover:ring-blue-500 transition">
-      {initial}
+    <button id="topbar-profile-btn" class="sm:hidden w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 touch-manipulation hover:ring-2 hover:ring-blue-500 transition overflow-hidden">
+      {userAvatarUrl ? (
+        <img src={userAvatarUrl} alt={userName} class="w-full h-full object-cover" />
+      ) : (
+        <span class="bg-blue-600 w-full h-full flex items-center justify-center">{initial}</span>
+      )}
     </button>
   </div>
 </header>

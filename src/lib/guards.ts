@@ -25,3 +25,12 @@ export function requireMember(Astro: AstroGlobal): RedirectResponse | null {
   if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');
   return null;
 }
+
+/** Alumni cannot create new content (activities, projects) but can view history */
+export function requireActiveMember(Astro: AstroGlobal): RedirectResponse | null {
+  const guard = requireMember(Astro);
+  if (guard) return guard;
+  const { user } = Astro.locals;
+  if (user!.role === 'alumni') return Astro.redirect('/app/overview');
+  return null;
+}

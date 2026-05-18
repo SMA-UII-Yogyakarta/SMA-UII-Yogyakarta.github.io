@@ -6,18 +6,30 @@ import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const canLog = user!.status === 'active';
+const canLog = user!.status === 'active' && user!.role !== 'alumni';
 ---
 
 <DashboardLayout title="Activities">
   <PageHeader subtitle="Log kontribusi dan kegiatan" actionLabel={canLog ? "Log Activity" : undefined} />
 
   <div id="activities-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
+
+  <!-- Filter chips -->
+  <div id="filter-bar" class="flex flex-wrap gap-2 mb-4">
+    <button data-filter="" class="filter-chip active px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white">Semua</button>
+    <button data-filter="contribution" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Contribution</button>
+    <button data-filter="event" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Event</button>
+    <button data-filter="workshop" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Workshop</button>
+    <button data-filter="meeting" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Meeting</button>
+    <button data-filter="other" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Other</button>
+  </div>
+
   <div id="activities-list"><SkeletonList count={5} /></div>
 
   {canLog && (
     <Modal id="add-modal" title="Log Activity">
       <form id="activity-form" class="space-y-3">
+        <input type="hidden" name="id" value="">
         <div>
           <label class="block text-xs text-gray-400 mb-1">Tipe *</label>
           <select name="type" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
@@ -59,6 +71,7 @@ const canLog = user!.status === 'active';
     const form = document.getElementById('activity-form') as HTMLFormElement | null;
 
     let currentPage = 1;
+    let currentFilter = '';
     const PAGE_LIMIT = 20;
 
     const typeColor: Record<string, string> = {
@@ -70,6 +83,7 @@ const canLog = user!.status === 'active';
     };
 
     function renderCard(a: any): string {
+      const canEdit = a.userId === currentUserId || isAdmin;
       const canDelete = a.userId === currentUserId || isAdmin;
       return `
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
@@ -83,15 +97,25 @@ const canLog = user!.status === 'active';
               ${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="text-blue-400 hover:text-blue-300">Lihat →</a>` : ''}
             </div>
           </div>
-          ${canDelete ? `
-            <button data-action="delete" data-id="${esc(a.id)}" data-title="${esc(a.title)}"
-              class="text-gray-600 hover:text-red-400 transition p-1 shrink-0" title="Hapus">${icons.trash}</button>
-          ` : ''}
+          <div class="flex gap-1 shrink-0">
+            ${canEdit ? `
+              <button data-action="edit"
+                data-id="${esc(a.id)}" data-type="${esc(a.type)}" data-title="${esc(a.title)}"
+                data-description="${esc(a.description || '')}" data-url="${esc(a.url || '')}"
+                class="text-gray-600 hover:text-blue-400 transition p-1" title="Edit">${icons.edit}</button>
+            ` : ''}
+            ${canDelete ? `
+              <button data-action="delete" data-id="${esc(a.id)}" data-title="${esc(a.title)}"
+                class="text-gray-600 hover:text-red-400 transition p-1" title="Hapus">${icons.trash}</button>
+            ` : ''}
+          </div>
         </div>`;
     }
 
     async function load() {
-      const res = await fetch(`/api/activities?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
+      if (currentFilter) params.set('type', currentFilter);
+      const res = await fetch(`/api/activities?${params}`);
       const { data } = await res.json();
       const activities: any[] = data?.activities || [];
       const total: number = data?.total || 0;
@@ -107,22 +131,46 @@ const canLog = user!.status === 'active';
 
     // Event delegation
     listEl.addEventListener('click', async (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action="delete"]');
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
       if (!btn) return;
-      const { id, title } = btn.dataset;
-      if (!confirm(`Hapus activity "${title}"?`)) return;
-      const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-      res.ok ? load() : alert('Gagal menghapus activity');
+      const action = btn.dataset.action;
+      const { id, title, type, description, url } = btn.dataset;
+
+      if (action === 'edit') {
+        if (!form) return;
+        (form.querySelector('[name="id"]') as HTMLInputElement).value = id || '';
+        (form.querySelector('[name="title"]') as HTMLInputElement).value = title || '';
+        (form.querySelector('[name="type"]') as HTMLSelectElement).value = type || 'contribution';
+        (form.querySelector('[name="description"]') as HTMLTextAreaElement).value = description || '';
+        (form.querySelector('[name="url"]') as HTMLInputElement).value = url || '';
+        modal?.classList.remove('hidden');
+        return;
+      }
+
+      if (action === 'delete') {
+        if (!confirm(`Hapus activity "${title}"?`)) return;
+        const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
+        res.ok ? load() : alert('Gagal menghapus activity');
+      }
     });
 
-    document.getElementById('open-modal')?.addEventListener('click', () => modal?.classList.remove('hidden'));
+    document.getElementById('open-modal')?.addEventListener('click', () => {
+      form?.reset();
+      const idField = form?.querySelector('[name="id"]') as HTMLInputElement | null;
+      if (idField) idField.value = '';
+      modal?.classList.remove('hidden');
+    });
     document.getElementById('close-modal')?.addEventListener('click', () => { modal?.classList.add('hidden'); form?.reset(); });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const fd = new FormData(form);
-      const res = await fetch('/api/activities', {
-        method: 'POST',
+      const fd = new FormData(form!);
+      const activityId = fd.get('id') as string;
+      const method = activityId ? 'PATCH' : 'POST';
+      const url = activityId ? `/api/activities/${activityId}` : '/api/activities';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: fd.get('type'),
@@ -133,6 +181,19 @@ const canLog = user!.status === 'active';
       });
       if (res.ok) { modal?.classList.add('hidden'); form.reset(); load(); }
       else alert('Gagal menyimpan');
+    });
+
+    // Filter chips
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(b => {
+          b.className = 'filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700';
+        });
+        currentFilter = (btn as HTMLElement).dataset.filter || '';
+        btn.className = 'filter-chip active px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white';
+        currentPage = 1;
+        load();
+      });
     });
 
     load();

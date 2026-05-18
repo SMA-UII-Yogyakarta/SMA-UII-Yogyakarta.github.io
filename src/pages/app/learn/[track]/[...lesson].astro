@@ -82,7 +82,7 @@ const levelColor: Record<string, string> = {
     </button>
   </div>
 
-  <div class="flex h-full overflow-hidden">
+  <div class="flex lg:h-full lg:overflow-hidden flex-col lg:flex-row">
 
     <!-- Sidebar kiri: navigasi lesson -->
     <aside class="w-60 shrink-0 border-r border-gray-800 overflow-y-auto hidden lg:flex flex-col">
@@ -129,7 +129,7 @@ const levelColor: Record<string, string> = {
     </aside>
 
     <!-- Konten utama -->
-    <div class="flex-1 overflow-y-auto" id="lesson-scroll" style="padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))">
+    <div class="flex-1 lg:overflow-y-auto" id="lesson-scroll" style="padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px))">
       <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6">
 
         <!-- Markdown -->
