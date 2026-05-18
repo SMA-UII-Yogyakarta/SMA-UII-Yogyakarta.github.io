@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { users, sessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, sessions } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
-import { verifyResetToken } from '@lib/jwt';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { verifyResetToken } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { User, MemberCard } from '@db/schema';
+import type { User, MemberCard } from '@smauii/db';
 
 interface MemberCardProps {
   user: User;

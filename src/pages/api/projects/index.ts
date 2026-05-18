@@ -1,8 +1,8 @@
-import { db } from '@db';
-import { projects, users } from '@db/schema';
+import { db } from '@smauii/db';
+import { projects, users } from '@smauii/db';
 import { eq, and, desc, like, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { nanoid } from 'nanoid';
 
 export const GET: APIRoute = async ({ locals, url }) => {

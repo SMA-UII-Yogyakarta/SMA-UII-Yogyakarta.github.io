@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { users, memberTracks } from '@db/schema';
-import { registerSchema } from '@lib/validation';
+import { db } from '@smauii/db';
+import { users, memberTracks } from '@smauii/db';
+import { registerSchema } from '@smauii/validation';
 import { nanoid } from 'nanoid';
 import { ZodError } from 'zod';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
-import { sendRegistrationEmail } from '@lib/email';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { sendRegistrationEmail } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

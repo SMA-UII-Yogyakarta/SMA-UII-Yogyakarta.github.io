@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { activities } from '@db/schema';
+import { db } from '@smauii/db';
+import { activities } from '@smauii/db';
 import { eq } from 'drizzle-orm';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
-import { createActivitySchema } from '@lib/validation';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createActivitySchema } from '@smauii/validation';
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const { user } = locals;

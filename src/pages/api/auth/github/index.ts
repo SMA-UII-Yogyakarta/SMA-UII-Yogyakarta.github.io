@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { github } from '@lib/oauth';
+import { github } from '@smauii/shared';
 import { generateState } from 'arctic';
 import { createHmac } from 'crypto';
 

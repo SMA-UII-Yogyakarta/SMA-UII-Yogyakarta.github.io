@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createSuccessResponse } from '@lib/api-utils';
+import { createSuccessResponse } from '@smauii/shared';
 
 export const GET: APIRoute = async () => {
   const health = {

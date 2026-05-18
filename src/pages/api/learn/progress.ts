@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { learningProgress } from '@db/schema';
+import { db } from '@smauii/db';
+import { learningProgress } from '@smauii/db';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 // GET /api/learn/progress?slug=... — cek apakah lesson sudah selesai
 export const GET: APIRoute = async ({ locals, url }) => {

@@ -1,9 +1,9 @@
-import { db } from '@db';
-import { users, memberTracks, memberCards } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, memberTracks, memberCards } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
-import { updateProfileSchema } from '@lib/validation';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { updateProfileSchema } from '@smauii/validation';
 
 export const GET: APIRoute = async ({ locals }) => {
   const { user: sessionUser } = locals;

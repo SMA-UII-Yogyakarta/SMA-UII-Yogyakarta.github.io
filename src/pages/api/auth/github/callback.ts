@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
-import { github } from '@lib/oauth';
+import { github } from '@smauii/shared';
 import { lucia } from '@lib/auth';
-import { db } from '@db';
-import { users, sessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, sessions } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { OAuth2RequestError } from 'arctic';
-import { createErrorResponse } from '@lib/api-utils';
+import { createErrorResponse } from '@smauii/shared';
 import { verifySignedState, extractReturnTo } from './index';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {

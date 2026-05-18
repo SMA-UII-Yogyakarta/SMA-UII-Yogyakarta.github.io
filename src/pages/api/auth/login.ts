@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro';
 import { lucia } from '@lib/auth';
-import { db } from '@db';
-import { users, sessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, sessions } from '@smauii/db';
 import { eq, or } from 'drizzle-orm';
 import { verify } from '@node-rs/argon2';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {

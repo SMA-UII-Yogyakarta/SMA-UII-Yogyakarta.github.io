@@ -1,0 +1,10 @@
+{
+  "name": "@smauii/shared",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "resend": "^4.2.0",
+    "jose": "^5.9.0"
+  }
+}

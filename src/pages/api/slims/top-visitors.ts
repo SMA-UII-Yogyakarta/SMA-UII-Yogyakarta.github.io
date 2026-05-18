@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ url }) => {
   const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '30'), 100);

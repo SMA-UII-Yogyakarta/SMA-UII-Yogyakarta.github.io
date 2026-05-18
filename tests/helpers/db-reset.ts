@@ -1,5 +1,5 @@
-import { db } from '../../src/db';
-import { users, sessions, projects, activities, announcements, notifications, memberCards, memberTracks } from '../../src/db/schema';
+import { db } from '@smauii/db';
+import { users, sessions, projects, activities, announcements, notifications, memberCards, memberTracks } from '@smauii/db';
 
 export async function resetDatabase() {
   // Delete all data in reverse dependency order

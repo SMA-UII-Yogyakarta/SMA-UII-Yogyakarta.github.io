@@ -1,5 +1,5 @@
-import { db } from '@db';
-import { notifications, users } from '@db/schema';
+import { db } from '@smauii/db';
+import { notifications, users } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 

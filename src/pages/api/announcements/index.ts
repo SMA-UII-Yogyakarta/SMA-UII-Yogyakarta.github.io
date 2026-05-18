@@ -1,11 +1,11 @@
-import { db } from '@db';
-import { announcements, users } from '@db/schema';
+import { db } from '@smauii/db';
+import { announcements, users } from '@smauii/db';
 import { eq, desc, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { nanoid } from 'nanoid';
-import { notifyAllActiveMembers } from '@lib/notifications';
-import { sendAnnouncementEmail } from '@lib/email';
+import { notifyAllActiveMembers } from '@smauii/shared';
+import { sendAnnouncementEmail } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;

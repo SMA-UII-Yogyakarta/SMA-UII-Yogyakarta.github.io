@@ -1,8 +1,8 @@
-import { db } from '@db';
-import { users, memberTracks } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, memberTracks } from '@smauii/db';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 // Public endpoint — returns safe public data (no NISN/email/passwordHash)
 // Maintainers get full data with filters/search/pagination via ?admin=1

@@ -1,8 +1,8 @@
-import { db } from '@db';
-import { notifications } from '@db/schema';
+import { db } from '@smauii/db';
+import { notifications } from '@smauii/db';
 import { eq, desc } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ locals }) => {
   const { user } = locals;

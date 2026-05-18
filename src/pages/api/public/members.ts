@@ -1,8 +1,8 @@
-import { db } from '@db';
-import { users, memberTracks } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, memberTracks } from '@smauii/db';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ url }) => {
   try {

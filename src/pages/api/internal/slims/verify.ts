@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 const SLIMS_API_URL = import.meta.env.SLIMS_API_URL;
 const SLIMS_API_KEY = import.meta.env.SLIMS_API_KEY;

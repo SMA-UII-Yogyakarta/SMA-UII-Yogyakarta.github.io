@@ -1,8 +1,8 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
-import { db } from '@db';
-import { memberCards } from '@db/schema';
+import { db } from '@smauii/db';
+import { memberCards } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { requireMember } from '@lib/guards';
 import { fmtDate } from '@lib/format';

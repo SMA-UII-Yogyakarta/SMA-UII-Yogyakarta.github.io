@@ -1,7 +1,7 @@
 import type { MiddlewareHandler } from 'astro';
 import { lucia } from './lib/auth';
-import { db } from './db';
-import { users } from './db/schema';
+import { db } from '@smauii/db';
+import { users } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 
 // In-memory rate limiter

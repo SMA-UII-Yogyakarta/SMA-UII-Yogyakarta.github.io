@@ -4,7 +4,7 @@ import PageHeader from '@components/app/PageHeader.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import Modal from '@components/app/Modal.astro';
 import { requireMaintainer } from '@lib/guards';
-import { trackOptions, classOptions } from '@lib/validation';
+import { trackOptions, classOptions } from '@smauii/validation';
 const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 ---
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { registerSchema, trackOptions, classOptions, type RegisterInput } from '@lib/validation';
+import { registerSchema, trackOptions, classOptions, type RegisterInput } from '@smauii/validation';
 import type { ZodError } from 'zod';
 
 type RegistrationStep = 'verify' | 'data' | 'github' | 'tracks' | 'confirm';

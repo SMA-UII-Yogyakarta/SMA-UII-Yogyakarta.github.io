@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 // Fallback mock data — digunakan saat SLIMS_API_URL tidak dikonfigurasi (development)
 // Di production, set SLIMS_API_URL dan SLIMS_API_KEY di environment

@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
-import { users, memberTracks, memberCards, activities, projects, announcements, notifications } from '@db/schema';
+import { users, memberTracks, memberCards, activities, projects, announcements, notifications } from '@smauii/db';
 import { nanoid } from 'nanoid';
 import { hash } from '@node-rs/argon2';
 import QRCode from 'qrcode';

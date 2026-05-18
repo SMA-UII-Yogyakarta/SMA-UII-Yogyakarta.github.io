@@ -2,8 +2,8 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import { requireAuth } from '@lib/guards';
 import { getCollection, getEntry } from 'astro:content';
-import { db } from '@db';
-import { learningProgress, readingSessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { learningProgress, readingSessions } from '@smauii/db';
 import { eq, and, gte } from 'drizzle-orm';
 
 const redirect = requireAuth(Astro);

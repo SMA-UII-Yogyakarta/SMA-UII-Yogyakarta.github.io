@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { readingSessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { readingSessions } from '@smauii/db';
 import { eq, and, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { readingSessionSchema } from '@lib/validation';
+import { readingSessionSchema } from '@smauii/validation';
 
 // POST — mulai atau akhiri sesi baca
 export const POST: APIRoute = async ({ request, locals }) => {

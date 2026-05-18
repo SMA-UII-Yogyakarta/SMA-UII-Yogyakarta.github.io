@@ -1,13 +1,13 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { users, memberCards, memberTracks, sessions } from '@db/schema';
+import { db } from '@smauii/db';
+import { users, memberCards, memberTracks, sessions } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
-import { approveUserSchema } from '@lib/validation';
-import { createNotification } from '@lib/notifications';
-import { sendApprovalEmail, sendRejectionEmail } from '@lib/email';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { approveUserSchema } from '@smauii/validation';
+import { createNotification } from '@smauii/shared';
+import { sendApprovalEmail, sendRejectionEmail } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   const { user } = locals;

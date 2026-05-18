@@ -4,13 +4,14 @@
     "baseUrl": ".",
     "types": ["bun-types"],
     "paths": {
+      "@smauii/db": ["packages/db/src"],
+      "@smauii/validation": ["packages/validation/src"],
+      "@smauii/shared": ["packages/shared/src"],
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
       "@layouts/*": ["src/layouts/*"],
       "@pages/*": ["src/pages/*"],
       "@lib/*": ["src/lib/*"],
-      "@db": ["src/db/index.ts"],
-      "@db/*": ["src/db/*"],
       "@styles/*": ["src/styles/*"]
     },
     "jsx": "preserve",

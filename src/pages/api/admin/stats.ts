@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
-import { db } from '@db';
-import { memberTracks, activities } from '@db/schema';
+import { db } from '@smauii/db';
+import { memberTracks, activities } from '@smauii/db';
 import { eq, gte } from 'drizzle-orm';
-import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ locals }) => {
   const { user } = locals;
