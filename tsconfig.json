@@ -1,13 +1,14 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "moduleResolution": "bundler",
-    "types": ["bun-types"],
-    "paths": {
-      "@smauii/db": ["packages/db/src"],
-      "@smauii/validation": ["packages/validation/src"],
-      "@smauii/shared": ["packages/shared/src"]
-    }
-  },
-  "include": ["packages/*/src", "packages/*/scripts", "apps/*/src"]
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "skipLibCheck": true,
+        "ignoreDeprecations": "6.0",
+        "baseUrl": ".",
+        "paths": {
+            "@smauii/db": ["packages/db/src"],
+            "@smauii/validation": ["packages/validation/src"],
+            "@smauii/shared": ["packages/shared/src"]
+        }
+    },
+    "include": ["packages/*/src", "packages/*/scripts", "apps/*/src"]
 }
