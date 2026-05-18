@@ -1,5 +1,5 @@
 FROM oven/bun:1.3-alpine AS builder
-WORKDIR /app
+WORKDIR /workspace
 RUN apk add --no-cache git
 
 # Layer 1: Dependencies (cache selama package.json & bun.lock tidak berubah)
@@ -32,9 +32,9 @@ RUN bun run build
 
 # Stage 2: Production runtime (minimal)
 FROM oven/bun:1.3-alpine
-WORKDIR /app
-COPY --from=builder /app/apps/web/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
+WORKDIR /workspace
+COPY --from=builder /workspace/apps/web/dist ./dist
+COPY --from=builder /workspace/node_modules ./node_modules
 
 EXPOSE 3000
 ENV HOST=0.0.0.0 PORT=3000 NODE_ENV=production
