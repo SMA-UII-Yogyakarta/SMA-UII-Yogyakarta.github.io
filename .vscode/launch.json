@@ -2,10 +2,63 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "./node_modules/.bin/astro dev",
-      "name": "Development server",
+      "name": "Web: Dev Server",
+      "type": "node-terminal",
       "request": "launch",
-      "type": "node-terminal"
+      "command": "bun dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Web: Dev Server (Web Only)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun --cwd apps/web dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "API: Dev (Wrangler)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun --cwd apps/api dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Build: All",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test: Unit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun test apps/web/src",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test: E2E (Playwright)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run test:e2e",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "DB: Push Schema",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun --cwd packages/db run db:push",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "DB: Seed",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun --cwd packages/db run db:seed",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

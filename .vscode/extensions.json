@@ -1,4 +1,31 @@
 {
-  "recommendations": ["astro-build.astro-vscode"],
-  "unwantedRecommendations": []
+  "recommendations": [
+    // Core
+    "astro-build.astro-vscode",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // TypeScript/JavaScript
+    "usernamehw.errorlens",
+
+    // Tailwind CSS
+    "bradlc.vscode-tailwindcss",
+
+    // Monorepo
+    "christian-kohler.path-intellisense",
+    "eamodio.gitlens",
+
+    // Database
+    "cweijan.vscode-database-client",
+
+    // Testing
+    "ms-playwright.playwright",
+
+    // Misc
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript-next"
+  ]
 }

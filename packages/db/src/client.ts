@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
-import * as schema from './schema';
+import * as schema from './schema.js';
 
 // Server-side only — tidak boleh pakai prefix PUBLIC_
 // Astro membaca .env.production saat build production,
