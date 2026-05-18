@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "dev:api": "bun run --cwd smauii-dev-api dev",
+    "dev:api": "bun run --cwd apps/api dev",
     "dev:all": "concurrently --names \"WEB,API\" --prefix-colors \"blue,green\" \"bun run dev\" \"bun run dev:api\"",
     "build": "astro build",
     "preview": "echo '\\n⚠️  Mau test SSR atau SSG bos?\\n  bun run preview:ssr  → build + jalankan Node server (output: server)\\n  bun run preview:ssg  → build + serve static files (output: static)\\n'",

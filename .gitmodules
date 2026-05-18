@@ -1,8 +1,12 @@
 [submodule "smauii-dev-api"]
-	path = smauii-dev-api
+	path = apps/api
 	url = git@github-sandikodev:SMA-UII-Yogyakarta/smauii-dev-api.git
 	branch = main
 [submodule "smauii-dev-content"]
-	path = smauii-dev-content
+	path = apps/content
+	url = git@github-sandikodev:SMA-UII-Yogyakarta/smauii-dev-content.git
+	branch = main
+[submodule "smauii-dev-content"]
+	path = apps/content
 	url = git@github-sandikodev:SMA-UII-Yogyakarta/smauii-dev-content.git
 	branch = main
