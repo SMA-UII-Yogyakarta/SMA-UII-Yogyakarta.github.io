@@ -1,0 +1,59 @@
+# Digital Lab School — Docker Compose
+# ====================================
+# Deploy mandiri tanpa ketergantungan infrastruktur Cloud.
+# Cocok untuk VPS, dedicated server, atau Raspberry Pi 4+.
+#
+# Cara pakai:
+#   1. Copy deploy/env/.env.production.example ke .env, isi nilai
+#   2. docker compose -f deploy/docker/docker-compose.yml up -d
+#   3. Konfigurasi reverse proxy (lihat deploy/nginx/)
+#
+# Persyaratan: Docker Engine >= 24, Docker Compose >= 2.24
+
+name: digital-lab
+
+services:
+  # ============================================================================
+  # Aplikasi Utama — Astro SSR (Node)
+  # ============================================================================
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://lab.example.com}
+        TURSO_URL: ${TURSO_URL}
+        TURSO_TOKEN: ${TURSO_TOKEN}
+        OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID}
+        OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET}
+        SLIMS_API_URL: ${SLIMS_API_URL}
+        SLIMS_API_KEY: ${SLIMS_API_KEY}
+    container_name: digital-lab-app
+    restart: unless-stopped
+    env_file: ../../.env
+    networks:
+      - internal
+
+  # ============================================================================
+  # Reverse Proxy — Nginx (opsional, bisa pakai existing)
+  # ============================================================================
+  # Uncomment jika tidak punya reverse proxy eksternal:
+  # nginx:
+  #   image: nginx:stable-alpine
+  #   container_name: digital-lab-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ../nginx/lab.conf:/etc/nginx/conf.d/lab.conf:ro
+  #     - /etc/letsencrypt:/etc/letsencrypt:ro
+  #     - /var/www/certbot:/var/www/certbot
+  #   networks:
+  #     - internal
+  #   depends_on:
+  #     - app
+
+networks:
+  internal:
+    driver: bridge
