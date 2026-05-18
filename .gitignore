@@ -3,9 +3,17 @@ dist/
 .astro/
 
 # Environment variables
+.env
 .env.local
 .env.*.local
 .env.production
+
+# Sisyphus work plans
+.sisyphus/
+
+# Codex knowledge base
+.codex
+.codex/
 
 # Database
 local.db
@@ -33,6 +41,7 @@ context/ACTIVE.md
 context/DECISIONS.md
 context/INTEGRATIONS.md
 context/README.md
+docs/CONTEXT_BACKUP_OTHER_PROJECTS.md
 
 # Build artifacts
 *.out
