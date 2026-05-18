@@ -114,6 +114,83 @@ docker compose -f deploy/docker/docker-compose.yml up -d
 
 **Cocok untuk:** Institusi yang ingin global reach dengan biaya minimal
 
+#### Cloudflare Pages: SSG atau SSR?
+
+> **Penting:** Cloudflare Pages **secara default** adalah platform SSG (Static Site Generation), **TAPI** juga mendukung SSR.
+
+| Mode | Deskripsi | Kapan Dipakai |
+|------|-----------|---------------|
+| **SSG (Default)** | Halaman di-build jadi HTML statis saat deploy, lalu disebar ke global CDN. Akses sangat cepat. | Content yang jarang berubah, public pages, SEO critical |
+| **SSR (Dinamis)** | Halaman di-render on-demand di server via Cloudflare Pages Functions (berjalan di atas Workers). | Dashboard, admin panel, personalized content |
+
+**SSG di Cloudflare Pages:**
+```
+Build Time:
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Source     │────▶│  Build      │────▶│  Static     │
+│  Code       │     │  Process    │     │  HTML Files │
+└─────────────┘     └─────────────┘     └─────────────┘
+
+Runtime:
+┌─────────────┐     ┌─────────────┐
+│  User       │────▶│  CDN Edge   │────▶  Static HTML (instant)
+│  Request    │     │  (nearest)  │
+└─────────────┘     └─────────────┘
+```
+
+**SSR di Cloudflare Pages:**
+```
+Runtime:
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  User       │────▶│  CF Pages   │────▶│  Render     │
+│  Request    │     │  Functions  │     │  On-Demand  │
+└─────────────┘     │  (Workers)  │     └─────────────┘
+                    └─────────────┘
+                          │
+                    ┌─────▼─────┐
+                    │  Database │
+                    │  (Turso)  │
+                    └───────────┘
+```
+
+**Konfigurasi Astro untuk CF Pages:**
+
+```javascript
+// astro.config.mjs
+
+// Untuk SSG (default CF Pages):
+export default defineConfig({
+  output: 'static',
+  // Tidak perlu adapter
+});
+
+// Untuk SSR di CF Pages:
+import cloudflare from '@astrojs/cloudflare';
+export default defineConfig({
+  output: 'server',
+  adapter: cloudflare({
+    platformProxy: {
+      enabled: true
+    }
+  })
+});
+```
+
+**Peringatan Penting:**
+
+| Aspek | SSG | SSR |
+|-------|-----|-----|
+| **Auth** | Client-side only (JWT) | Server-side (session/JWT) |
+| **API Routes** | Tidak tersedia | Tersedia via Functions |
+| **Build Time** | Lebih lama | Lebih singkat |
+| **Runtime Latency** | ~0ms (cached) | ~10-50ms (render) |
+| **Cost** | Free tier generous | Bisa exceed free tier |
+| **Astro Support** | ✅ Native | ✅ Via `@astrojs/cloudflare` |
+
+> **Rekomendasi untuk Lab Digital:**
+> - Public pages (home, about, members, projects) → **SSG** (SEO, speed)
+> - Dashboard, admin panel → **SSR** atau **Client-side fetch ke API terpisah**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Cloudflare Network                           │
@@ -144,9 +221,10 @@ docker compose -f deploy/docker/docker-compose.yml up -d
 - ✅ Free tier generous — cocok untuk sekolah kecil
 - ✅ DDoS protection built-in
 - ✅ SSL otomatis
+- ✅ Bisa pilih SSG atau SSR sesuai kebutuhan
 
 **Kekurangan:**
-- ❌ Perlu migrasi auth ke JWT
+- ❌ Perlu migrasi auth ke JWT (untuk SSG)
 - ❌ API terpisah = CORS configuration
 - ❌ Terikat ekosistem Cloudflare
 - ❌ Cold start untuk Workers (minimal)
@@ -221,6 +299,14 @@ bun run deploy  # wrangler deploy
 
 **Cocok untuk:** Institusi dengan budget minimal, frontend statis
 
+> **Penting:** GitHub Pages **HANYA** mendukung SSG (Static Site Generation). Tidak ada opsi SSR.
+
+**Konsekuensi GitHub Pages (SSG Only):**
+- Semua halaman di-build jadi HTML statis saat deploy
+- Tidak ada server-side logic (middleware, session, rate limiting)
+- Auth **harus** client-side dengan JWT
+- API routes tidak tersedia — harus pakai backend terpisah (CF Workers)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Hybrid Deployment                           │
@@ -244,10 +330,11 @@ bun run deploy  # wrangler deploy
 - ✅ Cocok untuk sekolah kecil
 
 **Kekurangan:**
-- ❌ Hanya SSG — tidak ada SSR
-- ❌ Perlu JWT auth
+- ❌ **HANYA SSG** — tidak ada opsi SSR sama sekali
+- ❌ Perlu JWT auth (wajib, tidak bisa session)
 - ❌ CORS configuration
 - ❌ GitHub Pages tidak support server-side
+- ❌ Tidak ada middleware (rate limit, CSP headers harus di API)
 
 **Deployment:**
 ```bash
@@ -347,8 +434,8 @@ chmod +x cloudflared
 | **Data Control** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Scaling** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
 | **Maintenance** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Auth Options** | Session/JWT | JWT only | Session/JWT | JWT only | Session/JWT |
-| **SSR Support** | ✅ | ❌ (SSG only) | ✅ | ❌ | ✅ |
+| **Auth Options** | Session/JWT | JWT (SSG) / Session+JWT (SSR) | Session/JWT | JWT only | Session/JWT |
+| **SSR Support** | ✅ | ✅ (via Functions) atau SSG | ✅ | ❌ (SSG only) | ✅ |
 
 ### Keputusan Berdasarkan Profil Institusi
 
