@@ -3,7 +3,6 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "react",
-    "types": ["bun-types"],
     "paths": {
       "@/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
