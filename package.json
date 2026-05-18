@@ -34,7 +34,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:all": "bun test && playwright test",
-    "ci": "bash scripts/ci-local.sh",
+    "ci": "bash apps/web/scripts/ci-local.sh",
     "check": "bun run --cwd apps/web astro check",
     "typecheck": "bun run --cwd apps/web astro check"
   },

@@ -32,7 +32,7 @@ echo -e "${GREEN}✓ Database ready${NC}"
 echo ""
 
 echo "🧪 Step 3: Run Unit Tests"
-bun test tests/unit
+bun test apps/web/src
 if [ $? -eq 0 ]; then
   echo -e "${GREEN}✓ Unit tests passed${NC}"
 else

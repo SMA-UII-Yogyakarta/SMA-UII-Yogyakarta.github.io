@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './apps/web/tests/e2e',
   fullyParallel: false, // Run tests serially for DB isolation
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0, // No retries locally for faster feedback
