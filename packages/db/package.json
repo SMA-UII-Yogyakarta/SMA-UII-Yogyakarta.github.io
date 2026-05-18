@@ -3,8 +3,27 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "push": "drizzle-kit push",
+    "pull": "drizzle-kit pull",
+    "studio": "drizzle-kit studio",
+    "drop": "drizzle-kit drop",
+    "check": "drizzle-kit check",
+    "up": "drizzle-kit up",
+    "migrate": "bun run scripts/migrate.ts",
+    "seed": "bun run scripts/seed.ts",
+    "seed:enhanced": "bun run scripts/seed-enhanced.ts"
+  },
   "dependencies": {
-    "drizzle-orm": "^0.41.0",
-    "@libsql/client": "^0.14.0"
+    "drizzle-orm": "^0.45.2",
+    "@libsql/client": "^0.17.2"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "nanoid": "^5.1.7",
+    "qrcode": "^1.5.4",
+    "@node-rs/argon2": "^2.0.2",
+    "@types/qrcode": "^1.5.6"
   }
 }
