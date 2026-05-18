@@ -37,11 +37,10 @@ ai.chat
 *.chat
 
 # Context — instance-specific, not for public repo
-context/ACTIVE.md
-context/DECISIONS.md
-context/INTEGRATIONS.md
-context/README.md
-docs/CONTEXT_BACKUP_OTHER_PROJECTS.md
+.context/
+
+# Kiro specs — AI-generated, not for repo
+.kiro/specs/
 
 # Build artifacts
 *.out

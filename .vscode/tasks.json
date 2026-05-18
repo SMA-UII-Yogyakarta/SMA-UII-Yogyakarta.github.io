@@ -1,0 +1,81 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev:web",
+      "type": "shell",
+      "command": "bun",
+      "args": ["--cwd", "apps/web", "dev"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "dev:api",
+      "type": "shell",
+      "command": "bun",
+      "args": ["--cwd", "apps/api", "dev"],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "build"],
+      "problemMatcher": ["$tsc"],
+      "group": "build"
+    },
+    {
+      "label": "test:unit",
+      "type": "shell",
+      "command": "bun",
+      "args": ["test", "apps/web/src"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "test:e2e",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "test:e2e"],
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "db:push",
+      "type": "shell",
+      "command": "bun",
+      "args": ["--cwd", "packages/db", "run", "db:push"],
+      "problemMatcher": []
+    },
+    {
+      "label": "db:seed",
+      "type": "shell",
+      "command": "bun",
+      "args": ["--cwd", "packages/db", "run", "db:seed"],
+      "problemMatcher": []
+    },
+    {
+      "label": "typecheck",
+      "type": "shell",
+      "command": "bun",
+      "args": ["run", "check"],
+      "problemMatcher": ["$tsc"],
+      "group": "build"
+    }
+  ]
+}

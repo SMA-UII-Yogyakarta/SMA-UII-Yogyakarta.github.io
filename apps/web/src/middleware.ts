@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'astro';
-import { lucia } from './lib/auth';
+import { lucia } from '@lib/auth';
 import { db } from '@smauii/db';
 import { users } from '@smauii/db';
 import { eq } from 'drizzle-orm';
