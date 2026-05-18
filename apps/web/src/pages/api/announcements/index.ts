@@ -4,7 +4,7 @@ import { eq, desc, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { nanoid } from 'nanoid';
-import { notifyAllActiveMembers } from '@smauii/shared';
+import { notifyAllActiveMembers } from '@lib/notifications';
 import { sendAnnouncementEmail } from '@smauii/shared';
 
 export const GET: APIRoute = async ({ locals, url }) => {

@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { github } from '@smauii/shared';
+import { github } from '@lib/oauth';
 import { lucia } from '@lib/auth';
 import { db } from '@smauii/db';
 import { users, sessions } from '@smauii/db';
