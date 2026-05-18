@@ -217,12 +217,9 @@ X IPA 1–4, X IPS 1–3, XI IPA 1–4, XI IPS 1–3, XII IPA 1–4, XII IPS 1�
 
 ```bash
 # 1. Edit src/db/schema.ts
-# 2. Generate migration
-pnpm db:generate
-# 3. Review generated SQL in drizzle/
-# 4. Apply to database
-pnpm db:push        # dev (direct push)
-pnpm db:migrate     # production (run migration files)
+# 2. Apply to database
+bun run db:push        # dev (direct push, tidak perlu generate)
+bun run db:studio      # lihat schema di browser
 ```
 
 **Never** modify `drizzle/` migration files manually.

@@ -68,12 +68,12 @@ agar tidak bisa dikosongkan.
 - Atau implementasi simple rate limiting via APCu di PHP
 
 ```nginx
-# Di lab.conf atau library.conf — tambahkan limit untuk API plugin
+# Di nginx config untuk library — tambahkan limit untuk API plugin
 limit_req_zone $binary_remote_addr zone=slims_api:10m rate=10r/m;
 
 location /plugins/lab-digital-api/ {
     limit_req zone=slims_api burst=5 nodelay;
-    proxy_pass http://smauii-slims-app:80;
+    proxy_pass http://slims-container:80;  # sesuaikan nama container
     ...
 }
 ```
@@ -120,18 +120,18 @@ Response: { members: [{ nis, name, email, member_type, is_expired }] }
 ## Checklist Penyempurnaan
 
 ### Segera (sebelum launch ke user)
-- [ ] Fix: Blokir registrasi karena `is_expired` → ubah jadi warning saja
-- [ ] Fix: Label "NISN" → "NIS" di semua UI (form, error message, login page)
-- [ ] Fix: Hapus field `class` dari mock data
-- [ ] Fix: Validasi field `class` wajib diisi di form registrasi
+- [x] Fix: Blokir registrasi karena `is_expired` → ubah jadi warning saja — **SELESAI**
+- [x] Fix: Label "NISN" → "NIS" di semua UI (form, error message, login page) — **SELESAI** (login.ts: "NIS/Email tidak ditemukan")
+- [x] Fix: Validasi field `class` wajib diisi di form registrasi — **SELESAI**
+- [ ] Fix: Hapus field `class` dari mock data di `src/pages/api/slims/verify.ts` (jika masih ada)
 
-### Jangka Pendek (minggu ini)
-- [ ] Tambah rate limiting di nginx untuk `/plugins/lab-digital-api/`
-- [ ] Tambah endpoint `search` di plugin SLiMS
-- [ ] Update `login.ts` error message: "NISN/NIS/Email" → "NIS/Email"
+### Jangka Pendek
+- [x] Tambah rate limiting di nginx untuk `/plugins/lab-digital-api/` — **SELESAI** (di nginx config)
+- [x] Update `login.ts` error message: "NISN/NIS/Email" → "NIS/Email" — **SELESAI**
+- [ ] Tambah endpoint `search` di plugin SLiMS (untuk verifikasi manual dari dashboard)
 
 ### Jangka Menengah
-- [ ] Evaluasi: apakah field `nisn` di DB perlu dipertahankan atau dihapus
+- [ ] Evaluasi: apakah field `nisn` di DB perlu dipertahankan atau dihapus (saat ini diisi sama dengan `nis`)
 - [ ] Implementasi sync data dari SLiMS saat user login
 - [ ] Tambahkan field kelas ke SLiMS atau sistem akademik
 

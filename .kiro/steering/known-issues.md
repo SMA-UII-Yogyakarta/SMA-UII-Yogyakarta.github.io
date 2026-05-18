@@ -1,6 +1,6 @@
 # Known Issues & Backlog
 
-Status aktual per 2026-04-15. Update file ini setiap kali isu diselesaikan atau ditemukan yang baru.
+Status aktual per 2026-04-27. Update file ini setiap kali isu diselesaikan atau ditemukan yang baru.
 
 ---
 
@@ -23,11 +23,7 @@ Submodule `smauii-dev-content` menggunakan remote `github-sandikodev` (sudah dik
 
 ## 🔴 Kritis — Harus Diselesaikan
 
-### 1. SLIMS Integration Masih Mock
-**File:** `src/pages/api/slims/verify.ts`  
-**Status:** Hardcoded 8 data siswa — hanya NISN tertentu yang bisa registrasi  
-**Dampak:** Semua siswa di luar 8 NISN tersebut tidak bisa mendaftar  
-**Keputusan:** Tetap mock sampai ada API SLiMS yang real. Expand data mock jika ada siswa baru — lihat `slims-mock.md`.
+*(tidak ada saat ini)*
 
 ---
 
@@ -39,6 +35,7 @@ Submodule `smauii-dev-content` menggunakan remote `github-sandikodev` (sudah dik
 
 ## ✅ Sudah Selesai (Jangan Dikerjakan Ulang)
 
+- ✅ SLIMS Integration — sudah real via plugin `lab-digital-api` di `src/pages/api/internal/slims/verify.ts`
 - ✅ QR Code generation — sudah pakai library `qrcode` yang real di `approve.ts`
 - ✅ Login bug fix — API menerima `identifier` (bukan `nisn`/`nis` terpisah)
 - ✅ Sidebar/topbar UX — profile dropdown, collapse button di topbar
@@ -75,4 +72,4 @@ Active Member: NISN 1234567891 / password test123
 Pending Member: NISN 1234567895 / (no password)
 ```
 
-Seed ulang: `pnpm db:seed:enhanced`
+Seed ulang: `bun run db:setup:enhanced`

@@ -3,7 +3,7 @@
 ## Stack
 
 - **Unit tests:** Bun test runner (`bun test tests/unit`)
-- **E2E tests:** Playwright (`pnpm test:e2e`)
+- **E2E tests:** Playwright (`bun run test:e2e`)
 - **Config:** `playwright.config.ts` — `workers: 1`, `retries: 1`, `reuseExistingServer: true`
 
 ---
@@ -142,7 +142,7 @@ Active Member: NISN 1234567891 / password test123
 Pending Member: NISN 1234567895 / (no password)
 ```
 
-Reset seed: `pnpm db:seed:enhanced`
+Reset seed: `bun run db:setup:enhanced`
 
 ---
 
@@ -195,23 +195,23 @@ await page.goto('/login');
 
 ```bash
 # Unit tests saja
-pnpm test
+bun test
 
 # E2E tests (butuh dev server running)
-pnpm dev          # terminal 1
-pnpm test:e2e     # terminal 2
+bun run dev          # terminal 1
+bun run test:e2e     # terminal 2
 
 # Hanya test yang failed terakhir
-pnpm test:e2e --last-failed
+bun run test:e2e --last-failed
 
 # Test spesifik
-pnpm exec playwright test tests/e2e/auth.spec.ts
+bunx playwright test tests/e2e/auth.spec.ts
 
 # Debug mode (buka browser)
-pnpm exec playwright test --headed --slow-mo=500
+bunx playwright test --headed --slow-mo=500
 
 # Jalankan seluruh CI pipeline secara lokal (unit + E2E + type check)
-bash scripts/ci-local.sh
+bun run ci
 ```
 
 ---

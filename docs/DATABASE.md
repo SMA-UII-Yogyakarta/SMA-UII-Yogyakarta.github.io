@@ -2,94 +2,97 @@
 
 Database menggunakan **Turso** (LibSQL) dengan **Drizzle ORM**.
 
+> **Package manager: `bun`** — semua command menggunakan `bun run`.
+
 ## Setup
 
 1. Copy `.env.example` ke `.env` dan isi credentials Turso
-2. Generate migrations: `pnpm db:generate`
-3. Push schema ke database: `pnpm db:push`
-4. Seed data awal: `pnpm db:seed`
+2. Push schema ke database: `bun run db:push`
+3. Seed data awal: `bun run db:setup:enhanced`
 
 ## Available Commands
 
-### Development
-
 ```bash
-# Generate migration dari schema changes
-pnpm db:generate
-
-# Push schema langsung ke database (tanpa migration file)
-pnpm db:push
-
-# Pull schema dari database ke local
-pnpm db:pull
-
-# Run migrations
-pnpm db:migrate
+# Push schema langsung ke database (dev)
+bun run db:push
 
 # Open Drizzle Studio (database GUI)
-pnpm db:studio
+bun run db:studio
 
-# Seed database dengan sample data
-pnpm db:seed
-```
-
-### Maintenance
-
-```bash
-# Check migration status
-pnpm db:check
-
-# Drop migration
-pnpm db:drop
-
-# Upgrade Drizzle Kit
-pnpm db:up
+# Reset + seed ulang database (dev)
+bun run db:setup:enhanced
 ```
 
 ## Schema Overview
 
-### Tables
+### Tables (Saat Ini)
 
-1. **users** - Data anggota (siswa, alumni, maintainer)
-   - NISN/NIS untuk verifikasi dengan SLiMS
+1. **users** — Data anggota (siswa, maintainer)
+   - NIS/NISN untuk verifikasi dengan SLiMS
    - GitHub account linking
-   - Status: pending, active, inactive
-   - Role: member, maintainer, alumni
+   - Status: `pending`, `active`, `inactive`
+   - Role: `member`, `maintainer`
+   - ⚠️ Role `alumni` direncanakan tapi belum ada di schema — lihat backlog
 
-2. **member_tracks** - Track minat yang diikuti member
+2. **member_tracks** — Track minat yang diikuti member
    - Many-to-many relationship dengan users
-   - Track: robotika, ai, data-science, network, security, software
+   - Track: `robotika`, `ai`, `data-science`, `network`, `security`, `software`
 
-3. **sessions** - Auth sessions (Lucia)
+3. **sessions** — Auth sessions (Lucia v3)
    - Session management untuk login
 
-4. **member_cards** - Kartu anggota digital
-   - Card number unik
-   - QR code untuk check-in
-   - Issued setelah approval
+4. **member_cards** — Kartu anggota digital
+   - Card number unik (format: `SMAUII-<base36timestamp>`)
+   - QR code (base64 data URL) untuk identifikasi
+   - Di-generate otomatis saat maintainer approve member
 
-5. **activities** - Log aktivitas member
-   - Type: project, contribution, attendance, achievement
+5. **activities** — Log aktivitas member
+   - Type: `contribution`, `event`, `workshop`, `meeting`, `other`
    - Tracking kontribusi dan partisipasi
+   - ⚠️ Edit activity (PATCH) belum ada — lihat backlog
+
+6. **notifications** — Notifikasi in-app per user
+   - Auto-generated saat approval dan pengumuman baru
+
+7. **announcements** — Pengumuman dari maintainer
+   - Broadcast ke semua active member via notifikasi + email
+   - ⚠️ Pin announcement belum ada — lihat backlog
+
+8. **projects** — Showcase proyek member
+   - Mendukung image upload (base64, maks 2MB)
+
+9. **learning_progress** — Progress belajar per lesson
+   - Tandai selesai per lesson slug
+
+10. **reading_sessions** — Sesi baca per lesson
+    - Tracking waktu aktif membaca
+    - Dipakai untuk contribution graph
+
+### Fields yang Direncanakan (Belum Ada di Schema)
+
+| Field | Table | Keterangan |
+|-------|-------|-----------|
+| `avatarUrl` | `users` | Foto profil member — saat ini hanya initial huruf |
+| `isPinned` | `announcements` | Pin pengumuman penting ke atas |
+| `role: 'alumni'` | `users` | Role untuk alumni siswa yang sudah lulus |
 
 ## Workflow
 
 ### 1. Pendaftaran Member Baru
 
 ```
-User Register → Pending Status → Maintainer Approve → Active + Card Generated
+User Register → Pending Status → Maintainer Approve → Active + Card Generated + Email Sent
 ```
 
 ### 2. Schema Changes
 
 ```bash
 # 1. Edit src/db/schema.ts
-# 2. Generate migration
-pnpm db:generate
+# 2. Push ke database (dev)
+bun run db:push
 
-# 3. Review migration file di drizzle/
-# 4. Push to database
-pnpm db:push
+# Production: jalankan migration
+bun run db:migrate
 ```
 
 ### 3. Switching Database (Dev ↔ Prod)
@@ -97,72 +100,51 @@ pnpm db:push
 Edit `.env`:
 
 ```bash
-# Development
-PUBLIC_TURSO_URL=libsql://smauiilab-prev-sandikodev.aws-ap-northeast-1.turso.io
-PUBLIC_TURSO_TOKEN=<dev-token>
+# Development (db-preview)
+TURSO_URL=libsql://your-db-preview.turso.io
+TURSO_TOKEN=<dev-token>
 
-# Production
-PUBLIC_TURSO_URL=libsql://smauiilab-sandikodev.aws-us-east-1.turso.io
-PUBLIC_TURSO_TOKEN=<prod-token>
+# Production (db-production)
+TURSO_URL=libsql://your-db-production.turso.io
+TURSO_TOKEN=<prod-token>
 ```
+
+**Jangan pernah** gunakan prefix `PUBLIC_` untuk `TURSO_URL` atau `TURSO_TOKEN` — ini akan mengekspos credentials ke browser.
 
 ## Drizzle Studio
 
-Buka database GUI:
-
 ```bash
-pnpm db:studio
+bun run db:studio
+# Akses di: https://local.drizzle.studio
 ```
-
-Akses di: https://local.drizzle.studio
 
 ## Backup & Restore
 
-### Backup
-
 ```bash
-# Via Turso CLI
-turso db shell smauiilab-prev-sandikodev ".dump" > backup.sql
-```
+# Backup via Turso CLI
+turso db shell db-preview ".dump" > backup.sql
 
-### Restore
-
-```bash
-turso db shell smauiilab-prev-sandikodev < backup.sql
+# Restore
+turso db shell db-preview < backup.sql
 ```
 
 ## Security Notes
 
 - ⚠️ **JANGAN commit `.env`** ke git
 - ✅ Turso tokens sudah di `.gitignore`
-- ✅ Gunakan `PUBLIC_*` prefix untuk env vars yang di-expose ke client
-- ✅ Sensitive operations (approve member, generate card) harus di server-side
+- ❌ **JANGAN** gunakan `PUBLIC_TURSO_URL` atau `PUBLIC_TURSO_TOKEN` — ter-expose ke browser
+- ✅ Semua DB access hanya dari server-side (API routes, middleware, frontmatter)
 
 ## Troubleshooting
 
 ### Error: "No such table"
 
 ```bash
-pnpm db:push
+bun run db:push
 ```
 
-### Error: "Migration conflict"
+### Reset Database (dev only)
 
 ```bash
-pnpm db:drop
-pnpm db:generate
-pnpm db:push
-```
-
-### Reset Database
-
-```bash
-# Drop all tables
-turso db shell smauiilab-prev-sandikodev "DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS member_tracks; DROP TABLE IF EXISTS sessions; DROP TABLE IF EXISTS member_cards; DROP TABLE IF EXISTS activities;"
-
-# Re-push schema
-pnpm db:push
-
-# Re-seed
-pnpm db:seed
+bun run db:setup:enhanced
 ```

@@ -182,28 +182,40 @@ export const mySchema = z.object({
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/auth/login` | public | Login NISN/NIS + password |
+| POST | `/api/auth/login` | public | Login NIS/NISN/email + password |
 | POST | `/api/auth/logout` | any | Logout + clear session |
 | GET | `/api/auth/me` | any | Get current user |
 | GET | `/api/auth/github` | public | GitHub OAuth redirect |
 | GET | `/api/auth/github/callback` | public | GitHub OAuth callback |
 | POST | `/api/register` | public | Register new member |
-| GET | `/api/register` | public | Check NISN/status |
-| POST | `/api/slims/verify` | public | Verify NISN via SLiMS |
-| GET | `/api/members` | maintainer | List members with filters |
+| GET | `/api/register` | public | Check NIS/status |
+| POST | `/api/slims/verify` | public | Verify NIS via SLiMS (mock fallback) |
+| GET | `/api/slims/top-visitors` | public | Ranking kunjungan perpustakaan |
+| GET | `/api/internal/slims/verify` | any auth | Verify NIS via SLiMS (proxy, auth required) |
+| GET | `/api/members` | any | List members publik (tanpa admin param) |
+| GET | `/api/members?admin=1` | maintainer | List members dengan filter/search/pagination |
 | POST | `/api/admin/approve` | maintainer | Approve/reject member |
 | POST | `/api/admin/set-password` | maintainer | Set member password |
 | GET | `/api/admin/stats` | maintainer | Dashboard statistics |
 | GET | `/api/admin/users` | maintainer | Admin user list |
 | PATCH | `/api/profile` | any auth | Update own profile |
-| GET | `/api/projects` | any auth | List projects |
+| GET | `/api/projects` | any auth | List projects (paginated) |
 | POST | `/api/projects` | active member | Create project |
-| GET | `/api/activities` | any auth | List activities |
+| PATCH | `/api/projects/[id]` | owner/maintainer | Update project |
+| DELETE | `/api/projects/[id]` | owner/maintainer | Delete project |
+| GET | `/api/activities` | any auth | List activities (paginated) |
 | POST | `/api/activities` | active member | Log activity |
-| GET | `/api/announcements` | any auth | List announcements |
-| POST | `/api/announcements` | maintainer | Create announcement |
+| DELETE | `/api/activities/[id]` | owner/maintainer | Delete activity |
+| GET | `/api/announcements` | any auth | List announcements (paginated) |
+| POST | `/api/announcements` | maintainer | Create announcement + broadcast notif + email |
+| PATCH | `/api/announcements/[id]` | maintainer | Update announcement |
+| DELETE | `/api/announcements/[id]` | maintainer | Delete announcement |
 | GET | `/api/notifications` | any auth | List notifications |
 | POST | `/api/notifications/read` | any auth | Mark notification read |
+| POST | `/api/upload/image` | active member | Upload image (base64, max 2MB) |
+| GET | `/api/learn/progress` | any auth | Cek progress lesson |
+| POST | `/api/learn/progress` | any auth | Toggle lesson selesai |
+| POST | `/api/learn/reading` | any auth | Start/end reading session |
 | GET | `/api/health` | public | Health check |
 
 ---

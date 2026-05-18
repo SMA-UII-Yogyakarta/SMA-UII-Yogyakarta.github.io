@@ -68,8 +68,8 @@ mendapat persetujuan, dan mengakses konten LMS.
 - Profile dropdown refactor
 
 **Masih perlu:**
-- [ ] Deploy ke production (manual trigger GitHub Actions)
-- [ ] Verifikasi semua fitur di production
+- [x] Deploy ke production (manual trigger GitHub Actions) — sudah live
+- [x] Verifikasi semua fitur di production — sudah live
 
 ---
 

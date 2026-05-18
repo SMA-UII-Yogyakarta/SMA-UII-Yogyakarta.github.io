@@ -1,17 +1,18 @@
 # GitHub OAuth Setup
 
-Admin login menggunakan GitHub OAuth. **Hanya user `sandikodev` yang bisa login.**
+GitHub OAuth digunakan sebagai salah satu metode login untuk semua member yang sudah terdaftar di database.
+
+> **Catatan penting:** GitHub OAuth **tidak** membuat akun baru secara otomatis. User harus sudah terdaftar di database (via registrasi normal) dan memiliki `githubUsername` yang sesuai. Ini bukan login khusus admin — semua member bisa login via GitHub.
 
 ## Setup GitHub OAuth App
 
 1. Buka https://github.com/settings/developers
-2. Klik **"New OAuth App"** atau **"Register a new application"**
+2. Klik **"New OAuth App"**
 3. Isi form:
 
 ```
 Application name: SMA UII Lab Digital
 Homepage URL: https://lab.smauiiyk.sch.id
-Application description: Platform komunitas developer SMA UII Yogyakarta untuk pendaftaran anggota, tracking kontribusi, dan akses ke learning materials
 Authorization callback URL: https://lab.smauiiyk.sch.id/api/auth/github/callback
 ```
 
@@ -23,146 +24,101 @@ Authorization callback URL: https://lab.smauiiyk.sch.id/api/auth/github/callback
 Tambahkan ke `.env`:
 
 ```bash
-GITHUB_CLIENT_ID=your_client_id_here
-GITHUB_CLIENT_SECRET=your_client_secret_here
+OAUTH_GITHUB_CLIENT_ID=your_client_id_here
+OAUTH_GITHUB_CLIENT_SECRET=your_client_secret_here
 PUBLIC_SITE_URL=https://lab.smauiiyk.sch.id
 ```
 
-Untuk development local:
+Untuk development local, buat OAuth App terpisah dengan callback URL `http://localhost:4321/api/auth/github/callback`:
 
 ```bash
-GITHUB_CLIENT_ID=your_client_id_here
-GITHUB_CLIENT_SECRET=your_client_secret_here
+OAUTH_GITHUB_CLIENT_ID=your_dev_client_id
+OAUTH_GITHUB_CLIENT_SECRET=your_dev_client_secret
 PUBLIC_SITE_URL=http://localhost:4321
 ```
-
-**Note:** Untuk local development, buat OAuth App terpisah dengan callback URL `http://localhost:4321/api/auth/github/callback`
 
 ## Deploy ke GitHub
 
 Set secrets di GitHub repository:
 
 ```bash
-gh secret set GITHUB_CLIENT_ID --body "your_client_id"
-gh secret set GITHUB_CLIENT_SECRET --body "your_client_secret"
+gh secret set OAUTH_GITHUB_CLIENT_ID --body "your_client_id"
+gh secret set OAUTH_GITHUB_CLIENT_SECRET --body "your_client_secret"
 ```
 
-Atau via GitHub UI:
-1. Repository → Settings → Secrets and variables → Actions
-2. New repository secret
-3. Tambahkan `GITHUB_CLIENT_ID` dan `GITHUB_CLIENT_SECRET`
+## Cara Kerja Login GitHub
 
-## Security
+### Flow
 
-### Hardcoded Restriction
+1. User klik "Login with GitHub" di `/login`
+2. Redirect ke GitHub OAuth
+3. Callback ke `/api/auth/github/callback`
+4. Cari user di DB berdasarkan `githubUsername` → jika tidak ketemu, coba `githubId`
+5. Jika user tidak ditemukan → error 403 (belum terdaftar)
+6. Jika ditemukan:
+   - Update `githubId` dan `githubUsername` jika berubah
+   - Cek status: `pending` → redirect `/check-status`, `inactive` → redirect `/login?error=inactive`
+   - Buat session → redirect ke dashboard
 
-Login **hanya** untuk user GitHub `sandikodev`. Ini di-hardcode di `/src/pages/api/auth/github/callback.ts`:
+### Implementasi
+
+File: `src/pages/api/auth/github/callback.ts`
 
 ```typescript
-// SECURITY: Only allow sandikodev to login
-if (githubUser.login !== 'sandikodev') {
-  return new Response('Unauthorized: Only admin can login via GitHub', { 
-    status: 403 
+// Cari user berdasarkan githubUsername dulu, lalu githubId
+let existingUser = await db.query.users.findFirst({
+  where: eq(users.githubUsername, githubUser.login),
+});
+if (!existingUser) {
+  existingUser = await db.query.users.findFirst({
+    where: eq(users.githubId, githubUser.id.toString()),
   });
+}
+
+// Jika tidak ditemukan → tolak
+if (!existingUser) {
+  return createErrorResponse('GitHub username not registered. Please contact administrator.', 403);
 }
 ```
 
-### No Password Login
+### Syarat Bisa Login via GitHub
 
-- ❌ Tidak ada password login
-- ❌ Tidak ada email/password registration untuk admin
-- ✅ Hanya GitHub OAuth
-- ✅ Hanya user `sandikodev`
+1. User sudah terdaftar di database (via registrasi normal)
+2. Field `githubUsername` di database sesuai dengan username GitHub yang dipakai login
+3. Status user bukan `inactive`
 
-## Usage
+### First-time GitHub Login
 
-### Login Flow
-
-1. User mengakses `/login`
-2. Klik "Login with GitHub"
-3. Redirect ke GitHub OAuth
-4. GitHub meminta authorization
-5. Callback ke `/api/auth/github/callback`
-6. Validasi user = `sandikodev`
-7. Create session
-8. Redirect ke `/admin`
-
-### Logout
-
-```html
-<form action="/api/auth/logout" method="POST">
-  <button type="submit">Logout</button>
-</form>
-```
-
-## Testing
-
-### Local Development
-
-1. Setup OAuth App untuk localhost
-2. Set env variables
-3. Run dev server: `pnpm dev`
-4. Akses http://localhost:4321/login
-5. Login dengan GitHub account `sandikodev`
-6. Redirect ke http://localhost:4321/admin
-
-### Production
-
-1. Setup OAuth App untuk production domain
-2. Set GitHub secrets
-3. Deploy
-4. Akses https://lab.smauiiyk.sch.id/login
-5. Login dengan GitHub account `sandikodev`
+Saat pertama kali login via GitHub, sistem akan:
+- Mengisi field `githubId` dengan ID numerik dari GitHub
+- Mengupdate `githubUsername` jika berubah
+- Mengupdate `email` dengan primary email GitHub (jika berbeda)
 
 ## Troubleshooting
 
-### Error: "Unauthorized: Only admin can login via GitHub"
+### Error: "GitHub username not registered"
 
-- Pastikan login dengan account GitHub `sandikodev`
-- User lain tidak bisa login (by design)
-
-### Error: "User not found in database"
-
-- Pastikan database sudah di-seed
-- User `sandikodev` harus ada di database dengan `githubUsername = 'sandikodev'`
-- Run: `bun run db:seed`
+- User belum terdaftar di database, atau
+- `githubUsername` di database tidak sesuai dengan username GitHub yang dipakai
+- Solusi: maintainer perlu update field `githubUsername` di database, atau user registrasi dulu
 
 ### Error: "Invalid state"
 
 - Clear cookies dan coba lagi
-- State expired (10 menit)
+- State parameter expired atau tidak valid
 
 ### Error: "OAuth2RequestError"
 
-- Check CLIENT_ID dan CLIENT_SECRET
-- Pastikan callback URL sesuai
+- Cek `OAUTH_GITHUB_CLIENT_ID` dan `OAUTH_GITHUB_CLIENT_SECRET`
+- Pastikan callback URL di GitHub OAuth App sesuai dengan `PUBLIC_SITE_URL`
 
 ## Database Schema
 
-User `sandikodev` di database:
+Field yang relevan di tabel `users`:
 
-```sql
-INSERT INTO users (
-  id, nisn, nis, name, email,
-  githubUsername, githubId,
-  class, role, status,
-  joinedAt, approvedAt, approvedBy
-) VALUES (
-  'xxx', '0000000001', 'ADMIN001', 'Sandikodev', 'sandikodev@example.com',
-  'sandikodev', NULL,  -- githubId will be filled on first login
-  'Alumni', 'maintainer', 'active',
-  NOW(), NOW(), 'xxx'
-);
+```typescript
+githubUsername: text('github_username'),  // nullable, diisi saat registrasi
+githubId: text('github_id'),              // nullable, diisi saat first GitHub login
 ```
 
-Saat first login, `githubId` akan di-update otomatis.
-
-## Admin Routes
-
-Setelah login, admin bisa akses:
-
-- `/admin` - Dashboard utama
-- `/admin/members` - Manage members (TODO)
-- `/admin/projects` - Manage projects (TODO)
-
-Semua route `/admin/*` harus di-protect dengan auth check.
+Maintainer bisa set `githubUsername` via `/app/settings` atau via admin panel.

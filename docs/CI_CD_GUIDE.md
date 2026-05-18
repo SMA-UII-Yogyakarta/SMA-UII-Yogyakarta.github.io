@@ -55,7 +55,7 @@ Memvalidasi: TypeScript types, Astro components
 bun run test:e2e
 ```
 Menguji: full user flows (auth, members, progress, dll)
-Database: `smauiilab-prev` (Turso preview — bukan production)
+Database: `db-preview` (Turso preview — bukan production)
 Browser: Chromium only (untuk kecepatan)
 
 **Total runtime: ~2 menit**
@@ -94,7 +94,7 @@ SERVER_USER          # username SSH (dev)
 SSH_PRIVATE_KEY      # private key SSH (tanpa passphrase)
 
 # Database (Turso)
-TURSO_URL            # libsql://smauiilab-prev-sandikodev.aws-ap-northeast-1.turso.io
+TURSO_URL            # libsql://your-db-preview.turso.io
 TURSO_TOKEN          # auth token Turso
 
 # OAuth (GitHub)
@@ -110,10 +110,10 @@ PUBLIC_SITE_URL      # https://lab.smauiiyk.sch.id
 
 ## 📊 Database Strategy
 
-| Database | Nama Turso | Digunakan untuk |
-|----------|-----------|----------------|
-| Preview | `smauiilab-prev-sandikodev` | Development, CI, staging |
-| Production | `smauiilab-sandikodev` | Production only |
+| Database | Alias | Digunakan untuk |
+|----------|-------|----------------|
+| Preview | `db-preview` | Development, CI, staging |
+| Production | `db-production` | Production only |
 
 **Aturan:** Database production **tidak pernah** dipakai di CI/CD.
 Semua test menggunakan database preview yang bisa di-reset kapan saja.

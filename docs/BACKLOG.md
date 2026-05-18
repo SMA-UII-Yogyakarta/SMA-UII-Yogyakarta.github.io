@@ -3,7 +3,7 @@
 **Dokumen ini adalah sumber kebenaran tunggal untuk semua pekerjaan yang tersisa.**
 Update setiap kali item selesai atau ada prioritas baru.
 
-Terakhir diperbarui: 2026-04-19
+Terakhir diperbarui: 2026-05-19
 
 ---
 
@@ -158,7 +158,7 @@ Tidak ada proteksi terhadap brute force.
 
 **Solusi:** Tambahkan `limit_req` di nginx-proxy untuk path plugin.
 
-**File:** `/home/dev/web/infrastructure/nginx/conf.d/smauii/library.conf`
+**File:** nginx config untuk library (di server, path sesuai environment)
 
 ```nginx
 # Tambahkan di bagian atas file (sebelum server block)
@@ -253,6 +253,235 @@ logging:
     max-size: "10m"
     max-file: "3"
 ```
+
+---
+
+## 🔴 Prioritas 1 — Security & Bugs
+
+### 1.1 Input Sanitization di `profile.ts` PATCH
+
+**Status: ✅ SELESAI** — Implemented. Trim, empty check, max-length validation added.
+
+---
+
+### 1.2 Validasi Zod Tidak Konsisten di API Routes
+
+**Status: ✅ SELESAI** — Implemented. Added 5 Zod schemas to validation.ts (createActivitySchema, approveUserSchema, setPasswordSchema, updateProfileSchema, readingSessionSchema). All 5 routes migrated.
+
+---
+
+### 1.3 `admin/users.ts` PATCH — Tidak Ada Validasi Enum `role` dan `status`
+
+**Status: ✅ SELESAI** — Implemented. Added VALID_ROLES = ['member', 'maintainer'] and VALID_STATUSES validation.
+
+---
+
+### 1.4 `admin/users.ts` DELETE — Orphaned Data (activities, projects, notifications)
+
+**Status: ✅ SELESAI** — Implemented. CASCADE delete includes activities, projects, notifications, learningProgress, readingSessions, memberTracks, sessions, memberCards.
+
+---
+
+### 1.5 `RegisterForm.tsx` — Daftar Kelas Tidak Lengkap
+
+**Status: ✅ SELESAI** — Fixed. Import classOptions from validation.ts, dropdown now shows all 21 classes.
+
+---
+
+### 1.6 `RegisterForm.tsx` — Dead Link ke `/dashboard`
+
+**Status: ✅ SELESAI** — Fixed. Link changed to `/success?nisn=...`.
+
+---
+
+### 1.7 Path Server Hardcoded di `deploy.yml`
+
+**Status: ✅ SELESAI** — Implemented. Paths replaced with ${{ secrets.DEPLOY_APP_PATH }} and ${{ secrets.DEPLOY_COMPOSE_PATH }}.
+
+---
+
+### 1.8 Deploy Workflow Tidak Ada Pre-deployment Test Check
+
+**Status: ✅ SELESAI** — Implemented. Added test job (unit test + type check) with `needs: [test]` in deploy workflow.
+
+---
+
+### 1.9 Missing Index `createdAt` di Tabel `announcements`
+
+**Status: ✅ SELESAI** — Implemented. Added `index('idx_announcements_created_at').on(table.createdAt)`.
+
+---
+
+## 🟢 Prioritas 3 — Enhancement & Polish
+
+> Fitur yang direncanakan, belum ada di source code, bisa dikerjakan kapan saja.
+
+### 3.1 Filter & Search di Halaman Activities
+
+**Status: ✅ SELESAI** — Implemented. Filter chips for all activity types with active state styling.
+
+---
+
+### 3.2 Edit Activity
+
+**Status: ✅ SELESAI** — Implemented. PATCH endpoint + edit modal with pre-filled form, owner/maintainer only.
+
+---
+
+### 3.3 Search di Halaman Projects
+
+**Status: ✅ SELESAI** — Implemented. Search input with debounce + maintainer user filter dropdown.
+
+---
+
+### 3.4 Pin Announcement
+
+**Status: ✅ SELESAI** — Implemented. isPinned field in schema, PATCH endpoint for toggle, UI with SVG pin/unpin buttons + badge + yellow border + ordering.
+
+---
+
+### 3.5 Avatar Upload untuk Profile
+
+**Status: ✅ SELESAI** — Implemented. avatarUrl in schema, upload in profile.astro, avatar display in Topbar.astro + Sidebar.astro.
+
+---
+
+### 3.6 Role Alumni
+
+**Status: ✅ SELESAI** — Implemented. Added 'alumni' to valid roles in admin/users.ts PATCH, alumni guard in guards.ts, activity/project creation blocked for alumni, role change button in member detail modal, alumni count in public API.
+
+---
+
+### 3.7 Rate Limiting di App Level
+
+**Status: ✅ SELESAI** — Implemented. In-memory rate limiter in middleware.ts for login (5/min), register (3/min), slims/verify (10/min), forgot-password, reset-password + 5-min cleanup interval.
+
+---
+
+### 3.8 Analytics Dashboard
+
+**Status: ✅ SELESAI** — Implemented. overview.astro with 4 stat cards, track popularity CSS bar chart, activity breakdown chart, recent members, announcements, pending approvals with approve/reject buttons.
+
+---
+
+### 3.9 Subtitle di Halaman Members
+
+**Status: ✅ SELESAI** — Implemented. Added PageHeader with subtitle "Kelola dan pantau seluruh anggota komunitas".
+
+---
+
+### 3.13 Download / Print Member Card
+
+**Status: ✅ SELESAI** — Implemented. Print button + @media print CSS with clean card-only layout, #topbar ID added to Topbar.astro.
+
+---
+
+### 3.14 Email Konfirmasi Registrasi (Pending)
+
+**Status: ✅ SELESAI** — Implemented. sendRegistrationEmail() added to email.ts, triggered in register.ts.
+
+---
+
+### 3.15 Email Notifikasi Rejection
+
+**Status: ✅ SELESAI** — Implemented. sendRejectionEmail() added, triggered in approve.ts before deletion.
+
+---
+
+### 3.16 Password Reset / Forgot Password
+
+**Status: ✅ SELESAI** — Implemented. forgot-password.astro + reset-password.astro + API endpoints + JWT token (1h expiry) + email notification.
+
+---
+
+### 3.17 Filter by Track/Class di Members Page
+
+**Status: ✅ SELESAI** — Implemented. Track filter chips + class dropdown + API support for ?track=, ?class=, ?search= params.
+
+---
+
+### 3.18 Tampilkan `approvedBy` di UI
+
+**Status: ✅ SELESAI** — Implemented. Displayed in profile page and member detail modal as "Disetujui oleh: [nama]".
+
+---
+
+### 3.19 Pagination di Public Pages
+
+**Status: ✅ SELESAI** — Implemented. New /api/public/members and /api/public/projects endpoints with page/limit + pagination UI on both public pages.
+
+---
+
+### 3.20 Achievement Badges & Leaderboard
+
+**Status: ❌ Belum dikerjakan (long-term)**
+
+**Kebutuhan:** Gamifikasi untuk mendorong kontribusi — badge untuk milestone tertentu (10 activities, 5 projects, dll) dan leaderboard member paling aktif.
+
+**Yang perlu dibuat:**
+- Schema tabel `badges` atau field `badges` di `users`
+- Logic pemberian badge otomatis
+- Halaman leaderboard
+
+**File:** `src/db/schema.ts`, halaman baru `/app/leaderboard`
+
+---
+
+### 3.21 Fetch GitHub Contributions
+
+**Status: ❌ Belum dikerjakan (long-term)**
+
+**Kebutuhan:** Tampilkan kontribusi GitHub member (commits, PRs, issues) di profile mereka secara otomatis.
+
+**Yang perlu dibuat:**
+- Fetch dari GitHub API menggunakan `githubUsername` yang sudah ada
+- Tampilkan di profile page
+
+**File:** `src/pages/app/profile.astro`, `src/pages/api/profile.ts`
+
+---
+
+## 🟡 Prioritas 3 — SLiMS Integration Lanjutan
+
+### 3.10 Endpoint Search di Plugin SLiMS
+
+**Status: ❌ Belum dikerjakan**
+
+**Kebutuhan:** Maintainer perlu bisa search anggota SLiMS dari dashboard untuk verifikasi manual.
+
+**Endpoint yang perlu ditambahkan ke plugin:**
+```
+GET /api.php?action=search&q={query}&limit=20
+Response: { members: [{ nis, name, email, member_type, is_expired }] }
+```
+
+**File:** Plugin SLiMS `lab-digital-api/api.php` (di server SLiMS)
+
+---
+
+### 3.11 Sync Data SLiMS saat Login
+
+**Status: ❌ Belum dikerjakan**
+
+**Masalah:** Data nama/email di Digital Lab bisa basi jika berubah di SLiMS. Saat ini tidak ada mekanisme sync.
+
+**Solusi:** Panggil SLiMS API saat user login, update field yang berubah.
+
+**File:** `src/pages/api/auth/login.ts`, `src/pages/api/auth/github/callback.ts`
+
+---
+
+### 3.12 Evaluasi Field `nisn` di Database
+
+**Status: ⏳ Perlu keputusan**
+
+**Masalah:** Field `nisn` di tabel `users` saat ini diisi sama dengan `nis` (NIS lokal 4 digit). Ini karena SLiMS SMA UII tidak punya NISN nasional.
+
+**Opsi:**
+- A) Pertahankan field `nisn` untuk integrasi Aksesekolah.id masa depan (NISN nasional 10 digit)
+- B) Hapus field `nisn`, gunakan `nis` saja
+
+**Keputusan:** Tunda sampai Aksesekolah.id siap dikonsumsi.
 
 ---
 

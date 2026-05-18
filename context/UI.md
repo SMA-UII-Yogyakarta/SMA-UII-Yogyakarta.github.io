@@ -66,10 +66,20 @@ Warning:     amber-400/500
 
 ---
 
-## Mobile-First Checklist (TODO)
+## Status Implementasi
 
-- [ ] Hamburger di Topbar untuk mobile (buka sidebar sebagai overlay)
-- [ ] `pb-[calc(4rem+env(safe-area-inset-bottom))]` di content area
-- [ ] `-webkit-overflow-scrolling: touch` di scroll containers
-- [ ] Touch target audit — semua button minimal 44px
+### ✅ Sudah Selesai
+- Sidebar 4 state (hidden/minimized/expanded/overlay) — `data-sidebar` attribute
+- BottomNav mobile (`sm:hidden`) — max 5 item
+- Sidebar overlay untuk tablet saat hamburger diklik
+- Profile dropdown di sidebar
+
+### ⚠️ Catatan Penting: Hamburger Hanya untuk Tablet
+Di mobile (`< 640px`): sidebar TIDAK ADA, navigasi via BottomNav.
+Hamburger toggle hanya relevan untuk tablet (`640–1023px`) untuk membuka sidebar sebagai overlay.
+Jangan tambahkan hamburger di mobile — ini akan merusak layout.
+
+### 📋 Backlog UI
+- [ ] `pb-[calc(4rem+env(safe-area-inset-bottom))]` di content area (safe area untuk notch)
+- [ ] Touch target audit — semua button minimal 44×44px
 - [ ] BottomNav active indicator lebih jelas

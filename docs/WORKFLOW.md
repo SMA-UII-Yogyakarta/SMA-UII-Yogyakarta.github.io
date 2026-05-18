@@ -32,9 +32,9 @@ feature/xxx branch
 
 | Environment | URL | Branch | Database | Deploy |
 |-------------|-----|--------|----------|--------|
-| Development | `http://localhost:4321` | `feature/*` | `smauiilab-prev` | `bun run dev` |
-| Staging | `http://lab-dev.localhost` | `develop` | `smauiilab-prev` | Auto saat merge ke `develop` |
-| Production | `https://lab.smauiiyk.sch.id` | `main` | `smauiilab-sandikodev` | Manual trigger |
+| Development | `http://localhost:4321` | `feature/*` | `db-preview` | `bun run dev` |
+| Staging | `http://lab-dev.localhost` | `develop` | `db-preview` | Auto saat merge ke `develop` |
+| Production | `https://lab.smauiiyk.sch.id` | `main` | `db-production` | Manual trigger |
 
 ---
 
@@ -117,7 +117,7 @@ gh workflow run deploy.yml --ref main
 ### Verifikasi setelah deploy
 ```bash
 curl -sI https://lab.smauiiyk.sch.id | head -3
-docker logs smauii-lab-app --tail=20
+docker logs app-container --tail=20  # sesuaikan nama container di environment kamu
 ```
 
 ---

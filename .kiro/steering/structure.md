@@ -82,7 +82,7 @@ if (redirect) return redirect;
 - Sanitize user-supplied strings with `escapeHtml` / `sanitizeObject` before storing or rendering
 
 ### Database
-- All schema changes go in `src/db/schema.ts`; run `pnpm db:generate` then `pnpm db:migrate`
+- All schema changes go in `src/db/schema.ts`; run `bun run db:push` (dev) or `bun run db:migrate` (production)
 - Timestamps are stored as Unix milliseconds (integer), not ISO strings
 - Always use transactions for multi-table writes
 

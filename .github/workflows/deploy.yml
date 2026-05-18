@@ -9,7 +9,31 @@ on:
         default: 'Release fitur baru'
 
 jobs:
+  test:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run unit tests
+        run: bun test tests/unit
+
+      - name: Run Astro type check
+        run: bun run astro check
+
   deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,11 +49,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd /home/dev/project/smauii-dev-foundation
+            cd ${{ secrets.DEPLOY_APP_PATH }}
             git pull origin main
             git submodule update --init --recursive
             docker build -t smauii-lab:latest .
-            cd /home/dev/web/instances/smauii/lab
+            cd ${{ secrets.DEPLOY_COMPOSE_PATH }}
             docker compose up -d
             docker image prune -f
             echo "Deploy selesai: $(date)"

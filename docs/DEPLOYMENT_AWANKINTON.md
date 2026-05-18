@@ -12,26 +12,26 @@
 Internet :80/:443
     │
     ▼
-nginx-proxy (nginx:stable-alpine, 172.23.0.9)
+nginx-proxy (nginx:stable-alpine, [reverse-proxy-ip])
     │  ← SATU-SATUNYA container yang expose 0.0.0.0:80/443 ke internet
     │  ← SSL via Let's Encrypt (/etc/letsencrypt)
-    │  ← Konfigurasi di /home/dev/web/infrastructure/nginx/conf.d/
+    │  ← Konfigurasi di /path/to/nginx-conf/
     │
-    ├── conf.d/smauii/library.conf → proxy_pass http://smauii-slims-app:80
+    ├── conf.d/smauii/library.conf → proxy_pass http://slims-container:80
     ├── conf.d/smauii/moodle.conf  → proxy_pass http://smauii-moodle-moodle-app
-    └── conf.d/smauii/lab.conf     ← AKAN DITAMBAHKAN → proxy_pass http://smauii-lab-app:3000
+    └── conf.d/smauii/lab.conf     ← AKAN DITAMBAHKAN → proxy_pass http://app-container:3000
 ```
 
 > **Penting:** `traefik-proxy` hanya bind ke `127.0.0.1` (internal), bukan yang handle traffic internet. Semua routing publik melalui `nginx-proxy`.
 
-### Container Relevan (nginx-net: 172.23.0.0/16)
+### Container Relevan (nginx-net: [proxy-network-subnet])
 
 | Container | IP | Fungsi |
 |-----------|-----|--------|
-| `nginx-proxy` | 172.23.0.9 | Reverse proxy utama, expose 80/443 |
-| `smauii-slims-app` | 172.23.0.12 | SLiMS 9.6.1 (Apache) |
-| `smauii-moodle-moodle-app` | 172.23.0.6 | Moodle (LMS existing) |
-| `traefik-proxy` | 172.23.0.7 | Internal routing (127.0.0.1 only) |
+| `nginx-proxy` | [reverse-proxy-ip] | Reverse proxy utama, expose 80/443 |
+| `slims-container` | [slims-container-ip] | SLiMS 9.6.1 (Apache) |
+| `smauii-moodle-moodle-app` | [moodle-container-ip] | Moodle (LMS existing) |
+| `traefik-proxy` | [traefik-ip] | Internal routing (127.0.0.1 only) |
 
 ### Network
 
@@ -56,19 +56,19 @@ awankinton-net → network global Awankinton
 Internet :80/:443
     │
     ▼
-nginx-proxy (nginx:stable-alpine, 172.23.0.9)
-    │  conf.d/smauii/library.conf → http://smauii-slims-app:80
+nginx-proxy (nginx:stable-alpine, [reverse-proxy-ip])
+    │  conf.d/smauii/library.conf → http://slims-container:80
     │  conf.d/smauii/moodle.conf  → http://smauii-moodle-moodle-app
-    │  conf.d/smauii/lab.conf     → http://smauii-lab-app:3000  ← BARU
+    │  conf.d/smauii/lab.conf     → http://app-container:3000  ← BARU
     │
-    ├── smauii-slims-app (existing, nginx-net)
+    ├── slims-container (existing, nginx-net)
     │       └── /plugins/lab-digital-api/ ← plugin baru
-    └── smauii-lab-app (baru, nginx-net + net-smauii)
+    └── app-container (baru, nginx-net + net-smauii)
             ├── Turso (remote DB)
-            └── http://smauii-slims-app/plugins/lab-digital-api (internal)
+            └── http://slims-container/plugins/lab-digital-api (internal)
 ```
 
-**Kunci:** `smauii-lab-app` join `nginx-net` agar bisa di-proxy oleh `nginx-proxy`, dan join `net-smauii` agar bisa komunikasi internal ke `smauii-slims-app` tanpa expose port.
+**Kunci:** `app-container` join `nginx-net` agar bisa di-proxy oleh `nginx-proxy`, dan join `net-smauii` agar bisa komunikasi internal ke `slims-container` tanpa expose port.
 
 ---
 
@@ -188,12 +188,12 @@ echo json_encode(['error' => 'Unknown action']);
 
 ```bash
 # Di server Awankinton
-mkdir -p /home/dev/web/instances/smauii/services/slims/plugins/lab-digital-api
+mkdir -p /path/to/instance/services/slims/plugins/lab-digital-api
 # Copy index.php ke direktori tersebut
 
 # Plugin sudah ter-mount via docker-compose SLiMS yang ada
 # Verifikasi mount di docker-compose SLiMS:
-# - /home/dev/web/instances/smauii/services/slims/plugins/lab-digital-api:/var/www/html/slims/plugins/lab-digital-api
+# - /path/to/instance/services/slims/plugins/lab-digital-api:/var/www/html/slims/plugins/lab-digital-api
 ```
 
 ### Test Plugin
@@ -201,7 +201,8 @@ mkdir -p /home/dev/web/instances/smauii/services/slims/plugins/lab-digital-api
 ```bash
 # Dari dalam net-smauii (atau server host)
 curl -H "X-Lab-API-Key: your-key" \
-  "http://smauii-slims-app/plugins/lab-digital-api/?action=verify&nisn=1234567890"
+  "http://slims-container/plugins/lab-digital-api/?action=verify&nisn=1234567890"
+  # Sesuaikan dengan nama container di environment kamu
 ```
 
 ---
@@ -237,7 +238,7 @@ CMD ["node", "dist/server/entry.mjs"]
 
 ## Fase 3b — Konfigurasi nginx-proxy
 
-Buat file `/home/dev/web/infrastructure/nginx/conf.d/smauii/lab.conf`:
+Buat file `/path/to/nginx-conf/smauii/lab.conf`:
 
 ```nginx
 # HTTP → redirect ke HTTPS
@@ -266,7 +267,7 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     location / {
-        proxy_pass http://smauii-lab-app:3000;
+        proxy_pass http://app-container:3000;  # Sesuaikan dengan nama container di environment kamu
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -287,18 +288,18 @@ docker exec nginx-proxy nginx -t && docker exec nginx-proxy nginx -s reload
 ## Fase 3 — Docker Compose
 
 ```yaml
-# /home/dev/web/instances/smauii/lab/docker-compose.yml
+# /path/to/instance/docker-compose.yml
 name: smauii-lab
 
 services:
   app:
     image: smauii-lab:latest
-    container_name: smauii-lab-app
+    container_name: smauii-lab-app  # Sesuaikan dengan nama container di environment kamu
     restart: unless-stopped
     env_file: .env
     networks:
       - nginx-net    # agar bisa di-proxy oleh nginx-proxy
-      - net-smauii   # agar bisa komunikasi internal ke smauii-slims-app
+      - net-smauii   # agar bisa komunikasi internal ke slims-container
 
 networks:
   nginx-net:
@@ -312,12 +313,12 @@ networks:
 ### `.env` (dari `.env.example`)
 
 ```env
-TURSO_URL=libsql://smauiilab-prev-sandikodev.aws-ap-northeast-1.turso.io
+TURSO_URL=libsql://your-db.turso.io
 TURSO_AUTH_TOKEN=...
 LUCIA_SECRET=...
 GITHUB_CLIENT_ID=...
 GITHUB_CLIENT_SECRET=...
-SLIMS_API_URL=http://smauii-slims-app/plugins/lab-digital-api
+SLIMS_API_URL=http://slims-container/plugins/lab-digital-api
 SLIMS_API_KEY=...
 PUBLIC_SITE_URL=https://lab.smauiiyk.sch.id
 NODE_ENV=production
@@ -388,10 +389,10 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/dev/web/instances/smauii/lab
+            cd /path/to/instance/
             git pull origin main
             git submodule update --init --recursive
-            docker build -t smauii-lab:latest /home/dev/project/smauii-dev-foundation
+            docker build -t smauii-lab:latest .
             docker compose up -d
             docker image prune -f
 ```
@@ -405,16 +406,16 @@ jobs:
 - [ ] Tambahkan mount di docker-compose SLiMS
 - [ ] Generate API key: `openssl rand -hex 32`
 - [ ] Simpan API key di `.env` server dan di secrets GitHub
-- [ ] Test: `curl -H "X-Lab-API-Key: ..." http://smauii-slims-app/plugins/lab-digital-api/?action=verify&nisn=xxx`
+- [ ] Test: `curl -H "X-Lab-API-Key: ..." http://slims-container/plugins/lab-digital-api/?action=verify&nisn=xxx`
 - [ ] Verifikasi field NISN di tabel `member` SLiMS (apakah `member_id` atau custom field)
 
 ### Fase 2-3 — Docker
 - [ ] Buat `Dockerfile` di root repo
-- [ ] Buat direktori `/home/dev/web/instances/smauii/lab/`
+- [ ] Buat direktori instance di server
 - [ ] Buat `docker-compose.yml` dan `.env`
 - [ ] Build: `docker build -t smauii-lab:latest .`
 - [ ] Run: `docker compose up -d`
-- [ ] Verifikasi Traefik routing
+- [ ] Verifikasi nginx routing
 
 ### Fase 4 — Integrasi
 - [ ] Update `src/pages/api/slims/verify.ts`

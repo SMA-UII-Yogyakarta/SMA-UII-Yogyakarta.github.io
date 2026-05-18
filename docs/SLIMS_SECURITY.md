@@ -173,11 +173,10 @@ Integrate dengan monitoring system untuk tracking usage patterns.
 
 ## Checklist
 
-- [x] Create internal proxy endpoint
+- [x] Create internal proxy endpoint (`src/pages/api/internal/slims/verify.ts`)
 - [x] Add authentication check
 - [x] Normalize response format
 - [x] Error handling & timeout
-- [ ] Connect containers to shared network (optional)
-- [ ] Add rate limiting
-- [ ] Add monitoring/logging
-- [ ] Migrate to modern API (long-term)
+- [x] Rate limiting di nginx untuk `/plugins/lab-digital-api/`
+- [ ] Add monitoring/logging (log semua SLIMS API calls)
+- [ ] Migrate to modern API (long-term — lihat ROADMAP.md Milestone 3)
