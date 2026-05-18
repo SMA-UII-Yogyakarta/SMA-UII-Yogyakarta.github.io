@@ -1,22 +1,13 @@
 {
-  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "baseUrl": ".",
+    "moduleResolution": "bundler",
     "types": ["bun-types"],
     "paths": {
       "@smauii/db": ["packages/db/src"],
       "@smauii/validation": ["packages/validation/src"],
-      "@smauii/shared": ["packages/shared/src"],
-      "@/*": ["apps/web/src/*"],
-      "@components/*": ["apps/web/src/components/*"],
-      "@layouts/*": ["apps/web/src/layouts/*"],
-      "@pages/*": ["apps/web/src/pages/*"],
-      "@lib/*": ["apps/web/src/lib/*"],
-      "@styles/*": ["apps/web/src/styles/*"]
-    },
-    "jsx": "preserve",
-    "jsxImportSource": "react",
+      "@smauii/shared": ["packages/shared/src"]
+    }
   },
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", "apps/api", "apps/content", "playwright-report", "test-results"]
+  "include": ["packages/*/src", "packages/*/scripts"]
 }

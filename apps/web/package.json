@@ -6,5 +6,37 @@
     "build": "astro build",
     "check": "astro check",
     "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "^10.0.4",
+    "@astrojs/react": "^5.0.3",
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
+    "@node-rs/argon2": "^2.0.2",
+    "@smauii/db": "workspace:*",
+    "@smauii/shared": "workspace:*",
+    "@smauii/validation": "workspace:*",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.2.2",
+    "arctic": "^3.7.0",
+    "astro": "^6.1.6",
+    "drizzle-orm": "^0.45.2",
+    "lucia": "^3.2.2",
+    "nanoid": "^5.1.7",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "unist-util-visit": "^5.0.0",
+    "tailwindcss": "^4.2.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/mdast": "^4.0.4",
+    "bun-types": "^1.3.12"
   }
 }
