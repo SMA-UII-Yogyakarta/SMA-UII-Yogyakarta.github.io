@@ -54,7 +54,7 @@ jobs:
             git submodule update --init --recursive
             docker build -f deploy/docker/Dockerfile -t smauii-lab:latest .
             cd ${{ secrets.DEPLOY_COMPOSE_PATH }}
-            docker compose up -d
+            docker compose -f deploy/docker/docker-compose.yml up -d
             docker image prune -f
             echo "Deploy selesai: $(date)"
             echo "Alasan: ${{ github.event.inputs.reason }}"
