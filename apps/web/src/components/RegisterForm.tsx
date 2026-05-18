@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { registerSchema, trackOptions, classOptions, type RegisterInput } from '@smauii/validation';
 import type { ZodError } from 'zod';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 
 type RegistrationStep = 'verify' | 'data' | 'github' | 'tracks' | 'confirm';
 
@@ -73,7 +76,7 @@ export default function RegisterForm() {
       // Check if user already exists
       const checkResponse = await fetch(`/api/register?nisn=${encodeURIComponent(nisn.trim())}`);
       const checkResult = await checkResponse.json();
-      
+
       if (!checkResponse.ok && checkResult.code === 'USER_EXISTS') {
         setError('User dengan NIS/Email ini sudah terdaftar');
         return;
@@ -90,21 +93,21 @@ export default function RegisterForm() {
 
       if (!response.ok) {
         if (result.code === 'MEMBER_NOT_FOUND') {
-          setError('NIS tidak ditemukan di database perpustakaan SMA UII');
+          setError(`ID tidak ditemukan di database ${config.institution.shortName}`);
           return;
         }
         throw new Error(result.error || 'Verifikasi gagal');
       }
 
       if (data.isPending) {
-        setError('Anggota ini dalam status pending di perpustakaan');
+        setError('Anggota ini dalam status pending di institusi');
         return;
       }
 
       // Expired membership = warning saja, bukan blokir
       // Keanggotaan perpustakaan ≠ keanggotaan Digital Lab
       const expiredWarning = data.isExpired
-        ? `Catatan: keanggotaan perpustakaan kamu expired sejak ${data.expiredAt}. Silakan perpanjang ke perpustakaan.`
+        ? `Catatan: keanggotaan kamu expired sejak ${data.expiredAt}. Silakan perpanjang ke institusi.`
         : '';
 
       setFormData(prev => ({
@@ -127,7 +130,7 @@ export default function RegisterForm() {
 
   const validateAndNext = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (step === 'data') {
       if (!formData.email) newErrors.email = 'Email harus diisi';
       if (!formData.class) newErrors.class = 'Kelas harus diisi';
@@ -201,8 +204,8 @@ export default function RegisterForm() {
             <p className="text-xl text-gray-300 mb-8">
               Pendaftaranmu sedang diproses. Tunggu persetujuan dari maintainer.
             </p>
-            <a 
-              href={`/success?nisn=${encodeURIComponent(formData.nisn)}`} 
+            <a
+              href={`/success?nisn=${encodeURIComponent(formData.nisn)}`}
               className="inline-block bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold transition text-lg"
             >
               Lihat Status Pendaftaran →
@@ -220,8 +223,8 @@ export default function RegisterForm() {
         {stepConfig.map((s, idx) => (
           <div key={s.key} className="flex items-center">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-              idx < currentStepIndex 
-                ? 'bg-green-500 text-white' 
+              idx < currentStepIndex
+                ? 'bg-green-500 text-white'
                 : idx === currentStepIndex
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-700 text-gray-400'
@@ -235,25 +238,25 @@ export default function RegisterForm() {
         ))}
       </div>
 
-      {/* Step 1: Verify NIS */}
+      {/* Step 1: Verify ID */}
       {step === 'verify' && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Verifikasi NIS</h3>
+          <h3 className="font-bold mb-4">Verifikasi ID</h3>
           <p className="text-gray-400 text-sm mb-4">
-            Masukkan NIS (Nomor Induk Siswa) untuk verifikasi data dari perpustakaan SMA UII
+            Masukkan ID (NIS/NIM/Email) untuk verifikasi data dari database {config.institution.shortName}
           </p>
-          
+
           <div className="mb-4">
             <input
               type="text"
               value={nisn}
               onChange={(e) => {
-                setNisn(e.target.value.replace(/\D/g, '').slice(0, 10));
+                setNisn(e.target.value.trim().slice(0, 20));
                 setError('');
               }}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-              placeholder="Masukkan NIS (contoh: 1763)"
-              maxLength={10}
+              placeholder="Masukkan ID"
+              maxLength={20}
             />
             {error && <p className={`text-xs mt-1 ${isWarning ? 'text-yellow-400' : 'text-red-400'}`}>{error}</p>}
           </div>
@@ -261,22 +264,21 @@ export default function RegisterForm() {
           <button
             type="button"
             onClick={verifyWithSlims}
-            disabled={nisn.length < 4 || loading}
+            disabled={nisn.length < 3 || loading}
             className={`w-full px-4 py-2.5 rounded-lg font-semibold transition ${
-              nisn.length < 4 || loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
+              nisn.length < 3 || loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
             } text-white`}
           >
-            {loading ? 'Memverifikasi...' : 'Verifikasi dengan SLiMS'}
+            {loading ? 'Memverifikasi...' : `Verifikasi dengan ${config.features.slimsIntegration ? 'SLiMS' : 'Database'}`}
           </button>
         </div>
       )}
-
       {/* Step 2: Personal Data */}
       {step === 'data' && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <h3 className="font-bold mb-4">Data Pribadi</h3>
-          <p className="text-gray-400 text-sm mb-4">Data ini diambil dari database SLiMS</p>
-          
+          <p className="text-gray-400 text-sm mb-4">Data ini diambil dari database {config.features.slimsIntegration ? 'SLiMS' : 'Institusi'}</p>
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Nama Lengkap</label>
@@ -334,13 +336,13 @@ export default function RegisterForm() {
             <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
               ← Kembali
             </button>
-            <button 
-              type="button" 
-              onClick={validateAndNext} 
+            <button
+              type="button"
+              onClick={validateAndNext}
               disabled={!formData.email || !dataConfirmed}
               className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
                 !formData.email || !dataConfirmed
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500' 
+                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
                   : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
             >
@@ -355,7 +357,7 @@ export default function RegisterForm() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <h3 className="font-bold mb-4">Akun GitHub</h3>
           <p className="text-gray-400 text-sm mb-4">Apakah kamu punya akun GitHub?</p>
-          
+
           <div className="mb-4">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -400,13 +402,13 @@ export default function RegisterForm() {
             <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
               ← Kembali
             </button>
-            <button 
-              type="button" 
-              onClick={nextStep} 
+            <button
+              type="button"
+              onClick={nextStep}
               disabled={hasGithub === null || (hasGithub === true && !formData.githubUsername)}
               className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
                 hasGithub === null || (hasGithub === true && !formData.githubUsername)
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500' 
+                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
                   : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
             >
@@ -421,7 +423,7 @@ export default function RegisterForm() {
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <h3 className="font-bold mb-4">Pilih Track Minat</h3>
           <p className="text-gray-400 text-sm mb-4">Pilih 1-3 track yang kamu minati</p>
-          
+
           <div className="grid md:grid-cols-2 gap-3">
             {trackOptions.map(track => (
               <button
@@ -444,13 +446,13 @@ export default function RegisterForm() {
             <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
               ← Kembali
             </button>
-            <button 
-              type="button" 
-              onClick={validateAndNext} 
+            <button
+              type="button"
+              onClick={validateAndNext}
               disabled={formData.tracks.length === 0}
               className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
-                formData.tracks.length === 0 
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500' 
+                formData.tracks.length === 0
+                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
                   : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
             >
@@ -465,7 +467,7 @@ export default function RegisterForm() {
         <>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="font-bold mb-4">Konfirmasi Pendaftaran</h3>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="text-gray-400">NIS</span>

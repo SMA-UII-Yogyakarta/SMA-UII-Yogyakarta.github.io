@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import type { User, MemberCard } from '@smauii/db';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 
 interface MemberCardProps {
   user: User;
@@ -27,8 +30,8 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
     // Card content
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 32px sans-serif';
-    ctx.fillText('SMA UII LAB', 40, 60);
-    
+    ctx.fillText(config.site.name.toUpperCase(), 40, 60);
+
     ctx.font = '18px sans-serif';
     ctx.fillStyle = '#e5e7eb';
     ctx.fillText('Developer Foundation', 40, 90);
@@ -37,12 +40,12 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 28px sans-serif';
     ctx.fillText(user.name, 40, 200);
-    
+
     ctx.font = '20px sans-serif';
     ctx.fillStyle = '#d1d5db';
     ctx.fillText(user.class, 40, 240);
-    ctx.fillText(`NIS: ${user.nis}`, 40, 280);
-    
+    ctx.fillText(`ID: ${user.nis}`, 40, 280);
+
     // Card number
     ctx.font = 'bold 24px monospace';
     ctx.fillStyle = '#60a5fa';
@@ -51,7 +54,7 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
     // QR Code (simplified - in production use actual QR)
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(600, 150, 150, 150);
-    
+
     // Add QR code image if available
     if (card.qrCode) {
       const img = new Image();
@@ -70,7 +73,7 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `smauii-lab-card-${user.nis}.png`;
+          a.download = `${config.site.name.toLowerCase().replace(/\s+/g, '-')}-card-${user.nis}.png`;
           a.click();
           URL.revokeObjectURL(url);
         }
@@ -84,14 +87,14 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
       {/* Card Preview */}
       <div className="relative aspect-8/5 bg-linear-to-br from-blue-900 to-purple-700 rounded-2xl p-8 text-white shadow-2xl mb-6">
         <div className="absolute top-8 left-8">
-          <h3 className="text-2xl font-bold mb-1">SMA UII LAB</h3>
+          <h3 className="text-2xl font-bold mb-1">{config.site.name.toUpperCase()}</h3>
           <p className="text-sm text-blue-200">Developer Foundation</p>
         </div>
 
         <div className="absolute bottom-24 left-8">
           <h2 className="text-3xl font-bold mb-2">{user.name}</h2>
           <p className="text-lg text-gray-200">{user.class}</p>
-          <p className="text-sm text-gray-300">NIS: {user.nis}</p>
+          <p className="text-sm text-gray-300">ID: {user.nis}</p>
         </div>
 
         <div className="absolute bottom-8 left-8">
@@ -137,7 +140,7 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
       {/* Info */}
       <div className="mt-6 bg-gray-900 border border-gray-800 rounded-lg p-4 text-sm text-gray-400">
         <p className="mb-2">
-          <strong className="text-white">Kartu Anggota Digital</strong> ini adalah bukti keanggotaanmu di SMA UII Lab.
+          <strong className="text-white">Kartu Anggota Digital</strong> ini adalah bukti keanggotaanmu di {config.site.name}.
         </p>
         <ul className="space-y-1 text-xs">
           <li>• Gunakan untuk akses ke event dan workshop</li>

@@ -1,5 +1,8 @@
 ---
 import { navItems } from '@lib/nav';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 
 interface Props {
   role: 'maintainer' | 'member';
@@ -16,13 +19,13 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
   /* ═══════════════════════════════════════════════════════════════
      SIDEBAR STATE SYSTEM
      State diset via: document.documentElement.setAttribute('data-sidebar', state)
-     
+
      States:
        hidden    — mobile (<640px), sidebar off-screen
        minimized — tablet (640-1023px) default, atau desktop collapsed: icon only, 4rem
        expanded  — desktop (≥1024px) default: full sidebar, 16rem
        overlay   — tablet saat hamburger diklik: full sidebar di atas konten, 16rem
-     
+
      CSS-only approach — jangan manipulasi .sidebar-label via JS inline style
      karena inline style mengalahkan CSS rules (specificity lebih tinggi).
   ═══════════════════════════════════════════════════════════════ */
@@ -70,16 +73,15 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
 <aside id="sidebar" class="bg-gray-900 border-r border-gray-800 flex flex-col fixed h-full z-[60]">
   <div id="sidebar-header" class="h-16 px-3 border-b border-gray-800 flex items-center justify-center transition-all duration-300">
     <a href="/" class="font-bold text-white flex items-center gap-2 whitespace-nowrap">
-      <span class="text-blue-400 text-xl flex-shrink-0">⬡</span> 
-      <span class="sidebar-label truncate">SMA UII Lab</span>
+      <span class="text-blue-400 text-xl flex-shrink-0">{config.site.logoSymbol}</span>
+      <span class="sidebar-label truncate">{config.site.name}</span>
     </a>
   </div>
-
   <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="sidebar-nav">
     {items.map(item => (
-      <a 
-        href={item.href} 
-        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition text-gray-400 hover:text-white touch-manipulation" 
+      <a
+        href={item.href}
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 transition text-gray-400 hover:text-white touch-manipulation"
         data-nav={item.label.toLowerCase()}
         title={item.label}
         style="min-height:44px;"
@@ -202,7 +204,7 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
           },
           credentials: 'same-origin',
         });
-        
+
         if (response.ok || response.redirected) {
           window.location.href = '/login';
         } else {

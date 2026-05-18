@@ -1,5 +1,8 @@
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 
 // Fallback mock data — digunakan saat SLIMS_API_URL tidak dikonfigurasi (development)
 // Di production, set SLIMS_API_URL dan SLIMS_API_KEY di environment
@@ -17,7 +20,7 @@ const MOCK_SLIMS_DATA = [
 /**
  * Public endpoint untuk verifikasi NIS saat registrasi
  * POST /api/slims/verify
- * 
+ *
  * Note: Endpoint ini public (no auth) karena digunakan saat registrasi.
  * Untuk internal use (sudah login), gunakan GET /api/internal/slims/verify
  */
@@ -29,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     const { nisn: nis } = body;
 
     if (!nis) {
-      return createErrorResponse('NIS harus diisi', 400);
+      return createErrorResponse('ID harus diisi', 400);
     }
 
     const slimsUrl  = import.meta.env.SLIMS_API_URL;
@@ -46,18 +49,18 @@ export const POST: APIRoute = async ({ request }) => {
       );
 
       if (res.status === 404) {
-        return createErrorResponse('NIS tidak ditemukan di SLiMS', 404, { code: 'MEMBER_NOT_FOUND' });
+        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
       }
 
       if (!res.ok) {
-        console.error(`SLiMS API error: ${res.status}`);
-        return createErrorResponse('SLiMS tidak tersedia, coba lagi nanti', 500);
+        console.error(`${config.features.slimsIntegration ? 'SLiMS' : 'Database'} API error: ${res.status}`);
+        return createErrorResponse(`${config.features.slimsIntegration ? 'SLiMS' : 'Database'} tidak tersedia, coba lagi nanti`, 500);
       }
 
       const data = await res.json();
 
       if (!data.found) {
-        return createErrorResponse('NIS tidak ditemukan di SLiMS', 404, { code: 'MEMBER_NOT_FOUND' });
+        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
       }
 
       return createSuccessResponse({
@@ -78,12 +81,12 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // ── Mode development: fallback ke mock data ───────────────────────────
-    console.warn('[slims/verify] SLIMS_API_URL tidak dikonfigurasi, menggunakan mock data');
+    console.warn(`[slims/verify] SLIMS_API_URL tidak dikonfigurasi, menggunakan mock data untuk ${config.institution.shortName}`);
 
     const member = MOCK_SLIMS_DATA.find(m => m.nis === nis);
 
     if (!member) {
-      return createErrorResponse('NIS tidak ditemukan di SLiMS', 404, { code: 'MEMBER_NOT_FOUND' });
+      return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
     }
 
     const isExpired = new Date(member.expiredAt) < new Date();

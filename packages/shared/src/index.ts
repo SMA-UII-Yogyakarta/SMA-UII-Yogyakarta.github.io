@@ -15,3 +15,9 @@ export {
   signResetToken,
   verifyResetToken,
 } from './jwt.js';
+
+export {
+  DEFAULT_CONFIG,
+  getSiteConfig,
+  type SiteConfig,
+} from './config.js';

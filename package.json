@@ -1,50 +1,55 @@
 {
-  "name": "smauii-dev-foundation",
-  "type": "module",
-  "version": "0.0.1",
-  "private": true,
-  "workspaces": ["apps/web", "apps/api", "packages/*"],
-  "engines": {
-    "node": ">=22.12.0",
-    "bun": ">=1.1.0"
-  },
-  "scripts": {
-    "dev": "bun run --cwd apps/web astro dev",
-    "dev:api": "bun run --cwd apps/api dev",
-    "dev:all": "concurrently --names \"WEB,API\" --prefix-colors \"blue,green\" \"bun run dev\" \"bun run dev:api\"",
-    "build": "bun run --cwd apps/web astro build",
-    "preview": "echo '\\n⚠️  Mau test SSR atau SSG bos?\\n  bun run preview:ssr  → build + jalankan Node server (output: server)\\n  bun run preview:ssg  → build + serve static files (output: static)\\n'",
-    "preview:ssr": "bun run --cwd apps/web astro build && node apps/web/dist/server/entry.mjs",
-    "preview:ssg": "bun run --cwd apps/web astro build && bun run --cwd apps/web astro preview",
-    "astro": "bun run --cwd apps/web astro",
-    "db:generate": "bun run --cwd packages/db drizzle-kit generate",
-    "db:push": "bun run --cwd packages/db drizzle-kit push",
-    "db:pull": "bun run --cwd packages/db drizzle-kit pull",
-    "db:migrate": "bun run --cwd packages/db scripts/migrate.ts",
-    "db:studio": "bun run --cwd packages/db drizzle-kit studio",
-    "db:drop": "bun run --cwd packages/db drizzle-kit drop",
-    "db:check": "bun run --cwd packages/db drizzle-kit check",
-    "db:up": "bun run --cwd packages/db drizzle-kit up",
-    "db:seed": "bun run --cwd packages/db scripts/seed.ts",
-    "db:seed:enhanced": "bun run --cwd packages/db scripts/seed-enhanced.ts",
-    "db:setup": "bun run db:migrate && bun run db:seed",
-    "db:setup:enhanced": "bun run --cwd packages/db scripts/drop-tables.ts && bun run db:push && bun run db:seed:enhanced",
-    "test": "bun test apps/web/src",
-    "test:watch": "bun test apps/web/src --watch",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:all": "bun test && playwright test",
-    "ci": "bash apps/web/scripts/ci-local.sh",
-    "check": "bun run --cwd apps/web astro check",
-    "typecheck": "bun run --cwd apps/web astro check"
-  },
-  "trustedDependencies": [
-    "esbuild",
-    "sharp"
-  ],
-  "devDependencies": {
-    "@playwright/test": "^1.59.1",
-    "concurrently": "^9.2.1",
-    "typescript": "^6.0.2"
-  }
+    "name": "smauii-dev-foundation",
+    "type": "module",
+    "version": "0.0.1",
+    "private": true,
+    "workspaces": [
+        "apps/web",
+        "apps/api",
+        "packages/*"
+    ],
+    "engines": {
+        "node": ">=22.12.0",
+        "bun": ">=1.1.0"
+    },
+    "scripts": {
+        "dev": "bun run --cwd apps/web astro dev",
+        "dev:api": "bun run --cwd apps/api dev",
+        "dev:all": "concurrently --names \"WEB,API\" --prefix-colors \"blue,green\" \"bun run dev\" \"bun run dev:api\"",
+        "build": "bun run --cwd apps/web astro build",
+        "preview": "echo '\\n⚠️  Mau test SSR atau SSG bos?\\n  bun run preview:ssr  → build + jalankan Node server (output: server)\\n  bun run preview:ssg  → build + serve static files (output: static)\\n'",
+        "preview:ssr": "bun run --cwd apps/web astro build && node apps/web/dist/server/entry.mjs",
+        "preview:ssg": "bun run --cwd apps/web astro build && bun run --cwd apps/web astro preview",
+        "astro": "bun run --cwd apps/web astro",
+        "onboard": "bun run scripts/onboard.ts",
+        "db:generate": "bun run --cwd packages/db drizzle-kit generate",
+        "db:push": "bun run --cwd packages/db drizzle-kit push",
+        "db:pull": "bun run --cwd packages/db drizzle-kit pull",
+        "db:migrate": "bun run --cwd packages/db scripts/migrate.ts",
+        "db:studio": "bun run --cwd packages/db drizzle-kit studio",
+        "db:drop": "bun run --cwd packages/db drizzle-kit drop",
+        "db:check": "bun run --cwd packages/db drizzle-kit check",
+        "db:up": "bun run --cwd packages/db drizzle-kit up",
+        "db:seed": "bun run --cwd packages/db scripts/seed.ts",
+        "db:seed:enhanced": "bun run --cwd packages/db scripts/seed-enhanced.ts",
+        "db:setup": "bun run db:migrate && bun run db:seed",
+        "db:setup:enhanced": "bun run --cwd packages/db scripts/drop-tables.ts && bun run db:push && bun run db:seed:enhanced",
+        "test": "bun test apps/web/src",
+        "test:watch": "bun test apps/web/src --watch",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:all": "bun test && playwright test",
+        "ci": "bash apps/web/scripts/ci-local.sh",
+        "check": "bun run --cwd apps/web astro check",
+        "typecheck": "bun run --cwd apps/web astro check"
+    },
+    "trustedDependencies": [
+        "esbuild",
+        "sharp"
+    ],
+    "devDependencies": {
+        "@playwright/test": "^1.59.1",
+        "concurrently": "^9.2.1",
+        "typescript": "^6.0.2"
+    }
 }

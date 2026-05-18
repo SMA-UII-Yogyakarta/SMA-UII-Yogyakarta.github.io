@@ -1,5 +1,8 @@
 ---
 import Layout from '@layouts/Layout.astro';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 
 const tracks = [
   { icon: "🤖", name: "Robotika/IoT", desc: "Bikin robot yang bisa gerak sendiri. Dari Arduino sampai kompetisi nasional." },
@@ -18,23 +21,24 @@ const tracks = [
     </div>
     <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
       <span class="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        Digital Lab SMA UII
+        {config.site.name}
       </span><br>
-      <span class="text-2xl md:text-3xl font-normal text-gray-400">Ruang Eksplorasi Digital</span>
+      <span class="text-2xl md:text-3xl font-normal text-gray-400">{config.site.description.split(' — ')[0]}</span>
     </h1>
     <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-      Tempat buat kamu yang suka ngulik teknologi — dari bikin robot, ngoding AI, 
+      Tempat buat kamu yang suka ngulik teknologi — dari bikin robot, ngoding AI,
       sampe jadi ethical hacker. Belajar bareng, bikin proyek nyata, ikut kompetisi.
     </p>
     <div class="flex gap-3 justify-center flex-wrap">
       <a href="/tracks" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
         Mulai Eksplorasi →
       </a>
-      <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
+      <a href={config.socials.github} target="_blank"
          class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
         ★ Lihat Proyek
       </a>
     </div>
+
   </section>
 
   <!-- Why Join -->
@@ -114,7 +118,7 @@ const tracks = [
       Semua orang bisa belajar. Yang penting konsisten dan mau bertanya.
     </p>
     <div class="flex gap-3 justify-center flex-wrap">
-      <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank"
+      <a href={`${config.deployment.repository}/blob/main/CONTRIBUTING.md`} target="_blank"
          class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
         Cara Berkontribusi
       </a>

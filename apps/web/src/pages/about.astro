@@ -1,17 +1,20 @@
 ---
 import Layout from '@layouts/Layout.astro';
+import { getSiteConfig } from '@smauii/shared';
+
+const config = getSiteConfig();
 ---
 <Layout title="Tentang">
   <div class="max-w-4xl mx-auto px-4 py-16">
-    <h1 class="text-3xl font-bold mb-2">Tentang SMA UII Lab</h1>
-    <p class="text-gray-400 mb-12">Ruang eksplorasi digital untuk siswa yang menekuni teknologi</p>
+    <h1 class="text-3xl font-bold mb-2">Tentang {config.site.name}</h1>
+    <p class="text-gray-400 mb-12">{config.site.description}</p>
 
     <!-- Vision -->
     <section class="mb-12">
       <h2 class="text-xl font-bold mb-4 text-blue-400">Visi</h2>
       <p class="text-gray-300 leading-relaxed">
-        Membangun ekosistem developer dan open source contributor sejak SMA. 
-        Kami percaya bahwa passion dan komitmen sejak dini adalah kunci untuk menghasilkan 
+        Membangun ekosistem developer dan open source contributor sejak SMA.
+        Kami percaya bahwa passion dan komitmen sejak dini adalah kunci untuk menghasilkan
         developer dan researcher berkelas dunia.
       </p>
     </section>
@@ -100,25 +103,25 @@ import Layout from '@layouts/Layout.astro';
     <section class="border-t border-gray-800 pt-12">
       <h2 class="text-xl font-bold mb-6">Dokumentasi Lengkap</h2>
       <div class="grid sm:grid-cols-2 gap-4">
-        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md"
+        <a href={`${config.deployment.repository}/blob/main/PHILOSOPHY.md`}
            target="_blank"
            class="bg-gray-900 border border-gray-800 rounded-lg p-5 hover:border-blue-500 transition group">
           <h3 class="font-bold mb-2 group-hover:text-blue-400 transition">📖 Filosofi Foundation</h3>
           <p class="text-sm text-gray-400">Visi, prinsip, roadmap, dan kultur komunitas</p>
         </a>
-        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" 
+        <a href={`${config.deployment.repository}/blob/main/CONTRIBUTING.md`}
            target="_blank"
            class="bg-gray-900 border border-gray-800 rounded-lg p-5 hover:border-blue-500 transition group">
           <h3 class="font-bold mb-2 group-hover:text-blue-400 transition">🤝 Panduan Kontribusi</h3>
           <p class="text-sm text-gray-400">Cara bergabung dan berkontribusi ke proyek</p>
         </a>
-        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CODE_OF_CONDUCT.md" 
+        <a href={`${config.deployment.repository}/blob/main/CODE_OF_CONDUCT.md`}
            target="_blank"
            class="bg-gray-900 border border-gray-800 rounded-lg p-5 hover:border-blue-500 transition group">
           <h3 class="font-bold mb-2 group-hover:text-blue-400 transition">⚖️ Code of Conduct</h3>
           <p class="text-sm text-gray-400">Standar perilaku dan etika komunitas</p>
         </a>
-        <a href="https://github.com/SMA-UII-Yogyakarta" 
+        <a href={config.socials.github}
            target="_blank"
            class="bg-gray-900 border border-gray-800 rounded-lg p-5 hover:border-blue-500 transition group">
           <h3 class="font-bold mb-2 group-hover:text-blue-400 transition">🌍 GitHub Organization</h3>
@@ -126,14 +129,13 @@ import Layout from '@layouts/Layout.astro';
         </a>
       </div>
     </section>
-
     <!-- CTA -->
     <section class="mt-16 text-center">
       <h2 class="text-2xl font-bold mb-4">Tertarik Bergabung?</h2>
       <p class="text-gray-400 mb-8">
         Mulai dari proyek kecil, konsisten berkontribusi, dan berkembang bersama komunitas.
       </p>
-      <a href="/tracks" 
+      <a href="/tracks"
          class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
         Mulai Eksplorasi →
       </a>

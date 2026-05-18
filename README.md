@@ -101,7 +101,6 @@ Hubungi: @sandikodev
 - **Package manager:** Bun (primary) — pnpm juga didukung untuk kontributor
 - **Testing:** Bun test (unit) + Playwright (E2E)
 - **CI/CD:** GitHub Actions
-
 ## Development
 
 ```bash
@@ -110,12 +109,16 @@ git clone https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io.git
 cd SMA-UII-Yogyakarta.github.io
 
 # Install dependencies
-bun install          # primary (direkomendasikan)
-# atau: pnpm install  # alternatif untuk kontributor
+bun install
 
-# Setup database (development — pakai smauiilab-prev)
+# Onboarding (Customize for your institution)
+bun run onboard
+
+# Setup database
 bun run db:push
 bun run db:seed:enhanced
+...
+```
 
 # Dev server
 bun dev              # atau: pnpm dev
