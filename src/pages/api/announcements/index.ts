@@ -19,11 +19,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const [allAnnouncements, countResult] = await Promise.all([
       db.select({
           id: announcements.id, title: announcements.title, content: announcements.content,
-          createdAt: announcements.createdAt, creatorName: users.name,
+          createdAt: announcements.createdAt, isPinned: announcements.isPinned, creatorName: users.name,
         })
         .from(announcements)
         .leftJoin(users, eq(announcements.createdBy, users.id))
-        .orderBy(desc(announcements.createdAt))
+        .orderBy(desc(announcements.isPinned), desc(announcements.createdAt))
         .limit(limit)
         .offset(offset),
       db.select({ count: sql`COUNT(*)` }).from(announcements),

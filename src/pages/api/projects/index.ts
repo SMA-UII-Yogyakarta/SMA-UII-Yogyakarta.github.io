@@ -1,6 +1,6 @@
 import { db } from '@db';
 import { projects, users } from '@db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, like, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 import { nanoid } from 'nanoid';
@@ -11,13 +11,17 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   try {
     const userIdParam = url.searchParams.get('userId');
+    const q = url.searchParams.get('q');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '12'), 50);
     const offset = (page - 1) * limit;
 
-    let whereClause;
-    if (userIdParam) whereClause = eq(projects.userId, userIdParam);
-    else if (user.role !== 'maintainer') whereClause = eq(projects.userId, user.id);
+    const conditions = [];
+    if (userIdParam) conditions.push(eq(projects.userId, userIdParam));
+    else if (user.role !== 'maintainer') conditions.push(eq(projects.userId, user.id));
+    if (q) conditions.push(like(projects.title, `%${q}%`));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [allProjects, countResult] = await Promise.all([
       db.select({

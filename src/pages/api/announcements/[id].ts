@@ -19,13 +19,33 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     try { body = await request.json(); }
     catch { return createErrorResponse('Invalid JSON', 400); }
 
-    const { title, content } = body as Record<string, string>;
-    if (!title?.trim() || !content?.trim()) {
-      return createErrorResponse('Judul dan konten tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
+    const data = body as Record<string, unknown>;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (data.title !== undefined || data.content !== undefined) {
+      const title = data.title as string | undefined;
+      const content = data.content as string | undefined;
+      if (title !== undefined && !title.trim()) {
+        return createErrorResponse('Judul tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
+      }
+      if (content !== undefined && !content.trim()) {
+        return createErrorResponse('Konten tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
+      }
+      if (title) updateData.title = title.trim();
+      if (content) updateData.content = content.trim();
+    }
+
+    if (data.isPinned !== undefined) {
+      updateData.isPinned = data.isPinned ? 1 : 0;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return createErrorResponse('Tidak ada data yang diubah', 400);
     }
 
     await db.update(announcements)
-      .set({ title: title.trim(), content: content.trim() })
+      .set(updateData)
       .where(eq(announcements.id, id));
 
     return createSuccessResponse({ success: true });

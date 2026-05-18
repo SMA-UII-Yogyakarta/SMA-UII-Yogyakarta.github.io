@@ -3,6 +3,7 @@ import { activities, users } from '@db/schema';
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
+import { createActivitySchema } from '@lib/validation';
 import { nanoid } from 'nanoid';
 
 export const GET: APIRoute = async ({ locals, url }) => {
@@ -57,9 +58,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (user.status !== 'active') return createErrorResponse('Only active members can log activities', 403);
 
   try {
-    const { type, title, description, url } = await request.json();
-    if (!type || !title) return createErrorResponse('Type and title required', 400);
+    const body = await request.json();
+    const parsed = createActivitySchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
 
+    const { type, title, description, url } = parsed.data;
     const id = nanoid();
     await db.insert(activities).values({ id, userId: user.id, type, title, description: description || null, url: url || null, createdAt: Date.now() });
     return createSuccessResponse({ id, success: true });

@@ -1,6 +1,6 @@
 import { db } from '@db';
 import { users, memberTracks } from '@db/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@lib/api-utils';
 
@@ -16,12 +16,29 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     try {
       const status = url.searchParams.get('status');
+      const track = url.searchParams.get('track');
+      const userClass = url.searchParams.get('class');
       const search = url.searchParams.get('search');
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '20');
 
+      // If track filter is specified, get user IDs that have this track
+      let trackUserIds: string[] | null = null;
+      if (track) {
+        const trackUsers = await db.select({ userId: memberTracks.userId })
+          .from(memberTracks)
+          .where(eq(memberTracks.track, track));
+        trackUserIds = trackUsers.map(t => t.userId);
+        if (trackUserIds.length === 0) {
+          // No users have this track, return empty result
+          return createSuccessResponse({ members: [], total: 0, page, limit });
+        }
+      }
+
       const conditions = [];
       if (status) conditions.push(eq(users.status, status));
+      if (userClass) conditions.push(eq(users.class, userClass));
+      if (trackUserIds) conditions.push(inArray(users.id, trackUserIds));
       if (search) conditions.push(sql`(${users.name} LIKE ${'%' + search + '%'} OR ${users.email} LIKE ${'%' + search + '%'} OR ${users.nisn} LIKE ${'%' + search + '%'})`);
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -77,6 +94,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     const maintainers = result.filter(u => u.role === 'maintainer');
     const members = result.filter(u => u.role === 'member');
+    const alumniFiltered = result.filter(u => u.role === 'alumni');
 
     // Count pending separately for stats
     const pendingCount = await db
@@ -87,12 +105,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
     return createSuccessResponse({
       maintainers,
       members,
-      alumni: [], // future use
+      alumni: alumniFiltered,
       stats: {
         maintainers: maintainers.length,
         activeMembers: members.length,
         pending: Number(pendingCount[0]?.count || 0),
-        alumni: 0,
+        alumni: alumniFiltered.length,
         totalMembers: result.length,
       },
     });

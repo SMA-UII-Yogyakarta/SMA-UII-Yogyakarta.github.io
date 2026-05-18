@@ -10,17 +10,22 @@ export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
   if (!user) return createErrorResponse('Unauthorized', 401);
 
-  const slug = url.searchParams.get('slug');
-  if (!slug) return createErrorResponse('slug required', 400);
+  try {
+    const slug = url.searchParams.get('slug');
+    if (!slug) return createErrorResponse('slug required', 400);
 
-  const progress = await db.query.learningProgress.findFirst({
-    where: and(
-      eq(learningProgress.userId, user.id),
-      eq(learningProgress.lessonSlug, slug),
-    ),
-  });
+    const progress = await db.query.learningProgress.findFirst({
+      where: and(
+        eq(learningProgress.userId, user.id),
+        eq(learningProgress.lessonSlug, slug),
+      ),
+    });
 
-  return createSuccessResponse({ completed: !!progress, completedAt: progress?.completedAt ?? null });
+    return createSuccessResponse({ completed: !!progress, completedAt: progress?.completedAt ?? null });
+  } catch (error) {
+    console.error('Get learning progress error:', error);
+    return createErrorResponse('Internal server error', 500);
+  }
 };
 
 // POST /api/learn/progress — tandai selesai / batalkan
@@ -29,22 +34,27 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!user) return createErrorResponse('Unauthorized', 401);
   if (user.status !== 'active') return createErrorResponse('Forbidden', 403);
 
-  const { slug, completed } = await request.json();
-  if (!slug) return createErrorResponse('slug required', 400);
+  try {
+    const { slug, completed } = await request.json();
+    if (!slug) return createErrorResponse('slug required', 400);
 
-  if (completed) {
-    // Upsert — insert jika belum ada
-    const existing = await db.query.learningProgress.findFirst({
-      where: and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug)),
-    });
-    if (!existing) {
-      await db.insert(learningProgress).values({ id: nanoid(), userId: user.id, lessonSlug: slug, completedAt: Date.now() });
+    if (completed) {
+      // Upsert — insert jika belum ada
+      const existing = await db.query.learningProgress.findFirst({
+        where: and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug)),
+      });
+      if (!existing) {
+        await db.insert(learningProgress).values({ id: nanoid(), userId: user.id, lessonSlug: slug, completedAt: Date.now() });
+      }
+    } else {
+      await db.delete(learningProgress).where(
+        and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug))
+      );
     }
-  } else {
-    await db.delete(learningProgress).where(
-      and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug))
-    );
-  }
 
-  return createSuccessResponse({ success: true });
+    return createSuccessResponse({ success: true });
+  } catch (error) {
+    console.error('Update learning progress error:', error);
+    return createErrorResponse('Internal server error', 500);
+  }
 };

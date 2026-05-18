@@ -22,13 +22,13 @@ export const GET: APIRoute = async ({ url, locals }) => {
       `${SLIMS_API_URL}/api.php?action=verify&nis=${encodeURIComponent(nis)}`,
       {
         headers: {
-          'X-Lab-API-Key': SLIMS_API_KEY,
+          'X-Lab-API-Key': SLIMS_API_KEY ?? '',
         },
       }
     );
 
     if (!response.ok) {
-      return createErrorResponse('SLIMS API error', response.status);
+      return createErrorResponse('SLIMS API error', 500);
     }
 
     const data = await response.json();
