@@ -209,34 +209,11 @@ curl -H "X-Lab-API-Key: your-key" \
 
 ## Fase 2 — Dockerfile
 
-```dockerfile
-# Dockerfile
-FROM oven/bun:1.3-alpine AS builder
-WORKDIR /app
-
-# Install git untuk submodule
-RUN apk add --no-cache git
-
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
-
-COPY . .
-# Init submodule konten
-RUN git submodule update --init --recursive
-RUN bun run build
-
-FROM oven/bun:1.3-alpine
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-EXPOSE 3000
-ENV HOST=0.0.0.0 PORT=3000
-CMD ["node", "dist/server/entry.mjs"]
-```
+Dockerfile kanonikal ada di `deploy/docker/Dockerfile`. Lihat [Dockerfile](../docker/Dockerfile).
 
 ---
 
-## Fase 3b — Konfigurasi nginx-proxy
+## Fase 3 — Konfigurasi nginx-proxy
 
 Buat file `/path/to/nginx-conf/smauii/lab.conf`:
 
@@ -285,7 +262,7 @@ Setelah file dibuat, reload nginx-proxy:
 docker exec nginx-proxy nginx -t && docker exec nginx-proxy nginx -s reload
 ```
 
-## Fase 3 — Docker Compose
+## Fase 3b — Docker Compose
 
 ```yaml
 # /path/to/instance/docker-compose.yml
@@ -365,16 +342,32 @@ export const POST: APIRoute = async ({ request }) => {
 
 ## Fase 5 — CI/CD GitHub Actions
 
+Lihat [CI_CD.md](CI_CD.md) untuk detail pipeline.
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy to Awankinton
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Alasan deploy ke production'
+        required: true
 
 jobs:
+  test:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun test apps/web/src
+      - run: bun run astro check
+
   deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -389,12 +382,16 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/instance/
+            set -e
+            cd ${{ secrets.DEPLOY_APP_PATH }}
             git pull origin main
             git submodule update --init --recursive
-            docker build -t smauii-lab:latest .
+            docker build -f deploy/docker/Dockerfile -t smauii-lab:latest .
+            cd ${{ secrets.DEPLOY_COMPOSE_PATH }}
             docker compose up -d
             docker image prune -f
+            echo "Deploy selesai: $(date)"
+            echo "Alasan: ${{ github.event.inputs.reason }}"
 ```
 
 ---
@@ -410,10 +407,10 @@ jobs:
 - [ ] Verifikasi field NISN di tabel `member` SLiMS (apakah `member_id` atau custom field)
 
 ### Fase 2-3 — Docker
-- [ ] Buat `Dockerfile` di root repo
+- [ ] Dockerfile di `deploy/docker/Dockerfile` (sudah tersedia)
 - [ ] Buat direktori instance di server
 - [ ] Buat `docker-compose.yml` dan `.env`
-- [ ] Build: `docker build -t smauii-lab:latest .`
+- [ ] Build: `docker build -f deploy/docker/Dockerfile -t smauii-lab:latest .`
 - [ ] Run: `docker compose up -d`
 - [ ] Verifikasi nginx routing
 
@@ -424,7 +421,7 @@ jobs:
 
 ### Fase 5 — CI/CD
 - [ ] Setup GitHub secrets
-- [ ] Test auto-deploy dari push ke main
+- [ ] Test deploy manual dari GitHub Actions
 
 ---
 
