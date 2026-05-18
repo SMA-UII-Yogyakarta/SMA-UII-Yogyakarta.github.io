@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 import QRCode from 'qrcode';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { approveUserSchema } from '@smauii/validation';
-import { createNotification } from '@smauii/shared';
+import { createNotification } from '@lib/notifications';
 import { sendApprovalEmail, sendRejectionEmail } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request, locals }) => {
