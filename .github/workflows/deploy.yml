@@ -27,7 +27,7 @@ jobs:
         run: bun install
 
       - name: Run unit tests
-        run: bun test tests/unit
+        run: bun test apps/web/src
 
       - name: Run Astro type check
         run: bun run astro check
@@ -52,7 +52,7 @@ jobs:
             cd ${{ secrets.DEPLOY_APP_PATH }}
             git pull origin main
             git submodule update --init --recursive
-            docker build -t smauii-lab:latest .
+            docker build -f deploy/docker/Dockerfile -t smauii-lab:latest .
             cd ${{ secrets.DEPLOY_COMPOSE_PATH }}
             docker compose up -d
             docker image prune -f
