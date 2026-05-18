@@ -9,5 +9,5 @@
       "@smauii/shared": ["packages/shared/src"]
     }
   },
-  "include": ["packages/*/src", "packages/*/scripts"]
+  "include": ["packages/*/src", "packages/*/scripts", "apps/*/src"]
 }
