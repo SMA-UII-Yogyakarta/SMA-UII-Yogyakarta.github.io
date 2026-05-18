@@ -3,20 +3,20 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["apps/web", "packages/*"],
   "engines": {
     "node": ">=22.12.0",
     "bun": ">=1.1.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "bun run --cwd apps/web astro dev",
     "dev:api": "bun run --cwd apps/api dev",
     "dev:all": "concurrently --names \"WEB,API\" --prefix-colors \"blue,green\" \"bun run dev\" \"bun run dev:api\"",
-    "build": "astro build",
+    "build": "bun run --cwd apps/web astro build",
     "preview": "echo '\\n⚠️  Mau test SSR atau SSG bos?\\n  bun run preview:ssr  → build + jalankan Node server (output: server)\\n  bun run preview:ssg  → build + serve static files (output: static)\\n'",
-    "preview:ssr": "astro build && node dist/server/entry.mjs",
-    "preview:ssg": "astro build && astro preview",
-    "astro": "astro",
+    "preview:ssr": "bun run --cwd apps/web astro build && node apps/web/dist/server/entry.mjs",
+    "preview:ssg": "bun run --cwd apps/web astro build && bun run --cwd apps/web astro preview",
+    "astro": "bun run --cwd apps/web astro",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
@@ -35,8 +35,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:all": "bun test && playwright test",
     "ci": "bash scripts/ci-local.sh",
-    "check": "astro check",
-    "typecheck": "astro check"
+    "check": "bun run --cwd apps/web astro check",
+    "typecheck": "bun run --cwd apps/web astro check"
   },
   "trustedDependencies": [
     "esbuild",

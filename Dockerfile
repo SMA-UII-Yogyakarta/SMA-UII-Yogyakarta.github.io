@@ -21,14 +21,14 @@ ARG PUBLIC_SITE_URL=https://lab.smauiiyk.sch.id
 
 RUN printf "TURSO_URL=%s\nTURSO_TOKEN=%s\nOAUTH_GITHUB_CLIENT_ID=%s\nOAUTH_GITHUB_CLIENT_SECRET=%s\nSLIMS_API_URL=%s\nSLIMS_API_KEY=%s\nPUBLIC_SITE_URL=%s\n" \
     "$TURSO_URL" "$TURSO_TOKEN" "$OAUTH_GITHUB_CLIENT_ID" "$OAUTH_GITHUB_CLIENT_SECRET" \
-    "$SLIMS_API_URL" "$SLIMS_API_KEY" "$PUBLIC_SITE_URL" > .env.production
+    "$SLIMS_API_URL" "$SLIMS_API_KEY" "$PUBLIC_SITE_URL" > apps/web/.env.production
 
 RUN bun run build
 
 # Hapus secrets dari image final — tidak perlu di runtime
 FROM oven/bun:1.3-alpine
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/apps/web/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000

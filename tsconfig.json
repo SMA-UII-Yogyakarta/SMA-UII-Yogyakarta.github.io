@@ -7,12 +7,12 @@
       "@smauii/db": ["packages/db/src"],
       "@smauii/validation": ["packages/validation/src"],
       "@smauii/shared": ["packages/shared/src"],
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@layouts/*": ["src/layouts/*"],
-      "@pages/*": ["src/pages/*"],
-      "@lib/*": ["src/lib/*"],
-      "@styles/*": ["src/styles/*"]
+      "@/*": ["apps/web/src/*"],
+      "@components/*": ["apps/web/src/components/*"],
+      "@layouts/*": ["apps/web/src/layouts/*"],
+      "@pages/*": ["apps/web/src/pages/*"],
+      "@lib/*": ["apps/web/src/lib/*"],
+      "@styles/*": ["apps/web/src/styles/*"]
     },
     "jsx": "preserve",
     "jsxImportSource": "react",

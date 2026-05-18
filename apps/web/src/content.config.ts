@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const contentBase = join(__dirname, '..', 'apps', 'content', 'tracks');
+const contentBase = join(__dirname, '..', '..', '..', 'apps', 'content', 'tracks');
 
 const lessons = defineCollection({
   loader: glob({
