@@ -19,9 +19,9 @@ dist/
 local.db
 local.db-shm
 local.db-wal
+packages/db/drizzle/
 playwright-report/
 test-results/
-drizzle/
 
 # Logs
 *.log

@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// ── Registration schemas ─────────────────────────────────────────────────────
+
+// Web registration (no password — set later by admin)
 export const registerSchema = z.object({
   nisn: z.string().min(1, 'NISN harus diisi').max(10, 'NISN maksimal 10 digit'),
   nis: z.string().min(1, 'NIS harus diisi').max(20, 'NIS maksimal 20 karakter'),
@@ -12,7 +15,24 @@ export const registerSchema = z.object({
     .max(3, 'Maksimal 3 track'),
 });
 
+// API registration (includes password)
+export const apiRegisterSchema = registerSchema.extend({
+  password: z.string().min(8, 'Password minimal 8 karakter'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type ApiRegisterInput = z.infer<typeof apiRegisterSchema>;
+
+// ── Login schema ──────────────────────────────────────────────────────────────
+
+export const loginSchema = z.object({
+  identifier: z.string().min(1, 'NISN, NIS, atau email harus diisi'),
+  password: z.string().min(1, 'Password harus diisi'),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+
+// ── Track options ─────────────────────────────────────────────────────────────
 
 export const trackOptions = [
   { value: 'robotika', label: '🤖 Robotika/IoT' },
