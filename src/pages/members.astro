@@ -5,16 +5,71 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Anggota">
   <div id="members-content" class="max-w-5xl mx-auto px-4 py-16">
     <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
-    <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
+    <p class="text-gray-400 mb-12">Siswa yang aktif berkontribusi di komunitas</p>
 
-    <div class="text-center py-12">
-      <div class="text-4xl mb-4">⏳</div>
-      <p class="text-gray-400">Loading...</p>
+    <div id="members-loading" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map(() => `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 animate-pulse">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-full bg-gray-800"></div>
+            <div class="flex-1">
+              <div class="h-4 bg-gray-800 rounded w-24 mb-1"></div>
+              <div class="h-3 bg-gray-800 rounded w-16"></div>
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <div class="h-5 bg-gray-800 rounded w-16"></div>
+            <div class="h-5 bg-gray-800 rounded w-20"></div>
+          </div>
+        </div>
+      `).join('')}
     </div>
+
+    <div id="members-grid" class="hidden grid sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+
+    <div id="members-empty" class="hidden text-center py-12">
+      <div class="text-4xl mb-4">👥</div>
+      <p class="text-gray-400">Belum ada anggota aktif</p>
+    </div>
+
+    <div id="members-error" class="hidden text-center py-12">
+      <div class="text-4xl mb-4">⚠️</div>
+      <p class="text-red-400">Gagal memuat data anggota</p>
+    </div>
+
+    <div id="pagination" class="hidden flex items-center justify-center gap-4 mt-10">
+      <button id="prev-btn" disabled
+        class="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-500 hover:text-white transition">
+        ← Sebelumnya
+      </button>
+      <span id="page-indicator" class="text-sm text-gray-400"></span>
+      <button id="next-btn" disabled
+        class="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-500 hover:text-white transition">
+        Selanjutnya →
+      </button>
+    </div>
+
+    <section class="mt-16 text-center border-t border-gray-800 pt-16">
+      <h2 class="text-2xl font-bold mb-4">Ingin Bergabung?</h2>
+      <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
+        Kami mencari siswa yang konsisten, curious, dan mau belajar bareng.
+        Tidak perlu jago coding — yang penting komitmen!
+      </p>
+      <div class="flex gap-3 justify-center flex-wrap">
+        <a href="/tracks"
+           class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
+          Lihat Track
+        </a>
+        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md"
+           target="_blank"
+           class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
+          Baca Filosofi
+        </a>
+      </div>
+    </section>
   </div>
 
   <script>
-    // XSS-safe HTML escape
     function escapeHtml(str: string): string {
       if (!str) return '';
       const htmlEntities: Record<string, string> = {
@@ -28,195 +83,6 @@ import Layout from '../layouts/Layout.astro';
       return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
     }
 
-    async function loadMembers() {
-      try {
-        const response = await fetch('/api/members');
-        if (!response.ok) {
-          throw new Error('Failed to load members');
-        }
-        
-        const result = await response.json();
-        const data = result.data;
-        renderMembers(data);
-      } catch (error) {
-        const content = document.getElementById('members-content');
-        if (content) {
-          content.innerHTML = `
-            <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
-            <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
-            <div class="text-center py-12">
-              <div class="text-4xl mb-4">⚠️</div>
-              <p class="text-red-400">Failed to load members data</p>
-            </div>
-          `;
-        }
-      }
-    }
-
-    function renderMembers(data: any) {
-      const { members, maintainers, alumni, stats } = data;
-      const content = document.getElementById('members-content');
-      if (!content) return;
-
-      const maintainerCards = maintainers.map((m: any) => `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white font-bold">
-              ${escapeHtml(m.name).charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h3 class="font-semibold">${escapeHtml(m.name)}</h3>
-              <p class="text-xs text-gray-400">Maintainer</p>
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-1 mb-3">
-            <span class="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">Software Engineering</span>
-            <span class="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded">DevOps</span>
-          </div>
-          ${m.githubUsername ? `
-            <a href="https://github.com/${escapeHtml(m.githubUsername)}" target="_blank" 
-               class="text-xs text-gray-400 hover:text-blue-400 transition">
-              @${escapeHtml(m.githubUsername)} →
-            </a>
-          ` : ''}
-        </div>
-      `).join('');
-
-      const memberCards = members.length === 0 
-        ? `<div class="bg-gray-900/50 border border-dashed border-gray-700 rounded-xl p-8 text-center">
-            <div class="text-3xl mb-3">👥</div>
-            <p class="text-gray-400 mb-4">Belum ada anggota aktif</p>
-          </div>`
-        : members.map((m: any) => `
-          <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-green-500 transition">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-teal-400 flex items-center justify-center text-white font-bold">
-                ${escapeHtml(m.name).charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 class="font-semibold">${escapeHtml(m.name)}</h3>
-                <p class="text-xs text-gray-400">${escapeHtml(m.class)}</p>
-              </div>
-            </div>
-            <div class="flex flex-wrap gap-1 mb-3">
-              ${m.tracks.map((track: string) => `
-                <span class="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded">${escapeHtml(formatTrack(track))}</span>
-              `).join('')}
-            </div>
-            ${m.githubUsername ? `
-              <a href="https://github.com/${escapeHtml(m.githubUsername)}" target="_blank" 
-                 class="text-xs text-gray-400 hover:text-green-400 transition">
-                @${escapeHtml(m.githubUsername)} →
-              </a>
-            ` : ''}
-          </div>
-        `).join('');
-
-      const alumniCards = alumni.length === 0
-        ? `<div class="bg-gray-900/50 border border-dashed border-gray-700 rounded-xl p-8 text-center">
-            <div class="text-3xl mb-3">🤝</div>
-            <p class="text-gray-400 mb-4">Belum ada alumni</p>
-          </div>`
-        : alumni.map((a: any) => `
-          <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-orange-500 transition">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-yellow-400 flex items-center justify-center text-white font-bold">
-                ${escapeHtml(a.name).charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 class="font-semibold">${escapeHtml(a.name)}</h3>
-                <p class="text-xs text-gray-400">${escapeHtml(a.class)}</p>
-              </div>
-            </div>
-            ${a.githubUsername ? `
-              <a href="https://github.com/${escapeHtml(a.githubUsername)}" target="_blank" 
-                 class="text-xs text-gray-400 hover:text-orange-400 transition">
-                @${escapeHtml(a.githubUsername)} →
-              </a>
-            ` : ''}
-          </div>
-        `).join('');
-
-      content.innerHTML = `
-        <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
-        <p class="text-gray-400 mb-12">Siswa dan alumni yang aktif berkontribusi di komunitas</p>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-12">
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-blue-400">${stats.maintainers}</div>
-            <div class="text-xs text-gray-400">Maintainer</div>
-          </div>
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-green-400">${stats.activeMembers}</div>
-            <div class="text-xs text-gray-400">Anggota Aktif</div>
-          </div>
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-yellow-400">${stats.pending}</div>
-            <div class="text-xs text-gray-400">Pending</div>
-          </div>
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-orange-400">${stats.alumni}</div>
-            <div class="text-xs text-gray-400">Alumni</div>
-          </div>
-          <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center">
-            <div class="text-2xl font-bold text-purple-400">${stats.totalMembers}</div>
-            <div class="text-xs text-gray-400">Total</div>
-          </div>
-        </div>
-
-        <!-- Maintainer -->
-        <section class="mb-12">
-          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-            <span class="text-blue-400">⚡</span> Maintainer
-          </h2>
-          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            ${maintainerCards}
-          </div>
-        </section>
-
-        <!-- Active Members -->
-        <section class="mb-12">
-          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-            <span class="text-green-400">●</span> Anggota Aktif
-          </h2>
-          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            ${memberCards}
-          </div>
-        </section>
-
-        <!-- Alumni -->
-        <section>
-          <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-            <span class="text-orange-400">🎓</span> Alumni & Mentor
-          </h2>
-          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            ${alumniCards}
-          </div>
-        </section>
-
-        <!-- CTA -->
-        <section class="mt-16 text-center border-t border-gray-800 pt-16">
-          <h2 class="text-2xl font-bold mb-4">Ingin Bergabung?</h2>
-          <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
-            Kami mencari siswa yang konsisten, curious, dan mau belajar bareng. 
-            Tidak perlu jago coding — yang penting komitmen!
-          </p>
-          <div class="flex gap-3 justify-center flex-wrap">
-            <a href="/tracks" 
-               class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
-              Lihat Track
-            </a>
-            <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" 
-               target="_blank"
-               class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
-              Baca Filosofi
-            </a>
-          </div>
-        </section>
-      `;
-    }
-
     function formatTrack(track: string): string {
       const trackNames: Record<string, string> = {
         'robotika': 'Robotika/IoT',
@@ -227,6 +93,107 @@ import Layout from '../layouts/Layout.astro';
         'software': 'Software',
       };
       return trackNames[track] || track;
+    }
+
+    function formatRole(role: string): string {
+      if (role === 'maintainer') return 'Maintainer';
+      if (role === 'member') return 'Anggota';
+      return role;
+    }
+
+    function formatDate(ts: number): string {
+      return new Date(ts).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
+    }
+
+    function renderMemberCard(m: any): string {
+      const roleGradient = m.role === 'maintainer'
+        ? 'from-blue-400 to-purple-400'
+        : 'from-green-400 to-teal-400';
+
+      const hoverBorder = m.role === 'maintainer'
+        ? 'hover:border-blue-500'
+        : 'hover:border-green-500';
+
+      const trackBadgeColor = m.role === 'maintainer'
+        ? 'bg-blue-500/10 text-blue-400'
+        : 'bg-green-500/10 text-green-400';
+
+      const roleLabelColor = m.role === 'maintainer' ? 'text-blue-400' : 'text-gray-400';
+
+      return `
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 ${hoverBorder} transition">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br ${roleGradient} flex items-center justify-center text-white font-bold flex-shrink-0">
+              ${escapeHtml(m.name).charAt(0).toUpperCase()}
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-semibold truncate">${escapeHtml(m.name)}</h3>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="${roleLabelColor}">${formatRole(m.role)}</span>
+                ${m.class ? `<span class="text-gray-500">· ${escapeHtml(m.class)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1 mb-3">
+            ${m.tracks.map((track: string) => `
+              <span class="text-xs ${trackBadgeColor} px-2 py-0.5 rounded">${escapeHtml(formatTrack(track))}</span>
+            `).join('')}
+          </div>
+          ${m.joinedAt ? `
+            <p class="text-xs text-gray-500">Bergabung ${formatDate(m.joinedAt)}</p>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    async function loadMembers(page: number = 1) {
+      const loading = document.getElementById('members-loading')!;
+      const grid = document.getElementById('members-grid')!;
+      const empty = document.getElementById('members-empty')!;
+      const error = document.getElementById('members-error')!;
+      const pagination = document.getElementById('pagination')!;
+      const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+      const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+      const indicator = document.getElementById('page-indicator')!;
+
+      loading.classList.remove('hidden');
+      grid.classList.add('hidden');
+      empty.classList.add('hidden');
+      error.classList.add('hidden');
+      pagination.classList.add('hidden');
+
+      try {
+        const response = await fetch(`/api/public/members?page=${page}&limit=12`);
+        if (!response.ok) throw new Error('Failed to load members');
+
+        const result = await response.json();
+        const { data, total, limit } = result.data;
+        const totalPages = Math.max(1, Math.ceil(total / limit));
+
+        loading.classList.add('hidden');
+
+        if (data.length === 0) {
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        grid.innerHTML = data.map(renderMemberCard).join('');
+        grid.classList.remove('hidden');
+
+        indicator.textContent = `Halaman ${page} dari ${totalPages} (${total} anggota)`;
+        prevBtn.disabled = page <= 1;
+        nextBtn.disabled = page >= totalPages;
+        pagination.classList.remove('hidden');
+
+        prevBtn.onclick = () => { if (page > 1) loadMembers(page - 1); };
+        nextBtn.onclick = () => { if (page < totalPages) loadMembers(page + 1); };
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        loading.classList.add('hidden');
+        grid.classList.add('hidden');
+        error.classList.remove('hidden');
+      }
     }
 
     loadMembers();
