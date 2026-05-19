@@ -445,17 +445,24 @@ logging:
 
 ### 3.10 Endpoint Search di Plugin SLiMS
 
-**Status: ❌ Belum dikerjakan**
+**Status: ✅ SELESAI** — Implemented in `apps/plugins/slims/api.php`.
 
-**Kebutuhan:** Maintainer perlu bisa search anggota SLiMS dari dashboard untuk verifikasi manual.
-
-**Endpoint yang perlu ditambahkan ke plugin:**
+**Endpoint:**
 ```
 GET /api.php?action=search&q={query}&limit=20
-Response: { members: [{ nis, name, email, member_type, is_expired }] }
+Header: X-Lab-API-Key: {key}
 ```
 
-**File:** Plugin SLiMS `lab-digital-api/api.php` (di server SLiMS)
+Search by NIS, name, or email. Min 2 characters.
+
+**Response:**
+```json
+{
+  "total": 2,
+  "query": "john",
+  "members": [{ "nis", "name", "email", "member_type", "is_expired" }]
+}
+```
 
 ---
 

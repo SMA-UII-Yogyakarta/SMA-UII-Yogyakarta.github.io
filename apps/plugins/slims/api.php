@@ -140,6 +140,68 @@ switch ($action) {
         ]);
         break;
 
+    case 'search':
+        $query = trim($_GET['q'] ?? '');
+        $limit = min((int)($_GET['limit'] ?? 20), 100);
+
+        if (empty($query) || strlen($query) < 2) {
+            lab_api_response(400, ['error' => 'Parameter q minimal 2 karakter']);
+        }
+
+        // Sanitize query untuk LIKE search
+        $searchTerm = '%' . preg_replace('/[%_]/', '\\$0', $query) . '%';
+
+        try {
+            $dbs = \SLiMS\DB::getInstance('mysqli');
+            $stmt = $dbs->prepare("
+                SELECT
+                    m.member_id,
+                    m.member_name,
+                    m.member_email,
+                    m.expire_date,
+                    mt.member_type_name
+                FROM member m
+                LEFT JOIN mst_member_type mt ON m.member_type_id = mt.member_type_id
+                WHERE m.member_id LIKE ?
+                   OR m.member_name LIKE ?
+                   OR m.member_email LIKE ?
+                ORDER BY m.member_name ASC
+                LIMIT ?
+            ");
+            $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $limit]);
+            $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log('[lab-digital-api] DB error: ' . $e->getMessage());
+            lab_api_response(503, ['error' => 'Database error']);
+        }
+
+        $members = [];
+        foreach ($rows as $r) {
+            $is_expired = false;
+            if (!empty($r['expire_date']) && $r['expire_date'] !== '0000-00-00') {
+                try {
+                    $is_expired = new DateTime($r['expire_date']) < new DateTime();
+                } catch (\Exception $e) {
+                    $is_expired = true;
+                }
+            }
+
+            $members[] = [
+                'nis'         => $r['member_id'],
+                'name'        => $r['member_name'],
+                'email'       => $r['member_email'] ?? '',
+                'member_type' => $r['member_type_name'] ?? '',
+                'is_expired'  => $is_expired,
+            ];
+        }
+
+        lab_api_response(200, [
+            'total'   => count($members),
+            'query'   => $query,
+            'members' => $members,
+        ]);
+        break;
+
     case 'top-visitors':
         $limit = min((int)($_GET['limit'] ?? 30), 100);
         $days  = (int)($_GET['days'] ?? 0); // 0 = all time
@@ -199,5 +261,5 @@ switch ($action) {
         break;
 
     default:
-        lab_api_response(400, ['error' => 'Action tidak dikenal. Tersedia: verify, top-visitors']);
+        lab_api_response(400, ['error' => 'Action tidak dikenal. Tersedia: verify, search, top-visitors']);
 }
