@@ -4,8 +4,10 @@ import { relations } from 'drizzle-orm';
 // Users table - single source of truth
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
-  nisn: text('nisn').notNull().unique(),
+  // NIS = Nomor Induk Siswa (local, 4 digit) — primary identifier from SLiMS
   nis: text('nis').notNull().unique(),
+  // NISN = Nomor Induk Siswa Nasional (10 digit) — optional, from Aksesekolah.id
+  nisn: text('nisn').unique(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   githubUsername: text('github_username'),
@@ -19,6 +21,7 @@ export const users = sqliteTable('users', {
   approvedAt: integer('approved_at'),       // Unix timestamp (ms)
   approvedBy: text('approved_by'),
 }, (table) => [
+  index('idx_users_nis').on(table.nis),
   index('idx_users_nisn').on(table.nisn),
   index('idx_users_email').on(table.email),
   index('idx_users_status').on(table.status),

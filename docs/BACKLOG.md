@@ -482,15 +482,15 @@ Search by NIS, name, or email. Min 2 characters.
 
 ### 3.12 Evaluasi Field `nisn` di Database
 
-**Status: ⏳ Perlu keputusan**
+**Status: ✅ SELESAI** — `nisn` sekarang nullable, `nis` sebagai primary identifier.
 
-**Masalah:** Field `nisn` di tabel `users` saat ini diisi sama dengan `nis` (NIS lokal 4 digit). Ini karena SLiMS SMA UII tidak punya NISN nasional.
+**Perubahan:**
+- Schema: `nisn` menjadi optional (nullable), `nis` wajib
+- Migration: Semua nilai `nisn` yang ada di-set ke NULL (karena berisi NIS, bukan NISN)
+- Query: Login/registrasi hanya pakai `nis` dan `email` sebagai identifier
+- NISN akan diisi nanti dari Aksesekolah.id
 
-**Opsi:**
-- A) Pertahankan field `nisn` untuk integrasi Aksesekolah.id masa depan (NISN nasional 10 digit)
-- B) Hapus field `nisn`, gunakan `nis` saja
-
-**Keputusan:** Tunda sampai Aksesekolah.id siap dikonsumsi.
+**Catatan:** Field `nisn` tetap ada untuk integrasi masa depan dengan Aksesekolah.id yang akan menyediakan NISN nasional (10 digit).
 
 ---
 

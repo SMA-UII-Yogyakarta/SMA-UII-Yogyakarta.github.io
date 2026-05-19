@@ -17,7 +17,6 @@ export default function RegisterForm() {
   const [dataConfirmed, setDataConfirmed] = useState(false);
 
   const [formData, setFormData] = useState<RegisterInput>({
-    nisn: '',
     nis: '',
     name: '',
     email: '',
@@ -163,7 +162,7 @@ export default function RegisterForm() {
         throw new Error(err.error || 'Pendaftaran gagal');
       }
 
-      window.location.href = `/success?nisn=${encodeURIComponent(formData.nisn)}`;
+      window.location.href = `/success?nis=${encodeURIComponent(formData.nis)}`;
     } catch (err) {
       if (err instanceof Error && 'issues' in err) {
         const zodError = err as ZodError;
@@ -205,7 +204,7 @@ export default function RegisterForm() {
               Pendaftaranmu sedang diproses. Tunggu persetujuan dari maintainer.
             </p>
             <a
-              href={`/success?nisn=${encodeURIComponent(formData.nisn)}`}
+              href={`/success?nis=${encodeURIComponent(formData.nis)}`}
               className="inline-block bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold transition text-lg"
             >
               Lihat Status Pendaftaran →
@@ -471,7 +470,7 @@ export default function RegisterForm() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="text-gray-400">NIS</span>
-                <span className="font-medium">{formData.nisn}</span>
+                <span className="font-medium">{formData.nis}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-gray-700">
                 <span className="text-gray-400">Nama</span>

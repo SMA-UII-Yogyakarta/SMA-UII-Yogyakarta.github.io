@@ -74,10 +74,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return createErrorResponse('Password harus diisi', 400, { code: 'MISSING_PASSWORD' });
     }
 
-    // Find user by NISN, NIS, or email
+    // Find user by NIS or email (nisn is optional, may be null)
     const user = await db.query.users.findFirst({
       where: or(
-        eq(users.nisn, identifier),
         eq(users.nis, identifier),
         eq(users.email, identifier),
       ),
@@ -107,7 +106,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return createErrorResponse(
         'Pendaftaran kamu masih dalam proses peninjauan.',
         403,
-        { code: 'PENDING_APPROVAL', details: { nisn: user.nisn } }
+        { code: 'PENDING_APPROVAL', details: { nis: user.nis } }
       );
     }
 

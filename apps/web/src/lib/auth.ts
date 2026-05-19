@@ -20,6 +20,7 @@ export const lucia = new Lucia(adapter, {
       email: attributes.email,
       role: attributes.role,
       status: attributes.status,
+      nis: attributes.nis,
       nisn: attributes.nisn,
       class: attributes.class,
       joinedAt: attributes.joinedAt,
@@ -43,7 +44,8 @@ interface DatabaseUserAttributes {
   email: string;
   role: string;
   status: string;
-  nisn: string;
+  nis: string;
+  nisn: string | null;
   class: string;
   joinedAt: number;
   approvedBy: string | null;

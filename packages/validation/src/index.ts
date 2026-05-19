@@ -4,7 +4,6 @@ import { z } from 'zod';
 
 // Web registration (no password — set later by admin)
 export const registerSchema = z.object({
-  nisn: z.string().min(1, 'NISN harus diisi').max(10, 'NISN maksimal 10 digit'),
   nis: z.string().min(1, 'NIS harus diisi').max(20, 'NIS maksimal 20 karakter'),
   name: z.string().min(1, 'Nama harus diisi').max(100, 'Nama maksimal 100 karakter'),
   email: z.string().min(1, 'Email harus diisi').email('Email tidak valid'),
@@ -26,7 +25,7 @@ export type ApiRegisterInput = z.infer<typeof apiRegisterSchema>;
 // ── Login schema ──────────────────────────────────────────────────────────────
 
 export const loginSchema = z.object({
-  identifier: z.string().min(1, 'NISN, NIS, atau email harus diisi'),
+  identifier: z.string().min(1, 'NIS atau email harus diisi'),
   password: z.string().min(1, 'Password harus diisi'),
 });
 

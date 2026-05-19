@@ -17,7 +17,6 @@ export const POST: APIRoute = async ({ request }) => {
     // Check if user already exists (duplicate check before insert)
     const existing = await db.query.users.findFirst({
       where: (users, { or, eq }) => or(
-        eq(users.nisn, validated.nisn),
         eq(users.nis, validated.nis),
         eq(users.email, validated.email)
       ),
@@ -25,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (existing) {
       return createErrorResponse(
-        'User dengan NISN/NIS/Email ini sudah terdaftar',
+        'User dengan NIS/Email ini sudah terdaftar',
         409,
         { code: 'USER_EXISTS' }
       );
@@ -39,8 +38,8 @@ export const POST: APIRoute = async ({ request }) => {
       // Create user
       await tx.insert(users).values({
         id: userId,
-        nisn: validated.nisn,
-       nis: validated.nis,
+        nis: validated.nis,
+        nisn: null,
         name: validated.name,
         email: validated.email,
         githubUsername: validated.githubUsername || null,
@@ -100,7 +99,7 @@ export const GET: APIRoute = async ({ url }) => {
     try {
       const user = await db.query.users.findFirst({
         where: (users, { or, eq }) => or(
-          eq(users.nisn, identifier),
+          eq(users.nis, identifier),
           eq(users.email, identifier),
         ),
         with: {
@@ -113,6 +112,7 @@ export const GET: APIRoute = async ({ url }) => {
       }
 
       return createSuccessResponse({
+        nis: user.nis,
         nisn: user.nisn,
         name: user.name,
         email: user.email,
@@ -135,14 +135,14 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const existing = await db.query.users.findFirst({
       where: (users, { or, eq }) => or(
-        eq(users.nisn, identifier),
+        eq(users.nis, identifier),
         eq(users.email, identifier),
       ),
     });
 
     if (existing) {
       return createErrorResponse(
-        'User dengan NISN/NIS/Email ini sudah terdaftar',
+        'User dengan NIS/Email ini sudah terdaftar',
         409,
         { code: 'USER_EXISTS' }
       );

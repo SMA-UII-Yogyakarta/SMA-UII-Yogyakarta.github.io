@@ -39,13 +39,13 @@ export const GET: APIRoute = async ({ locals, url }) => {
       if (status) conditions.push(eq(users.status, status));
       if (userClass) conditions.push(eq(users.class, userClass));
       if (trackUserIds) conditions.push(inArray(users.id, trackUserIds));
-      if (search) conditions.push(sql`(${users.name} LIKE ${'%' + search + '%'} OR ${users.email} LIKE ${'%' + search + '%'} OR ${users.nisn} LIKE ${'%' + search + '%'})`);
+      if (search) conditions.push(sql`(${users.name} LIKE ${'%' + search + '%'} OR ${users.email} LIKE ${'%' + search + '%'} OR ${users.nis} LIKE ${'%' + search + '%'})`);
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
       const allUsers = await db
         .select({
-          id: users.id, name: users.name, email: users.email, nisn: users.nisn,
-          nis: users.nis, class: users.class, role: users.role, status: users.status,
+          id: users.id, name: users.name, email: users.email, nis: users.nis, nisn: users.nisn,
+          class: users.class, role: users.role, status: users.status,
           joinedAt: users.joinedAt, approvedAt: users.approvedAt,
           tracks: sql`GROUP_CONCAT(${memberTracks.track})`.as('tracks'),
         })
