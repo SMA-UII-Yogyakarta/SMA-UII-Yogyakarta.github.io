@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '@smauii/db';
 import { learningProgress } from '@smauii/db';
+import { checkAndAwardBadges } from '@smauii/db/badges';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
@@ -39,12 +40,12 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (!slug) return createErrorResponse('slug required', 400);
 
     if (completed) {
-      // Upsert — insert jika belum ada
       const existing = await db.query.learningProgress.findFirst({
         where: and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug)),
       });
       if (!existing) {
         await db.insert(learningProgress).values({ id: nanoid(), userId: user.id, lessonSlug: slug, completedAt: Date.now() });
+        checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
       }
     } else {
       await db.delete(learningProgress).where(

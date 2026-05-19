@@ -1,5 +1,6 @@
 import { db } from '@smauii/db';
 import { projects, users } from '@smauii/db';
+import { checkAndAwardBadges } from '@smauii/db/badges';
 import { eq, and, desc, like, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
@@ -61,6 +62,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     const id = nanoid();
     await db.insert(projects).values({ id, userId: user.id, title, description: description || null, url: url || null, imageUrl: imageUrl || null, createdAt: Date.now() });
+
+    checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
+
     return createSuccessResponse({ id, success: true });
   } catch (error) {
     console.error('Create project error:', error);

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { db } from '@smauii/db';
 import { readingSessions } from '@smauii/db';
+import { checkAndAwardBadges } from '@smauii/db/badges';
 import { eq, and, isNull } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { readingSessionSchema } from '@smauii/validation';
@@ -42,6 +43,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         eq(readingSessions.lessonSlug, slug),
         isNull(readingSessions.endedAt)
       ));
+
+    checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
   }
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
