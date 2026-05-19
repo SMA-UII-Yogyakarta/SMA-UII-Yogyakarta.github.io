@@ -81,4 +81,20 @@ export function isExternalApiMode(): boolean {
   return useExternalAPI;
 }
 
+export function apiUrl(path: string): string {
+  const baseUrl = useExternalAPI ? API_BASE_URL : '';
+  return `${baseUrl}${path}`;
+}
+
+export function authHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  const token = getToken();
+  if (token && useExternalAPI) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export { getToken, setToken, clearToken };
