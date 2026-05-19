@@ -468,13 +468,15 @@ Search by NIS, name, or email. Min 2 characters.
 
 ### 3.11 Sync Data SLiMS saat Login
 
-**Status: ❌ Belum dikerjakan**
+**Status: ✅ SELESAI** — Implemented in `apps/web/src/pages/api/auth/login.ts`.
 
-**Masalah:** Data nama/email di Digital Lab bisa basi jika berubah di SLiMS. Saat ini tidak ada mekanisme sync.
+**Implementasi:**
+- `syncSlimsData()` function memanggil SLiMS API saat login
+- Update `name` dan `email` jika berubah di SLiMS
+- Non-blocking: login tidak gagal jika sync gagal
+- Hanya berjalan jika `SLIMS_API_URL` dan `SLIMS_API_KEY` dikonfigurasi
 
-**Solusi:** Panggil SLiMS API saat user login, update field yang berubah.
-
-**File:** `src/pages/api/auth/login.ts`, `src/pages/api/auth/github/callback.ts`
+**Catatan:** GitHub OAuth callback tidak perlu sync karena user sudah ada di database dari seed/registrasi.
 
 ---
 
