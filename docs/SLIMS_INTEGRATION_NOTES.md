@@ -123,17 +123,17 @@ Response: { members: [{ nis, name, email, member_type, is_expired }] }
 - [x] Fix: Blokir registrasi karena `is_expired` → ubah jadi warning saja — **SELESAI**
 - [x] Fix: Label "NISN" → "NIS" di semua UI (form, error message, login page) — **SELESAI** (login.ts: "NIS/Email tidak ditemukan")
 - [x] Fix: Validasi field `class` wajib diisi di form registrasi — **SELESAI**
-- [ ] Fix: Hapus field `class` dari mock data di `src/pages/api/slims/verify.ts` (jika masih ada)
+- [x] Fix: Hapus field `class` dari mock data di `src/pages/api/slims/verify.ts` — **SELESAI**
 
 ### Jangka Pendek
 - [x] Tambah rate limiting di nginx untuk `/plugins/lab-digital-api/` — **SELESAI** (di nginx config)
 - [x] Update `login.ts` error message: "NISN/NIS/Email" → "NIS/Email" — **SELESAI**
-- [ ] Tambah endpoint `search` di plugin SLiMS (untuk verifikasi manual dari dashboard)
+- [x] Tambah endpoint `search` di plugin SLiMS (untuk verifikasi manual dari dashboard) — **SELESAI**
 
 ### Jangka Menengah
-- [ ] Evaluasi: apakah field `nisn` di DB perlu dipertahankan atau dihapus (saat ini diisi sama dengan `nis`)
-- [ ] Implementasi sync data dari SLiMS saat user login
-- [ ] Tambahkan field kelas ke SLiMS atau sistem akademik
+- [ ] Evaluasi: apakah field `nisn` di DB perlu dipertahankan atau dihapus (saat ini diisi sama dengan `nis`) — **TUNDA sampai Aksesekolah.id**
+- [x] Implementasi sync data dari SLiMS saat user login — **SELESAI**
+- [ ] Tambahkan field kelas ke SLiMS atau sistem akademik — **TUNDA sampai Aksesekolah.id**
 
 ### Jangka Panjang
 - [ ] Integrasi dengan sistem akademik sekolah untuk data kelas real-time

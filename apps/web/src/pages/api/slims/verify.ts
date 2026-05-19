@@ -6,15 +6,16 @@ const config = getSiteConfig();
 
 // Fallback mock data — digunakan saat SLIMS_API_URL tidak dikonfigurasi (development)
 // Di production, set SLIMS_API_URL dan SLIMS_API_KEY di environment
+// Note: SLiMS tidak menyimpan data kelas, jadi field class selalu kosong
 const MOCK_SLIMS_DATA = [
-  { nis: '1724', name: 'ALPIS GELIRIS TARI', email: '1724@students.smauiiyk.sch.id', class: 'XII IPA 1', expiredAt: '2026-08-12', isPending: false },
-  { nis: '1751', name: 'ARIF MUHAMMAD MUNIF', email: '1751@students.smauiiyk.sch.id', class: 'XII IPA 2', expiredAt: '2026-08-12', isPending: false },
-  { nis: '1725', name: 'ATFAL MAULANA YULIANTO', email: '1725@students.smauiiyk.sch.id', class: 'XI IPA 1', expiredAt: '2026-08-12', isPending: false },
-  { nis: '1739', name: 'DEVITASARI', email: '1739@students.smauiiyk.sch.id', class: 'XII IPS 1', expiredAt: '2026-08-12', isPending: false },
-  { nis: '1738', name: 'DIANA ARI MINARSIH', email: '1738@students.smauiiyk.sch.id', class: 'XII IPA 3', expiredAt: '2026-08-12', isPending: false },
-  { nis: '1763', name: 'AHMAD ZIDAN', email: '1763@students.smauiiyk.sch.id', class: 'X IPA 1', expiredAt: '2024-03-27', isPending: false },
-  { nis: '1800', name: 'ACHMAD KHASAN NURWAHIDIN', email: '1800@students.smauiiyk.sch.id', class: 'XII IPA 1', expiredAt: '2024-03-27', isPending: false },
-  { nis: '1812', name: 'ABDUL RAHIM ABUBAKAR', email: '1812@students.smauiiyk.sch.id', class: 'X IPS 1', expiredAt: '2024-03-27', isPending: false },
+  { nis: '1724', name: 'ALPIS GELIRIS TARI', email: '1724@students.smauiiyk.sch.id', expiredAt: '2026-08-12', isPending: false },
+  { nis: '1751', name: 'ARIF MUHAMMAD MUNIF', email: '1751@students.smauiiyk.sch.id', expiredAt: '2026-08-12', isPending: false },
+  { nis: '1725', name: 'ATFAL MAULANA YULIANTO', email: '1725@students.smauiiyk.sch.id', expiredAt: '2026-08-12', isPending: false },
+  { nis: '1739', name: 'DEVITASARI', email: '1739@students.smauiiyk.sch.id', expiredAt: '2026-08-12', isPending: false },
+  { nis: '1738', name: 'DIANA ARI MINARSIH', email: '1738@students.smauiiyk.sch.id', expiredAt: '2026-08-12', isPending: false },
+  { nis: '1763', name: 'AHMAD ZIDAN', email: '1763@students.smauiiyk.sch.id', expiredAt: '2024-03-27', isPending: false },
+  { nis: '1800', name: 'ACHMAD KHASAN NURWAHIDIN', email: '1800@students.smauiiyk.sch.id', expiredAt: '2024-03-27', isPending: false },
+  { nis: '1812', name: 'ABDUL RAHIM ABUBAKAR', email: '1812@students.smauiiyk.sch.id', expiredAt: '2024-03-27', isPending: false },
 ];
 
 /**
