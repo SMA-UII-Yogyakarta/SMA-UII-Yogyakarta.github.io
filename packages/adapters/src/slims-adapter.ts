@@ -1,15 +1,41 @@
 import type { SchoolDataAdapter, MemberData, MemberSearchResult, TopVisitor, AdapterConfig } from './types';
 
-/**
- * SLiMS 9.x adapter - connects to SLiMS plugin REST API.
- * 
- * The plugin is installed at: /plugins/lab-digital-api/api.php
- * 
- * Endpoints:
- * - GET ?action=verify&nis={nis} - Verify member by NIS
- * - GET ?action=search&q={query}&limit={limit} - Search members
- * - GET ?action=top-visitors&limit={limit} - Get top visitors
- */
+interface SlimsVerifyResponse {
+  found: boolean;
+  nis?: string;
+  nisn?: string | null;
+  name?: string;
+  email?: string;
+  class?: string | null;
+  gender?: string | null;
+  birth_date?: string | null;
+  phone?: string | null;
+  member_type?: string | null;
+  expire_date?: string | null;
+  is_expired?: boolean;
+  is_pending?: boolean;
+}
+
+interface SlimsSearchResponse {
+  total: number;
+  query: string;
+  members: Array<{
+    nis: string;
+    name: string;
+    email: string;
+    member_type?: string | null;
+    is_expired: boolean;
+  }>;
+}
+
+interface SlimsTopVisitorsResponse {
+  members: Array<{
+    nis: string;
+    name: string;
+    visit_count: number;
+  }>;
+}
+
 export class SlimsAdapter implements SchoolDataAdapter {
   readonly name = 'slims';
   
@@ -39,7 +65,7 @@ export class SlimsAdapter implements SchoolDataAdapter {
       throw new Error(`SLiMS API error: ${res.status}`);
     }
 
-    const data = await res.json();
+    const data: SlimsVerifyResponse = await res.json();
 
     if (!data.found) {
       return { found: false, nis, nisn: null, name: '', email: '', class: null, gender: null, birthDate: null, phone: null, memberType: null, expireDate: null, isExpired: false, isPending: false };
@@ -47,17 +73,17 @@ export class SlimsAdapter implements SchoolDataAdapter {
 
     return {
       found: true,
-      nis: data.nis,
+      nis: data.nis ?? nis,
       nisn: data.nisn ?? null,
-      name: data.name,
-      email: data.email,
+      name: data.name ?? '',
+      email: data.email ?? '',
       class: data.class ?? null,
       gender: data.gender ?? null,
       birthDate: data.birth_date ?? null,
       phone: data.phone ?? null,
       memberType: data.member_type ?? null,
       expireDate: data.expire_date ?? null,
-      isExpired: data.is_expired,
+      isExpired: data.is_expired ?? false,
       isPending: data.is_pending ?? false,
     };
   }
@@ -74,17 +100,17 @@ export class SlimsAdapter implements SchoolDataAdapter {
       throw new Error(`SLiMS API error: ${res.status}`);
     }
 
-    const data = await res.json();
+    const data: SlimsSearchResponse = await res.json();
 
     return {
       total: data.total,
       query: data.query,
-      members: data.members.map((m: Record<string, unknown>) => ({
-        nis: m.nis as string,
-        name: m.name as string,
-        email: m.email as string,
-        memberType: m.member_type as string | null,
-        isExpired: m.is_expired as boolean,
+      members: data.members.map(m => ({
+        nis: m.nis,
+        name: m.name,
+        email: m.email,
+        memberType: m.member_type ?? null,
+        isExpired: m.is_expired,
       })),
     };
   }
@@ -101,12 +127,12 @@ export class SlimsAdapter implements SchoolDataAdapter {
       throw new Error(`SLiMS API error: ${res.status}`);
     }
 
-    const data = await res.json();
+    const data: SlimsTopVisitorsResponse = await res.json();
 
-    return data.members.map((m: Record<string, unknown>) => ({
-      nis: m.nis as string,
-      name: m.name as string,
-      visitCount: m.visit_count as number,
+    return data.members.map(m => ({
+      nis: m.nis,
+      name: m.name,
+      visitCount: m.visit_count,
     }));
   }
 

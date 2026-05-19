@@ -16,6 +16,7 @@
       "dependencies": {
         "@hono/zod-validator": "^0.7.6",
         "@libsql/client": "^0.17.2",
+        "@smauii/adapters": "workspace:*",
         "@smauii/db": "workspace:*",
         "@smauii/validation": "workspace:*",
         "bcryptjs": "^3.0.3",
