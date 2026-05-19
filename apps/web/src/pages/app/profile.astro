@@ -2,8 +2,8 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import { db } from '@smauii/db';
-import { users, memberTracks, memberCards } from '@smauii/db';
-import { eq } from 'drizzle-orm';
+import { users, memberTracks, memberCards, badges, userBadges } from '@smauii/db';
+import { eq, desc } from 'drizzle-orm';
 import { requireMember } from '@lib/guards';
 import { fmtDate } from '@lib/format';
 import { STATUS_COLORS } from '@lib/constants';
@@ -11,11 +11,28 @@ import { STATUS_COLORS } from '@lib/constants';
 const redirect = requireMember(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
 
-const [tracks, card, approver] = await Promise.all([
+const [tracks, card, approver, userBadgesList] = await Promise.all([
   db.select({ track: memberTracks.track }).from(memberTracks).where(eq(memberTracks.userId, user!.id)),
   db.query.memberCards.findFirst({ where: eq(memberCards.userId, user!.id) }),
   user!.approvedBy ? db.query.users.findFirst({ where: eq(users.id, user!.approvedBy) }) : null,
+  db.select({
+    id: userBadges.id,
+    awardedAt: userBadges.awardedAt,
+    badge: badges,
+  })
+    .from(userBadges)
+    .innerJoin(badges, eq(userBadges.badgeId, badges.id))
+    .where(eq(userBadges.userId, user!.id))
+    .orderBy(desc(userBadges.awardedAt))
+    .limit(10),
 ]);
+
+const tierColors: Record<string, string> = {
+  bronze: 'text-amber-600 bg-amber-600/20 border-amber-600/30',
+  silver: 'text-gray-400 bg-gray-400/20 border-gray-400/30',
+  gold: 'text-yellow-400 bg-yellow-400/20 border-yellow-400/30',
+  diamond: 'text-cyan-400 bg-cyan-400/20 border-cyan-400/30',
+};
 ---
 
 <DashboardLayout title="Profile">
@@ -54,16 +71,49 @@ const [tracks, card, approver] = await Promise.all([
           @{user!.githubUsername}
         </a>
       )}
+      <a href="/app/leaderboard" class="mt-4 text-sm text-blue-400 hover:text-blue-300 transition">
+        View Leaderboard →
+      </a>
     </div>
 
     <!-- Detail info -->
     <div class="lg:col-span-2 space-y-4">
+      <!-- Achievement Badges -->
+      {userBadgesList.length > 0 && (
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-sm text-gray-400 uppercase tracking-wider">Achievement Badges</h3>
+            <span class="text-sm text-blue-400">{userBadgesList.length} badges</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {userBadgesList.map((ub) => (
+              <div class={`flex items-center gap-2 px-3 py-2 rounded-lg border ${tierColors[ub.badge.tier] || 'text-gray-400 bg-gray-800'}`}>
+                <span class="text-xl">{ub.badge.icon}</span>
+                <div>
+                  <p class="text-sm font-medium">{ub.badge.name}</p>
+                  <p class="text-xs opacity-70">{ub.badge.points} pts</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- GitHub Contributions (loaded client-side) -->
+      <div id="github-contributions" class="bg-gray-900 border border-gray-800 rounded-xl p-6 hidden">
+        <h3 class="font-semibold mb-4 text-sm text-gray-400 uppercase tracking-wider">GitHub Contributions</h3>
+        <div id="github-content" class="animate-pulse">
+          <div class="h-4 bg-gray-800 rounded w-1/2 mb-3"></div>
+          <div class="h-4 bg-gray-800 rounded w-1/3"></div>
+        </div>
+      </div>
+
       <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
         <h3 class="font-semibold mb-4 text-sm text-gray-400 uppercase tracking-wider">Informasi Akademik</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-xs text-gray-500 mb-1">NISN</p>
-            <p class="font-mono font-medium">{user!.nisn}</p>
+            <p class="text-xs text-gray-500 mb-1">NIS</p>
+            <p class="font-mono font-medium">{user!.nis}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Kelas</p>
@@ -144,7 +194,6 @@ const [tracks, card, approver] = await Promise.all([
     const file = fileInput.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       setStatus('File terlalu besar (maks 2MB)', true);
       return;
@@ -153,7 +202,6 @@ const [tracks, card, approver] = await Promise.all([
     setStatus('Mengupload...', false);
 
     try {
-      // Upload image
       const fd = new FormData();
       fd.append('image', file);
       const uploadRes = await fetch('/api/upload/image', { method: 'POST', body: fd });
@@ -169,7 +217,6 @@ const [tracks, card, approver] = await Promise.all([
         return;
       }
 
-      // Save to profile
       const saveRes = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -180,7 +227,6 @@ const [tracks, card, approver] = await Promise.all([
         return;
       }
 
-      // Update UI
       if (avatarContainer) {
         const currentAvatar = avatarContainer.querySelector('img');
         if (currentAvatar) {
@@ -197,11 +243,65 @@ const [tracks, card, approver] = await Promise.all([
         }
       }
       setStatus('Foto profil diperbarui', false);
-      // Reload to update sidebar/topbar
       setTimeout(() => window.location.reload(), 1000);
     } catch (e) {
       setStatus('Terjadi kesalahan', true);
       console.error(e);
     }
   });
+
+  // Load GitHub contributions
+  async function loadGitHubContributions() {
+    const container = document.getElementById('github-contributions');
+    const content = document.getElementById('github-content');
+    if (!container || !content) return;
+
+    try {
+      const res = await fetch('/api/github-contributions');
+      const data = await res.json();
+
+      if (!data.data?.hasGitHub) {
+        container.remove();
+        return;
+      }
+
+      container.classList.remove('hidden');
+
+      if (!data.data.valid) {
+        content.innerHTML = `<p class="text-gray-500 text-sm">${data.data.message}</p>`;
+        return;
+      }
+
+      const { stats, topRepos } = data.data;
+      content.innerHTML = `
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="text-center">
+            <p class="text-2xl font-bold text-green-400">${stats.commits}</p>
+            <p class="text-xs text-gray-500">Commits</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-purple-400">${stats.pullRequests}</p>
+            <p class="text-xs text-gray-500">Pull Requests</p>
+          </div>
+          <div class="text-center">
+            <p class="text-2xl font-bold text-blue-400">${stats.issues}</p>
+            <p class="text-xs text-gray-500">Issues</p>
+          </div>
+        </div>
+        ${topRepos.length > 0 ? `
+          <div>
+            <p class="text-xs text-gray-500 mb-2">Top Repositories</p>
+            <div class="flex flex-wrap gap-2">
+              ${topRepos.map((r: string) => `<a href="https://github.com/${r}" target="_blank" class="text-xs px-2 py-1 bg-gray-800 rounded hover:bg-gray-700 transition">${r}</a>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+    } catch (e) {
+      console.error('Failed to load GitHub contributions:', e);
+      container.remove();
+    }
+  }
+
+  loadGitHubContributions();
 </script>

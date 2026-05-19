@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./badges": "./src/badges.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",
@@ -18,7 +19,8 @@
     "up": "drizzle-kit up",
     "migrate": "bun run scripts/migrate.ts",
     "seed": "bun run scripts/seed.ts",
-    "seed:enhanced": "bun run scripts/seed-enhanced.ts"
+    "seed:enhanced": "bun run scripts/seed-enhanced.ts",
+    "seed:badges": "bun run scripts/seed-badges.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

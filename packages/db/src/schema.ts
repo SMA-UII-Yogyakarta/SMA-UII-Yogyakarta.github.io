@@ -20,11 +20,13 @@ export const users = sqliteTable('users', {
   joinedAt: integer('joined_at').notNull(), // Unix timestamp (ms)
   approvedAt: integer('approved_at'),       // Unix timestamp (ms)
   approvedBy: text('approved_by'),
+  badgeScore: integer('badge_score').notNull().default(0), // Leaderboard ranking
 }, (table) => [
   index('idx_users_nis').on(table.nis),
   index('idx_users_nisn').on(table.nisn),
   index('idx_users_email').on(table.email),
   index('idx_users_status').on(table.status),
+  index('idx_users_badge_score').on(table.badgeScore),
 ]);
 
 // User relations
@@ -202,6 +204,43 @@ export const learningProgressRelations = relations(learningProgress, ({ one }) =
   user: one(users, { fields: [learningProgress.userId], references: [users.id] }),
 }));
 
+// ── Achievement Badges System ────────────────────────────────────────────────
+
+export const badges = sqliteTable('badges', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  icon: text('icon').notNull(),
+  tier: text('tier').notNull(), // bronze, silver, gold, diamond
+  category: text('category').notNull(), // activity, project, streak, learning, community, special
+  criteriaType: text('criteria_type').notNull(), // activity_count, project_count, lesson_count, streak_days, manual
+  threshold: integer('threshold'), // null for manual badges
+  points: integer('points').notNull().default(0),
+});
+
+export const userBadges = sqliteTable('user_badges', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  badgeId: text('badge_id').notNull().references(() => badges.id),
+  awardedAt: integer('awarded_at').notNull(),
+  metadata: text('metadata'), // JSON: {"triggerValue":5,"criteriaType":"activity_count"}
+}, (table) => [
+  index('idx_user_badges_user_id').on(table.userId),
+  index('idx_user_badges_badge_id').on(table.badgeId),
+  index('idx_user_badges_awarded').on(table.awardedAt),
+]);
+
+export const badgesRelations = relations(badges, ({ many }) => ({
+  userBadges: many(userBadges),
+}));
+
+export const userBadgesRelations = relations(userBadges, ({ one }) => ({
+  badge: one(badges, { fields: [userBadges.badgeId], references: [badges.id] }),
+  user: one(users, { fields: [userBadges.userId], references: [users.id] }),
+}));
+
+// ── Type Exports ──────────────────────────────────────────────────────────────
+
 export type LearningProgress = typeof learningProgress.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -212,3 +251,5 @@ export type Activity = typeof activities.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type Project = typeof projects.$inferSelect;
+export type Badge = typeof badges.$inferSelect;
+export type UserBadge = typeof userBadges.$inferSelect;

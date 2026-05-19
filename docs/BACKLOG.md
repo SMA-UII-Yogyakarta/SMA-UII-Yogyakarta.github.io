@@ -414,30 +414,38 @@ logging:
 
 ### 3.20 Achievement Badges & Leaderboard
 
-**Status: ❌ Belum dikerjakan (long-term)**
+**Status: ✅ SELESAI** — Implemented complete badge system with leaderboard.
 
-**Kebutuhan:** Gamifikasi untuk mendorong kontribusi — badge untuk milestone tertentu (10 activities, 5 projects, dll) dan leaderboard member paling aktif.
+**Implementasi:**
+- Schema: `badges` table (definitions), `userBadges` junction table, `badgeScore` on users
+- 18 badge definitions: activity, project, learning, streak, community, special
+- `checkAndAwardBadges()` function for automatic badge awarding
+- Leaderboard page at `/app/leaderboard`
+- Badge display on profile page
+- Seed script: `bun run db:seed:badges`
 
-**Yang perlu dibuat:**
-- Schema tabel `badges` atau field `badges` di `users`
-- Logic pemberian badge otomatis
-- Halaman leaderboard
-
-**File:** `src/db/schema.ts`, halaman baru `/app/leaderboard`
+**Badge Categories:**
+- Activity: 5/20/50/100 activities (bronze/silver/gold/diamond)
+- Project: 1/5/15/30 projects
+- Learning: 3/10/25 lessons completed
+- Streak: 3/7/30/100 consecutive days
+- Special: Manual award (Mentor, Hackathon winner)
 
 ---
 
 ### 3.21 Fetch GitHub Contributions
 
-**Status: ❌ Belum dikerjakan (long-term)**
+**Status: ✅ SELESAI** — Implemented GitHub contributions display.
 
-**Kebutuhan:** Tampilkan kontribusi GitHub member (commits, PRs, issues) di profile mereka secara otomatis.
+**Implementasi:**
+- API endpoint: `/api/github-contributions`
+- Fetches public events (commits, PRs, issues) from GitHub REST API
+- 5-minute memory cache to reduce API calls
+- Client-side loading on profile page (non-blocking)
+- Shows: commit count, PR count, issue count, top repos
+- Optional `GITHUB_PAT` env var for higher rate limits
 
-**Yang perlu dibuat:**
-- Fetch dari GitHub API menggunakan `githubUsername` yang sudah ada
-- Tampilkan di profile page
-
-**File:** `src/pages/app/profile.astro`, `src/pages/api/profile.ts`
+**Catatan:** Users need `githubUsername` set to see contributions.
 
 ---
 
