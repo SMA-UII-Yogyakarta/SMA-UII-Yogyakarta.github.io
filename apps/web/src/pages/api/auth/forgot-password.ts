@@ -3,17 +3,20 @@ import { db } from '@smauii/db';
 import { users } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
-import { signResetToken } from '@smauii/shared';
+import { signResetToken } from '@smauii/shared/jwt';
 import { sendPasswordResetEmail } from '@smauii/shared';
+import { forgotPasswordSchema } from '@smauii/validation';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { email } = body;
-
-    if (!email) {
-      return createErrorResponse('Email harus diisi', 400, { code: 'MISSING_EMAIL' });
+    const parsed = forgotPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
     }
+
+    const { email } = parsed.data;
 
     const user = await db.query.users.findFirst({
       where: eq(users.email, email),

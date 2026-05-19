@@ -5,6 +5,7 @@ import { eq, and, desc, like, sql } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { nanoid } from 'nanoid';
+import { createProjectSchema } from '@smauii/validation';
 
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
@@ -57,11 +58,25 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (user.status !== 'active') return createErrorResponse('Only active members can add projects', 403);
 
   try {
-    const { title, description, url, imageUrl } = await request.json();
-    if (!title) return createErrorResponse('Title required', 400);
+    const body = await request.json();
+    const parsed = createProjectSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+
+    const { title, description, url, imageUrl } = parsed.data;
 
     const id = nanoid();
-    await db.insert(projects).values({ id, userId: user.id, title, description: description || null, url: url || null, imageUrl: imageUrl || null, createdAt: Date.now() });
+    await db.insert(projects).values({ 
+      id, 
+      userId: user.id, 
+      title, 
+      description: description || null, 
+      url: url || null, 
+      imageUrl: imageUrl || null, 
+      createdAt: Date.now() 
+    });
 
     checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
 

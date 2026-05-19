@@ -6,6 +6,7 @@ import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { nanoid } from 'nanoid';
 import { notifyAllActiveMembers } from '@lib/notifications';
 import { sendAnnouncementEmail } from '@smauii/shared';
+import { createAnnouncementSchema } from '@smauii/validation';
 
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
@@ -46,17 +47,21 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!user || user.role !== 'maintainer') return createErrorResponse('Forbidden', 403);
 
   try {
-    const { title, content } = await request.json();
-    if (!title || !content) return createErrorResponse('Title and content required', 400);
+    const body = await request.json();
+    const parsed = createAnnouncementSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+
+    const { title, content } = parsed.data;
 
     const id = nanoid();
     const now = Date.now();
     await db.insert(announcements).values({ id, title, content, createdBy: user.id, createdAt: now });
 
-    // Notifikasi broadcast ke semua active members
     await notifyAllActiveMembers(`📢 Pengumuman baru: ${title}`);
 
-    // Kirim email ke semua active members
     const activeMembers = await db.select({ email: users.email, name: users.name })
       .from(users)
       .where(eq(users.status, 'active'));

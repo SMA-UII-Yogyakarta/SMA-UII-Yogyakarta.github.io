@@ -3,6 +3,7 @@ import { db } from '@smauii/db';
 import { announcements } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { updateAnnouncementSchema } from '@smauii/validation';
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const { user } = locals;
@@ -15,30 +16,19 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     const announcement = await db.query.announcements.findFirst({ where: eq(announcements.id, id) });
     if (!announcement) return createErrorResponse('Pengumuman tidak ditemukan', 404, { code: 'NOT_FOUND' });
 
-    let body: unknown;
-    try { body = await request.json(); }
-    catch { return createErrorResponse('Invalid JSON', 400); }
+    const body = await request.json();
+    const parsed = updateAnnouncementSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
 
-    const data = body as Record<string, unknown>;
+    const { title, content, isPinned } = parsed.data;
 
     const updateData: Record<string, unknown> = {};
-
-    if (data.title !== undefined || data.content !== undefined) {
-      const title = data.title as string | undefined;
-      const content = data.content as string | undefined;
-      if (title !== undefined && !title.trim()) {
-        return createErrorResponse('Judul tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
-      }
-      if (content !== undefined && !content.trim()) {
-        return createErrorResponse('Konten tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
-      }
-      if (title) updateData.title = title.trim();
-      if (content) updateData.content = content.trim();
-    }
-
-    if (data.isPinned !== undefined) {
-      updateData.isPinned = data.isPinned ? 1 : 0;
-    }
+    if (title) updateData.title = title;
+    if (content) updateData.content = content;
+    if (isPinned !== undefined) updateData.isPinned = isPinned ? 1 : 0;
 
     if (Object.keys(updateData).length === 0) {
       return createErrorResponse('Tidak ada data yang diubah', 400);

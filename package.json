@@ -6,7 +6,8 @@
     "workspaces": [
         "apps/web",
         "apps/api",
-        "packages/*"
+        "packages/*",
+        "packages/adapters"
     ],
     "engines": {
         "node": ">=22.12.0",
@@ -17,9 +18,14 @@
         "dev:api": "bun run --cwd apps/api dev",
         "dev:all": "concurrently --names \"WEB,API\" --prefix-colors \"blue,green\" \"bun run dev\" \"bun run dev:api\"",
         "build": "bun run --cwd apps/web astro build",
-        "preview": "echo '\\n⚠️  Mau test SSR atau SSG bos?\\n  bun run preview:ssr  → build + jalankan Node server (output: server)\\n  bun run preview:ssg  → build + serve static files (output: static)\\n'",
-        "preview:ssr": "bun run --cwd apps/web astro build && node apps/web/dist/server/entry.mjs",
-        "preview:ssg": "bun run --cwd apps/web astro build && bun run --cwd apps/web astro preview",
+        "build:ssr": "DEPLOY_MODE=ssr bun run build",
+        "build:ssg": "DEPLOY_MODE=ssg bun run build",
+        "build:hybrid": "DEPLOY_MODE=hybrid bun run build",
+        "preview": "echo '\\n⚠️  Mau test mode apa?\\n  bun run preview:ssr    → SSR all-in-one (Docker/VPS)\\n  bun run preview:ssg    → SSG static files (GH Pages/CF Pages)\\n  bun run preview:hybrid → SSR + external API\\n'",
+        "preview:ssr": "DEPLOY_MODE=ssr bun run build && node apps/web/dist/server/entry.mjs",
+        "preview:ssg": "DEPLOY_MODE=ssg bun run build && bun run --cwd apps/web astro preview",
+        "preview:hybrid": "DEPLOY_MODE=hybrid bun run build && node apps/web/dist/server/entry.mjs",
+        "deploy:api": "bun run --cwd apps/api deploy",
         "astro": "bun run --cwd apps/web astro",
         "onboard": "bun run scripts/onboard.ts",
         "db:generate": "bun run --cwd packages/db drizzle-kit generate",

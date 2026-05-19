@@ -4,7 +4,7 @@ import { users, sessions } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
-import { verifyResetToken } from '@smauii/shared';
+import { verifyResetToken } from '@smauii/shared/jwt';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

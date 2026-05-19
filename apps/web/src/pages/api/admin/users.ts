@@ -3,6 +3,7 @@ import { db } from '@smauii/db';
 import { users, memberTracks, memberCards, sessions, activities, projects, notifications, learningProgress, readingSessions } from '@smauii/db';
 import { eq, inArray, and } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { updateUserSchema } from '@smauii/validation';
 
 export const GET: APIRoute = async ({ url, locals }) => {
   const { user } = locals;
@@ -82,17 +83,18 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const { userId, status, role, name, email, class: userClass } = await request.json();
+    const body = await request.json();
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+
+    const { userId, status, role, name, email, class: userClass } = parsed.data;
     if (!userId) return createErrorResponse('User ID is required', 400);
 
     const targetUser = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!targetUser) return createErrorResponse('User not found', 404);
-
-    const VALID_ROLES = ['member', 'maintainer', 'alumni'] as const;
-    const VALID_STATUSES = ['pending', 'active', 'inactive'] as const;
-
-    if (role && !VALID_ROLES.includes(role)) return createErrorResponse('Role tidak valid', 422);
-    if (status && !VALID_STATUSES.includes(status)) return createErrorResponse('Status tidak valid', 422);
 
     const updateData: Record<string, unknown> = {};
     if (status) updateData.status = status;

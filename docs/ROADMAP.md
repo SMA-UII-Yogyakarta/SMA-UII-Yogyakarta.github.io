@@ -77,18 +77,34 @@ mendapat persetujuan, dan mengakses konten LMS.
 
 REST API terpisah sebagai fondasi migrasi ke JAMstack, berjalan di Cloudflare Workers.
 
-**Status:** Implementasi awal sudah ada di `smauii-dev-api/`
+**Status:** Implementasi aktif
 - ✅ Hono + CF Workers setup
-- ✅ Auth routes: register, login (NISN/NIS/email), logout, me
+- ✅ Auth routes: register, login (NIS/NIS/email), logout, me
 - ✅ JWT via jose, bcryptjs untuk password hashing
+- ✅ Middleware: requireAuth, requireMaintainer, requireActive, CORS
+- ✅ Response helpers: ok(), err()
+- 🔧 Routes: members, projects, activities, announcements, admin, slims (in progress)
 - ❌ Belum di-deploy ke CF Workers
-- ❌ Belum ada routes: members, activities, projects, announcements
 
 **Yang perlu dikerjakan:**
+- [ ] Lengkapi semua routes di `apps/api/src/routes/`
 - [ ] Deploy ke Cloudflare Workers
-- [ ] Tambah routes: members, activities, projects, announcements
 - [ ] Rate limiting via CF KV
 - [ ] Integration test dengan frontend
+
+**Arsitektur Deployment Mode:**
+
+| Mode | DEPLOY_MODE | Output | Backend | Use Case |
+|------|-------------|--------|---------|----------|
+| **SSR** | `ssr` | `server` | Astro API routes (internal) | Docker/VPS self-hosted |
+| **SSG** | `ssg` | `static` | Hono API (CF Workers) | GitHub Pages/CF Pages |
+| **Hybrid** | `hybrid` | `server` | Hono API (CF Workers) | SSR + external API |
+
+**Yang sudah diimplementasi:**
+- `apps/web/astro.config.mjs` — baca `DEPLOY_MODE` env var
+- `apps/web/src/lib/api-client.ts` — conditional fetch (local vs external)
+- `packages/adapters` — SchoolDataAdapter abstraction layer (SLiMS, Mock)
+- Root `package.json` — scripts: `build:ssr`, `build:ssg`, `build:hybrid`
 
 ---
 
@@ -141,4 +157,4 @@ mirip Vercel/Railway/Netlify tapi self-hosted.
 
 ---
 
-**Terakhir diperbarui:** 2026-04-19
+**Terakhir diperbarui:** 2026-05-19

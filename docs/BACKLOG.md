@@ -507,6 +507,27 @@ Search by NIS, name, or email. Min 2 characters.
 > Dikerjakan setelah pangkalan data terpusat (Laravel + Next.js) siap.
 > Jangan dikerjakan sekarang — akan berubah saat arsitektur berubah.
 
+### 5.0 Deployment Mode System (NEW)
+
+**Status: ✅ SELESAI** — Implementasi 3 mode deployment:
+
+| Mode | DEPLOY_MODE | Output | Backend | Use Case |
+|------|-------------|--------|---------|----------|
+| **SSR** | `ssr` | `server` | Astro API routes (internal) | Docker/VPS self-hosted |
+| **SSG** | `ssg` | `static` | Hono API (CF Workers) | GitHub Pages/CF Pages |
+| **Hybrid** | `hybrid` | `server` | Hono API (CF Workers) | SSR + external API |
+
+**Yang sudah diimplementasi:**
+- `apps/web/astro.config.mjs` — baca `DEPLOY_MODE` env var
+- `apps/web/src/lib/api-client.ts` — conditional fetch (local vs external)
+- `packages/adapters` — SchoolDataAdapter abstraction layer
+- Root `package.json` — scripts: `build:ssr`, `build:ssg`, `build:hybrid`
+
+**Yang belum:**
+- `apps/api` routes lengkap (members, projects, activities, announcements, admin, slims)
+- Deploy `apps/api` ke Cloudflare Workers
+- Update `apps/web` pages untuk pakai `api-client.ts`
+
 ### 5.1 Migrasi ke Jamstack
 
 Sudah didokumentasikan lengkap di `docs/MIGRATION_JAMSTACK.md`.

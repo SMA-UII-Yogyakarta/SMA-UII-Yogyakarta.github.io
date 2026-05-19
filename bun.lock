@@ -68,6 +68,13 @@
         "bun-types": "^1.3.12",
       },
     },
+    "packages/adapters": {
+      "name": "@smauii/adapters",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^6.0.2",
+      },
+    },
     "packages/db": {
       "name": "@smauii/db",
       "dependencies": {
@@ -477,6 +484,8 @@
     "@shikijs/vscode-textmate": ["@shikijs/vscode-textmate@10.0.2", "", {}, "sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
+
+    "@smauii/adapters": ["@smauii/adapters@workspace:packages/adapters"],
 
     "@smauii/api": ["@smauii/api@workspace:apps/api"],
 

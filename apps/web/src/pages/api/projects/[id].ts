@@ -3,6 +3,7 @@ import { db } from '@smauii/db';
 import { projects } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { updateProjectSchema } from '@smauii/validation';
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const { user } = locals;
@@ -15,25 +16,24 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     const project = await db.query.projects.findFirst({ where: eq(projects.id, id) });
     if (!project) return createErrorResponse('Project tidak ditemukan', 404, { code: 'NOT_FOUND' });
 
-    // Hanya owner atau maintainer yang bisa edit
     if (project.userId !== user.id && user.role !== 'maintainer') {
       return createErrorResponse('Forbidden', 403);
     }
 
-    let body: unknown;
-    try { body = await request.json(); }
-    catch { return createErrorResponse('Invalid JSON', 400); }
-
-    const { title, description, url, imageUrl } = body as Record<string, string>;
-    if (!title || title.trim() === '') {
-      return createErrorResponse('Judul tidak boleh kosong', 422, { code: 'VALIDATION_ERROR' });
+    const body = await request.json();
+    const parsed = updateProjectSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
     }
+
+    const { title, description, url, imageUrl } = parsed.data;
 
     await db.update(projects)
       .set({
-        title: title.trim(),
-        description: description?.trim() || null,
-        url: url?.trim() || null,
+        title: title ?? project.title,
+        description: description ?? project.description,
+        url: url ?? project.url,
         imageUrl: imageUrl !== undefined ? (imageUrl || null) : project.imageUrl,
       })
       .where(eq(projects.id, id));

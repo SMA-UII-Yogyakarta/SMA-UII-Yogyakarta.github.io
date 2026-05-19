@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-// ── Registration schemas ─────────────────────────────────────────────────────
-
-// Web registration (no password — set later by admin)
 export const registerSchema = z.object({
   nis: z.string().min(1, 'NIS harus diisi').max(20, 'NIS maksimal 20 karakter'),
   name: z.string().min(1, 'Nama harus diisi').max(100, 'Nama maksimal 100 karakter'),
@@ -14,7 +11,6 @@ export const registerSchema = z.object({
     .max(3, 'Maksimal 3 track'),
 });
 
-// API registration (includes password)
 export const apiRegisterSchema = registerSchema.extend({
   password: z.string().min(8, 'Password minimal 8 karakter'),
 });
@@ -22,16 +18,12 @@ export const apiRegisterSchema = registerSchema.extend({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type ApiRegisterInput = z.infer<typeof apiRegisterSchema>;
 
-// ── Login schema ──────────────────────────────────────────────────────────────
-
 export const loginSchema = z.object({
   identifier: z.string().min(1, 'NIS atau email harus diisi'),
   password: z.string().min(1, 'Password harus diisi'),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-
-// ── Track options ─────────────────────────────────────────────────────────────
 
 export const trackOptions = [
   { value: 'robotika', label: '🤖 Robotika/IoT' },
@@ -64,7 +56,7 @@ export const setPasswordSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().min(1, 'Nama tidak boleh kosong').max(100, 'Nama maksimal 100 karakter').optional(),
+  name: z.string().min(1, 'Nama tidak boleh kosong').max(100, 'Nama maksimal 100 karakter').transform(s => s.trim()).optional(),
   githubUsername: z.string().optional(),
   avatarUrl: z.string().url('URL avatar tidak valid').optional().or(z.literal('')),
 });
@@ -83,3 +75,54 @@ export const classOptions = [
   'XII IPA 1', 'XII IPA 2', 'XII IPA 3', 'XII IPA 4',
   'XII IPS 1', 'XII IPS 2', 'XII IPS 3',
 ];
+
+export const userRoleOptions = ['member', 'maintainer', 'alumni'] as const;
+export const userStatusOptions = ['pending', 'active', 'inactive'] as const;
+
+export const updateUserSchema = z.object({
+  userId: z.string().min(1, 'User ID harus diisi'),
+  role: z.enum(userRoleOptions, { message: 'Role tidak valid' }).optional(),
+  status: z.enum(userStatusOptions, { message: 'Status tidak valid' }).optional(),
+  name: z.string().min(1, 'Nama tidak boleh kosong').max(100, 'Nama maksimal 100 karakter').transform(s => s.trim()).optional(),
+  email: z.string().email('Email tidak valid').optional(),
+  class: z.string().optional(),
+});
+
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+
+export const createProjectSchema = z.object({
+  title: z.string().min(1, 'Judul harus diisi').max(200, 'Judul maksimal 200 karakter').transform(s => s.trim()),
+  description: z.string().max(2000, 'Deskripsi maksimal 2000 karakter').transform(s => s?.trim() || undefined).optional(),
+  url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  imageUrl: z.string().url('URL gambar tidak valid').optional().or(z.literal('')),
+});
+
+export const updateProjectSchema = z.object({
+  title: z.string().min(1, 'Judul tidak boleh kosong').max(200, 'Judul maksimal 200 karakter').transform(s => s.trim()).optional(),
+  description: z.string().max(2000, 'Deskripsi maksimal 2000 karakter').transform(s => s?.trim() || undefined).optional(),
+  url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  imageUrl: z.string().url('URL gambar tidak valid').optional().or(z.literal('')),
+});
+
+export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+
+export const createAnnouncementSchema = z.object({
+  title: z.string().min(1, 'Judul harus diisi').max(200, 'Judul maksimal 200 karakter').transform(s => s.trim()),
+  content: z.string().min(1, 'Konten harus diisi').max(10000, 'Konten maksimal 10000 karakter').transform(s => s.trim()),
+});
+
+export const updateAnnouncementSchema = z.object({
+  title: z.string().min(1, 'Judul tidak boleh kosong').max(200, 'Judul maksimal 200 karakter').transform(s => s.trim()).optional(),
+  content: z.string().min(1, 'Konten tidak boleh kosong').max(10000, 'Konten maksimal 10000 karakter').transform(s => s.trim()).optional(),
+  isPinned: z.boolean().optional(),
+});
+
+export type CreateAnnouncementInput = z.infer<typeof createAnnouncementSchema>;
+export type UpdateAnnouncementInput = z.infer<typeof updateAnnouncementSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().min(1, 'Email harus diisi').email('Email tidak valid'),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;

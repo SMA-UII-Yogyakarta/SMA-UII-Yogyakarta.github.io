@@ -39,7 +39,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
       if (status) conditions.push(eq(users.status, status));
       if (userClass) conditions.push(eq(users.class, userClass));
       if (trackUserIds) conditions.push(inArray(users.id, trackUserIds));
-      if (search) conditions.push(sql`(${users.name} LIKE ${'%' + search + '%'} OR ${users.email} LIKE ${'%' + search + '%'} OR ${users.nis} LIKE ${'%' + search + '%'})`);
+      if (search) {
+        const escapedSearch = search.replace(/[%_]/g, '\\$&');
+        conditions.push(sql`(${users.name} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\' OR ${users.email} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\' OR ${users.nis} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\')`);
+      }
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
       const allUsers = await db
