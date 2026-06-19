@@ -2,7 +2,6 @@
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import Modal from '@components/app/Modal.astro';
-import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
@@ -30,7 +29,10 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     )}
   </div>
 
-  <div id="projects-grid" data-testid="projects-grid"><SkeletonList count={6} type="cards" /></div>
+  <!-- Projects Grid (populated by JS) -->
+  <div id="projects-grid" data-testid="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Content loaded by JavaScript -->
+  </div>
 
   {canAdd && (
     <Modal id="add-modal" title="Tambah Project" maxWidth="max-w-lg">
@@ -57,7 +59,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
             class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
         </div>
 
-        <!-- Image zone: satu container untuk upload & preview -->
+        <!-- Image upload zone -->
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1.5">
             Gambar Cover <span class="text-gray-600 font-normal">· JPG, PNG, WebP · maks 2MB</span>
@@ -118,8 +120,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     let userIdFilter = '';
     const PAGE_LIMIT = 12;
 
-    // --- Image upload ---
-
+    // Image upload handlers
     function setImagePreview(url: string) {
       if (!imageUrlField || !previewImg || !imageOverlay || !uploadLabel) return;
       imageUrlField.value = url;
@@ -153,15 +154,14 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     imageInputReplace?.addEventListener('change', () => { const f = imageInputReplace.files?.[0]; if (f) handleFileUpload(f); });
     document.getElementById('remove-image')?.addEventListener('click', resetImage);
 
-    // Auto-prepend https:// saat blur jika user lupa protokol
+    // Auto-prepend https:// saat blur
     const urlInput = document.getElementById('project-url') as HTMLInputElement | null;
     urlInput?.addEventListener('blur', () => {
       const v = urlInput.value.trim();
       if (v && !v.match(/^https?:\/\//)) urlInput.value = `https://${v}`;
     });
 
-    // --- Render ---
-
+    // Render functions
     const imgPlaceholder = `<div class="w-full h-full flex items-center justify-center text-gray-700">
       <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
     </div>`;
@@ -200,28 +200,33 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
       if (searchQuery) params.set('q', searchQuery);
       if (userIdFilter) params.set('userId', userIdFilter);
-      const res = await fetch(`/api/projects?${params}`);
-      const { data } = await res.json();
-      const projects: any[] = data?.projects || [];
-      const total: number = data?.total || 0;
+      
+      try {
+        const res = await fetch(`/api/projects?${params}`);
+        const { data } = await res.json();
+        const projects: any[] = data?.projects || [];
+        const total: number = data?.total || 0;
 
-      gridEl.innerHTML = projects.length
-        ? '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">' + projects.map(renderCard).join('') + '</div>'
-        : '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada project</p></div>';
+        gridEl.innerHTML = projects.length
+          ? projects.map(renderCard).join('')
+          : '<div class="col-span-full text-center py-10"><p class="text-gray-500 text-sm">Belum ada project</p></div>';
 
-      renderPagination('projects-pagination', 'projects-grid', total, currentPage, PAGE_LIMIT, 'project', 'window.projPage');
+        renderPagination('projects-pagination', 'projects-grid', total, currentPage, PAGE_LIMIT, 'project', 'window.projPage');
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+        gridEl.innerHTML = '<div class="col-span-full text-center py-10"><p class="text-red-400 text-sm">Gagal memuat projects</p></div>';
+      }
     }
 
     window.projPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
 
-    // --- Modal helpers ---
-
+    // Modal helpers
     function openModal(id = '', title = '', description = '', url = '', imageUrl = '') {
       if (!form) return;
       (form.querySelector('[name="id"]') as HTMLInputElement).value = id;
       (form.querySelector('[name="title"]') as HTMLInputElement).value = title;
       (form.querySelector('[name="description"]') as HTMLTextAreaElement).value = description;
-      const urlField = form.querySelector('[name="url"]') as HTMLInputElement;
+      const urlField = form.querySelector('[name="url']') as HTMLInputElement;
       urlField.value = url;
       resetImage();
       if (imageUrl) setImagePreview(imageUrl);
@@ -237,8 +242,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       resetImage();
     }
 
-    // --- Event delegation ---
-
+    // Event delegation
     gridEl.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
       if (!btn) return;
@@ -247,7 +251,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       if (action === 'delete') {
         if (!confirm(`Hapus project "${title}"?`)) return;
         const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-        res.ok ? load() : alert('Gagal menghapus project');
+        res.ok ? load() : showToast('Gagal menghapus project', 'error');
       }
     });
 
@@ -259,7 +263,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       const fd = new FormData(form!);
       const id = fd.get('id') as string;
       const title = (fd.get('title') as string)?.trim();
-      if (!title) { alert('Judul tidak boleh kosong'); return; }
+      if (!title) { showToast('Judul tidak boleh kosong', 'warning'); return; }
 
       const rawUrl = (fd.get('url') as string)?.trim() || null;
       const url = rawUrl && !rawUrl.match(/^https?:\/\//) ? `https://${rawUrl}` : rawUrl;
@@ -282,7 +286,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       if (res.ok) { closeModal(); load(); }
       else {
         const json = await res.json().catch(() => ({}));
-        alert(json.error || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'));
+        showToast(json.error || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'), 'error');
       }
     });
 
@@ -301,7 +305,6 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     // User filter (maintainer only)
     const userFilter = document.getElementById('user-filter') as HTMLSelectElement | null;
     if (userFilter && isAdmin) {
-      // Fetch users for dropdown
       fetch('/api/admin/users')
         .then(r => r.json())
         .then(res => {
@@ -322,6 +325,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       });
     }
 
+    // Initial load
     load();
   </script>
 </DashboardLayout>

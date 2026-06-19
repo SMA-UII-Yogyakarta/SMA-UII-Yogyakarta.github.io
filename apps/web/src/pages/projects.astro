@@ -10,8 +10,9 @@ import Layout from '@layouts/Layout.astro';
       Semua proyek terbuka di GitHub. Kamu bisa belajar dari kode, kontribusi, atau fork untuk proyek sendiri.
     </p>
 
+    <!-- Skeleton Loading - FIXED: Use JSX syntax, NOT template strings -->
     <div id="projects-loading" class="grid sm:grid-cols-2 gap-6">
-      {Array.from({ length: 4 }).map(() => `
+      {Array.from({ length: 4 }).map(() => (
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 animate-pulse">
           <div class="flex items-start justify-between mb-3">
             <div class="h-5 bg-gray-800 rounded w-32"></div>
@@ -27,7 +28,7 @@ import Layout from '@layouts/Layout.astro';
           </div>
           <div class="h-3 bg-gray-800 rounded w-20"></div>
         </div>
-      `).join('')}
+      ))}
     </div>
 
     <div id="projects-grid" class="hidden grid sm:grid-cols-2 gap-6"></div>
@@ -60,124 +61,124 @@ import Layout from '@layouts/Layout.astro';
         Usulkan proyek baru atau mulai proyek sendiri di track yang kamu minati.
         Kami siap bantu dari ide sampai deployment!
       </p>
-      <div class="flex gap-3 justify-center flex-wrap">
-        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md"
-           target="_blank"
-           class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
-          Panduan Kontribusi
-        </a>
-        <a href="/tracks"
-           class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
+      <div class="flex gap-4 justify-center">
+        <a href="/tracks" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition">
           Lihat Track
+        </a>
+        <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" rel="noopener"
+          class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition">
+          GitHub Org
         </a>
       </div>
     </section>
   </div>
 
   <script>
-    function escapeHtml(str: string): string {
-      if (!str) return '';
-      const htmlEntities: Record<string, string> = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2F;',
-      };
-      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
-    }
+    import { esc, renderPagination } from '@lib/ui';
 
-    function formatDate(ts: number): string {
-      return new Date(ts).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
-    }
+    const loadingEl = document.getElementById('projects-loading');
+    const gridEl = document.getElementById('projects-grid');
+    const emptyEl = document.getElementById('projects-empty');
+    const errorEl = document.getElementById('projects-error');
+    const paginationEl = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageIndicator = document.getElementById('page-indicator');
 
-    function renderProjectCard(p: any): string {
-      const hasUrl = p.url && p.url.length > 0;
-      const cardContent = `
-        <div class="flex items-start justify-between mb-3">
-          <h3 class="font-mono font-semibold text-blue-400 ${hasUrl ? 'group-hover:text-blue-300' : ''} transition">${escapeHtml(p.title)}</h3>
-          ${p.createdAt ? `<span class="text-xs text-gray-500">${formatDate(p.createdAt)}</span>` : ''}
-        </div>
-        ${p.description ? `<p class="text-sm text-gray-400 mb-4">${escapeHtml(p.description)}</p>` : ''}
-        ${p.userName ? `
-          <div class="flex items-center gap-2 mb-3">
-            <span class="text-xs text-gray-500">👤 ${escapeHtml(p.userName)}</span>
-          </div>
-        ` : ''}
-        ${p.url ? `
-          <div class="flex items-center gap-3 text-xs text-gray-500">
-            <span class="text-blue-400 group-hover:text-blue-300 transition">${escapeHtml(new URL(p.url).hostname + new URL(p.url).pathname)} →</span>
-          </div>
-        ` : ''}
-      `;
+    let currentPage = 1;
+    const PAGE_SIZE = 6;
 
-      const wrapperClass = 'bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition block group';
-
-      if (hasUrl) {
-        return `
-          <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" class="${wrapperClass}">
-            ${cardContent}
-          </a>
-        `;
-      }
-      return `
-        <div class="${wrapperClass}">
-          ${cardContent}
-        </div>
-      `;
-    }
-
-    async function loadProjects(page: number = 1) {
-      const loading = document.getElementById('projects-loading')!;
-      const grid = document.getElementById('projects-grid')!;
-      const empty = document.getElementById('projects-empty')!;
-      const error = document.getElementById('projects-error')!;
-      const pagination = document.getElementById('pagination')!;
-      const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
-      const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
-      const indicator = document.getElementById('page-indicator')!;
-
-      loading.classList.remove('hidden');
-      grid.classList.add('hidden');
-      empty.classList.add('hidden');
-      error.classList.add('hidden');
-      pagination.classList.add('hidden');
-
+    async function loadProjects() {
       try {
-        const response = await fetch(`/api/public/projects?page=${page}&limit=12`);
-        if (!response.ok) throw new Error('Failed to load projects');
+        const res = await fetch(`/api/public/projects?page=${currentPage}&limit=${PAGE_SIZE}`);
+        const { data } = await res.json();
+        const projects = data?.projects || [];
+        const total = data?.total || 0;
+        const totalPages = Math.ceil(total / PAGE_SIZE);
 
-        const result = await response.json();
-        const { data, total, limit } = result.data;
-        const totalPages = Math.max(1, Math.ceil(total / limit));
-
-        loading.classList.add('hidden');
-
-        if (data.length === 0) {
-          empty.classList.remove('hidden');
+        if (projects.length === 0) {
+          showEmpty();
           return;
         }
 
-        grid.innerHTML = data.map(renderProjectCard).join('');
-        grid.classList.remove('hidden');
-
-        indicator.textContent = `Halaman ${page} dari ${totalPages} (${total} proyek)`;
-        prevBtn.disabled = page <= 1;
-        nextBtn.disabled = page >= totalPages;
-        pagination.classList.remove('hidden');
-
-        prevBtn.onclick = () => { if (page > 1) loadProjects(page - 1); };
-        nextBtn.onclick = () => { if (page < totalPages) loadProjects(page + 1); };
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        loading.classList.add('hidden');
-        grid.classList.add('hidden');
-        error.classList.remove('hidden');
+        renderProjects(projects);
+        updatePagination(currentPage, totalPages);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+        showError();
       }
     }
 
+    function renderProjects(projects: any[]) {
+      gridEl.innerHTML = projects.map(p => `
+        <a href="${esc(p.url || '#')}" target="_blank" rel="noopener noreferrer"
+          class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition block group">
+          <div class="flex items-start justify-between mb-3">
+            <h3 class="font-semibold text-gray-100 group-hover:text-blue-400 transition">${esc(p.title)}</h3>
+            <span class="text-xs text-gray-500">by ${esc(p.userName || 'Unknown')}</span>
+          </div>
+          ${p.description ? `<p class="text-sm text-gray-400 mb-4 line-clamp-2">${esc(p.description)}</p>` : ''}
+          <div class="flex gap-2 mb-3">
+            <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs font-medium">Open Source</span>
+            ${p.url ? `<span class="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs">GitHub</span>` : ''}
+          </div>
+          ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-48 object-cover rounded-lg mt-3">` : ''}
+        </a>
+      `).join('');
+    }
+
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showEmpty() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showError() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showContent() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.remove('hidden');
+    }
+
+    function updatePagination(page: number, total: number) {
+      pageIndicator.textContent = `Halaman ${page} dari ${total}`;
+      prevBtn.disabled = page === 1;
+      nextBtn.disabled = page === total || total === 0;
+      showContent();
+    }
+
+    prevBtn?.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadProjects();
+      }
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      currentPage++;
+      loadProjects();
+    });
+
+    // Initial load
     loadProjects();
   </script>
 </Layout>

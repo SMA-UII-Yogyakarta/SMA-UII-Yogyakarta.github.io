@@ -7,8 +7,9 @@ import Layout from '@layouts/Layout.astro';
     <h1 class="text-3xl font-bold mb-2">Anggota Lab</h1>
     <p class="text-gray-400 mb-12">Siswa yang aktif berkontribusi di komunitas</p>
 
+    <!-- Skeleton Loading - Use JSX syntax, NOT template strings -->
     <div id="members-loading" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {Array.from({ length: 6 }).map(() => `
+      {Array.from({ length: 6 }).map(() => (
         <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 animate-pulse">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-12 h-12 rounded-full bg-gray-800"></div>
@@ -22,7 +23,7 @@ import Layout from '@layouts/Layout.astro';
             <div class="h-5 bg-gray-800 rounded w-20"></div>
           </div>
         </div>
-      `).join('')}
+      ))}
     </div>
 
     <div id="members-grid" class="hidden grid sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
@@ -48,154 +49,118 @@ import Layout from '@layouts/Layout.astro';
         Selanjutnya →
       </button>
     </div>
-
-    <section class="mt-16 text-center border-t border-gray-800 pt-16">
-      <h2 class="text-2xl font-bold mb-4">Ingin Bergabung?</h2>
-      <p class="text-gray-400 mb-8 max-w-2xl mx-auto">
-        Kami mencari siswa yang konsisten, curious, dan mau belajar bareng.
-        Tidak perlu jago coding — yang penting komitmen!
-      </p>
-      <div class="flex gap-3 justify-center flex-wrap">
-        <a href="/tracks"
-           class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
-          Lihat Track
-        </a>
-        <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md"
-           target="_blank"
-           class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
-          Baca Filosofi
-        </a>
-      </div>
-    </section>
   </div>
 
   <script>
-    function escapeHtml(str: string): string {
-      if (!str) return '';
-      const htmlEntities: Record<string, string> = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2F;',
-      };
-      return str.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
-    }
+    import { esc, fmtDate } from '@lib/ui';
 
-    function formatTrack(track: string): string {
-      const trackNames: Record<string, string> = {
-        'robotika': 'Robotika/IoT',
-        'ai': 'AI',
-        'data-science': 'Data Science',
-        'network': 'Network',
-        'security': 'Security',
-        'software': 'Software',
-      };
-      return trackNames[track] || track;
-    }
+    const loadingEl = document.getElementById('members-loading');
+    const gridEl = document.getElementById('members-grid');
+    const emptyEl = document.getElementById('members-empty');
+    const errorEl = document.getElementById('members-error');
+    const paginationEl = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageIndicator = document.getElementById('page-indicator');
 
-    function formatRole(role: string): string {
-      if (role === 'maintainer') return 'Maintainer';
-      if (role === 'member') return 'Anggota';
-      return role;
-    }
+    let currentPage = 1;
+    const PAGE_SIZE = 6;
 
-    function formatDate(ts: number): string {
-      return new Date(ts).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
-    }
-
-    function renderMemberCard(m: any): string {
-      const roleGradient = m.role === 'maintainer'
-        ? 'from-blue-400 to-purple-400'
-        : 'from-green-400 to-teal-400';
-
-      const hoverBorder = m.role === 'maintainer'
-        ? 'hover:border-blue-500'
-        : 'hover:border-green-500';
-
-      const trackBadgeColor = m.role === 'maintainer'
-        ? 'bg-blue-500/10 text-blue-400'
-        : 'bg-green-500/10 text-green-400';
-
-      const roleLabelColor = m.role === 'maintainer' ? 'text-blue-400' : 'text-gray-400';
-
-      return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 ${hoverBorder} transition">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br ${roleGradient} flex items-center justify-center text-white font-bold flex-shrink-0">
-              ${escapeHtml(m.name).charAt(0).toUpperCase()}
-            </div>
-            <div class="min-w-0">
-              <h3 class="font-semibold truncate">${escapeHtml(m.name)}</h3>
-              <div class="flex items-center gap-2 text-xs">
-                <span class="${roleLabelColor}">${formatRole(m.role)}</span>
-                ${m.class ? `<span class="text-gray-500">· ${escapeHtml(m.class)}</span>` : ''}
-              </div>
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-1 mb-3">
-            ${m.tracks.map((track: string) => `
-              <span class="text-xs ${trackBadgeColor} px-2 py-0.5 rounded">${escapeHtml(formatTrack(track))}</span>
-            `).join('')}
-          </div>
-          ${m.joinedAt ? `
-            <p class="text-xs text-gray-500">Bergabung ${formatDate(m.joinedAt)}</p>
-          ` : ''}
-        </div>
-      `;
-    }
-
-    async function loadMembers(page: number = 1) {
-      const loading = document.getElementById('members-loading')!;
-      const grid = document.getElementById('members-grid')!;
-      const empty = document.getElementById('members-empty')!;
-      const error = document.getElementById('members-error')!;
-      const pagination = document.getElementById('pagination')!;
-      const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
-      const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
-      const indicator = document.getElementById('page-indicator')!;
-
-      loading.classList.remove('hidden');
-      grid.classList.add('hidden');
-      empty.classList.add('hidden');
-      error.classList.add('hidden');
-      pagination.classList.add('hidden');
-
+    async function loadMembers() {
       try {
-        const response = await fetch(`/api/public/members?page=${page}&limit=12`);
-        if (!response.ok) throw new Error('Failed to load members');
+        const res = await fetch(`/api/members?page=${currentPage}&limit=${PAGE_SIZE}&status=active`);
+        const { data } = await res.json();
+        const members = data?.members || [];
+        const total = data?.total || 0;
+        const totalPages = Math.ceil(total / PAGE_SIZE);
 
-        const result = await response.json();
-        const { data, total, limit } = result.data;
-        const totalPages = Math.max(1, Math.ceil(total / limit));
-
-        loading.classList.add('hidden');
-
-        if (data.length === 0) {
-          empty.classList.remove('hidden');
+        if (members.length === 0) {
+          showEmpty();
           return;
         }
 
-        grid.innerHTML = data.map(renderMemberCard).join('');
-        grid.classList.remove('hidden');
-
-        indicator.textContent = `Halaman ${page} dari ${totalPages} (${total} anggota)`;
-        prevBtn.disabled = page <= 1;
-        nextBtn.disabled = page >= totalPages;
-        pagination.classList.remove('hidden');
-
-        prevBtn.onclick = () => { if (page > 1) loadMembers(page - 1); };
-        nextBtn.onclick = () => { if (page < totalPages) loadMembers(page + 1); };
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        loading.classList.add('hidden');
-        grid.classList.add('hidden');
-        error.classList.remove('hidden');
+        renderMembers(members);
+        updatePagination(currentPage, totalPages);
+      } catch (error) {
+        console.error('Failed to load members:', error);
+        showError();
       }
     }
 
+    function renderMembers(members: any[]) {
+      gridEl.innerHTML = members.map(m => `
+        <a href="/app/members/${m.id}" class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition block group">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400 font-bold text-lg">
+              ${m.name.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-100 truncate group-hover:text-blue-400 transition">${esc(m.name)}</h3>
+              <p class="text-xs text-gray-400">${esc(m.class || 'Alumni')}</p>
+            </div>
+          </div>
+          <div class="flex gap-1 flex-wrap">
+            <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs font-medium">${m.role === 'maintainer' ? 'Maintainer' : 'Member'}</span>
+            ${m.tracks?.slice(0, 2).map((t: string) => 
+              `<span class="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs">${t}</span>`
+            ).join('') || ''}
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showEmpty() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showError() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+      paginationEl.classList.add('hidden');
+    }
+
+    function showContent() {
+      loadingEl.classList.add('hidden');
+      gridEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      paginationEl.classList.remove('hidden');
+    }
+
+    function updatePagination(page: number, total: number) {
+      pageIndicator.textContent = `Halaman ${page} dari ${total}`;
+      prevBtn.disabled = page === 1;
+      nextBtn.disabled = page === total || total === 0;
+      showContent();
+    }
+
+    prevBtn?.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadMembers();
+      }
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      currentPage++;
+      loadMembers();
+    });
+
+    // Initial load
     loadMembers();
   </script>
 </Layout>

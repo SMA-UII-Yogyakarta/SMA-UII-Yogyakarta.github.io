@@ -1,10 +1,22 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize resend only if API key exists (non-blocking for development)
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+// Helper to check if email is enabled
+function isEmailEnabled(): boolean {
+  return resend !== null;
+}
 
 const BASE_URL = process.env.PUBLIC_BASE_URL || 'https://lab.smauiiyk.sch.id';
 
 export async function sendApprovalEmail(to: string, name: string): Promise<void> {
+  if (!resend) {
+    console.warn('Email not configured (missing RESEND_API_KEY). Skipping approval email.');
+    return;
+  }
+
   await resend.emails.send({
     from: 'SMAUII Lab <noreply@lab.smauiiyk.sch.id>',
     to,
@@ -25,6 +37,11 @@ export async function sendApprovalEmail(to: string, name: string): Promise<void>
 }
 
 export async function sendPasswordResetEmail(to: string, name: string, token: string): Promise<void> {
+  if (!resend) {
+    console.warn('Email not configured (missing RESEND_API_KEY). Skipping password reset email.');
+    return;
+  }
+
   const resetLink = `${BASE_URL}/reset-password?token=${encodeURIComponent(token)}`;
 
   await resend.emails.send({
@@ -55,6 +72,11 @@ export async function sendPasswordResetEmail(to: string, name: string, token: st
 }
 
 export async function sendAnnouncementEmail(to: string, title: string, content: string): Promise<void> {
+  if (!resend) {
+    console.warn('Email not configured (missing RESEND_API_KEY). Skipping announcement email.');
+    return;
+  }
+
   await resend.emails.send({
     from: 'SMAUII Lab <noreply@lab.smauiiyk.sch.id>',
     to,
@@ -72,6 +94,11 @@ export async function sendAnnouncementEmail(to: string, title: string, content: 
 }
 
 export async function sendRegistrationEmail(to: string, name: string): Promise<void> {
+  if (!resend) {
+    console.warn('Email not configured (missing RESEND_API_KEY). Skipping registration email.');
+    return;
+  }
+
   await resend.emails.send({
     from: 'SMAUII Lab <noreply@lab.smauiiyk.sch.id>',
     to,
@@ -91,6 +118,11 @@ export async function sendRegistrationEmail(to: string, name: string): Promise<v
 }
 
 export async function sendRejectionEmail(to: string, name: string): Promise<void> {
+  if (!resend) {
+    console.warn('Email not configured (missing RESEND_API_KEY). Skipping rejection email.');
+    return;
+  }
+
   await resend.emails.send({
     from: 'SMAUII Lab <noreply@lab.smauiiyk.sch.id>',
     to,

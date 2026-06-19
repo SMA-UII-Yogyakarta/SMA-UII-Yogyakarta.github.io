@@ -17,7 +17,9 @@ const baseConfig = {
   markdown: {
     remarkPlugins: [remarkMath, remarkMermaid],
     rehypePlugins: [rehypeKatex],
-    shikiConfig: { theme: 'github-dark' },
+    shikiConfig: { 
+      theme: /** @type {any} */ ('github-dark') 
+    },
   },
   vite: {
     plugins: [tailwindcss()],

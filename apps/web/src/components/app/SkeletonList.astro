@@ -1,13 +1,24 @@
 ---
+/**
+ * SkeletonList Component - Reusable loading skeleton
+ * 
+ * Usage:
+ * <SkeletonList count={5} type="cards" />
+ * 
+ * @param count - Number of skeleton items (default: 5)
+ * @param type - Display type: 'rows' | 'cards' (default: 'rows')
+ */
 interface Props {
   count?: number;
   type?: 'rows' | 'cards';
 }
+
 const { count = 5, type = 'rows' } = Astro.props;
 ---
+
 {type === 'rows' ? (
   <div class="space-y-3">
-    {Array.from({length: count}).map(() => (
+    {Array.from({ length: count }).map(() => (
       <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3 animate-pulse">
         <div class="w-10 h-10 rounded-full bg-gray-800 flex-shrink-0"></div>
         <div class="flex-1 space-y-2">
@@ -19,7 +30,7 @@ const { count = 5, type = 'rows' } = Astro.props;
   </div>
 ) : (
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {Array.from({length: count}).map(() => (
+    {Array.from({ length: count }).map(() => (
       <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden animate-pulse">
         <div class="aspect-video bg-gray-800"></div>
         <div class="p-4 space-y-2">
