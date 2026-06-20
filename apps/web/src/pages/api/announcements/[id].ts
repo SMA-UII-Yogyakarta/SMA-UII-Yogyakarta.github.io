@@ -34,8 +34,8 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
       return createErrorResponse('Tidak ada data yang diubah', 400);
     }
 
-    await db.update(announcements})
-      .set(updateData})
+    await db.update(announcements)
+      .set(updateData)
       .where(eq(announcements.id, id));
 
     return createSuccessResponse({ success: true });

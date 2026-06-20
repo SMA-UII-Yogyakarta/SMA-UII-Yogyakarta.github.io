@@ -50,7 +50,7 @@ async function syncSlimsData(user: { id: string; nis: string; name: string; emai
       if (emailChanged) updateData.email = data.email;
 
       await db.update(users})
-        .set(updateData})
+        .set(updateData)
         .where(eq(users.id, user.id));
 
       console.log(`[login] Synced SLiMS data for ${user.nis}: ${Object.keys(updateData).join(', ')}`);

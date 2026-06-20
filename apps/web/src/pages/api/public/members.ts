@@ -26,7 +26,7 @@ export const GET: APIRoute = async ({ url }) => {
         avatarUrl: users.avatarUrl,
       )
       .from(users)
-      .where(eq(users.status, 'active')})
+      .where(eq(users.status, 'active'))
       .orderBy(users.joinedAt)
       .limit(limit)
       .offset(offset);

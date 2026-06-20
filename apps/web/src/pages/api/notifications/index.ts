@@ -12,8 +12,8 @@ export const GET: APIRoute = async ({ locals }) => {
     const userNotifications = await db
       .select({ id: notifications.id, message: notifications.message, isRead: notifications.isRead, createdAt: notifications.createdAt )
       .from(notifications)
-      .where(eq(notifications.userId, user.id)})
-      .orderBy(desc(notifications.createdAt)})
+      .where(eq(notifications.userId, user.id))
+      .orderBy(desc(notifications.createdAt))
       .limit(20);
 
     return createSuccessResponse(userNotifications);

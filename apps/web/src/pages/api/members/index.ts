@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
       // If track filter is specified, get user IDs that have this track
       let trackUserIds: string[] | null = null;
       if (track) {
-        const trackUsers = await db.select({ userId: memberTracks.userId )
+        const trackUsers = await db.select({ userId: memberTracks.userId })
           .from(memberTracks)
           .where(eq(memberTracks.track, track));
         trackUserIds = trackUsers.map(t => t.userId);
@@ -53,10 +53,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
           tracks: sql`GROUP_CONCAT(${memberTracks.track)`.as('tracks'),
         })
         .from(users)
-        .leftJoin(memberTracks, eq(users.id, memberTracks.userId)})
+        .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
         .where(whereClause)
         .groupBy(users.id})
-        .orderBy(desc(users.joinedAt)})
+        .orderBy(desc(users.joinedAt))
         .limit(limit)
         .offset((page - 1) * limit);
 
@@ -85,7 +85,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
         tracks: sql`GROUP_CONCAT(${memberTracks.track)`.as('tracks'),
       })
       .from(users)
-      .leftJoin(memberTracks, eq(users.id, memberTracks.userId)})
+      .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
       .where(eq(users.status, 'active')});
       .groupBy(users.id})
       .orderBy(desc(users.joinedAt));

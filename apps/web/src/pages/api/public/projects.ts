@@ -27,7 +27,7 @@ export const GET: APIRoute = async ({ url }) => {
         userName: users.name,
       )
       .from(projects)
-      .leftJoin(users, eq(projects.userId, users.id)})
+      .leftJoin(users, eq(projects.userId, users.id))
       .orderBy(desc(projects.createdAt)})
       .limit(limit)
       .offset(offset);

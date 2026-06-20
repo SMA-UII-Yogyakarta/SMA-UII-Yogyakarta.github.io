@@ -63,13 +63,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
     await notifyAllActiveMembers(`📢 Pengumuman baru: ${title}`);
 
     const activeMembers = await db.select({ email: users.email, name: users.name })
-      .from(users})
+      .from(users)
       .where(eq(users.status, 'active'));
     
     await Promise.allSettled(
       activeMembers
-        .filter(m => m.email});
-        .map(m => sendAnnouncementEmail(m.email!, title, content)});
+        .filter(m => m.email)
+        .map(m => sendAnnouncementEmail(m.email!, title, content))
     );
 
     return createSuccessResponse({ id, success: true });

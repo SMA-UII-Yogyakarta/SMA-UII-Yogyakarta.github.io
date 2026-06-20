@@ -20,8 +20,8 @@ export const GET: APIRoute = async ({ locals }) => {
     const inactiveUsers = allUsers.filter(u => u.status === 'inactive');
 
     const recentMembers = [...allUsers]
-      .sort((a, b) => b.joinedAt - a.joinedAt});
-      .slice(0, 5});
+      .sort((a, b) => b.joinedAt - a.joinedAt)
+      .slice(0, 5)
       .map(u => ({ name: u.name, joinedAt: u.joinedAt, status: u.status }));
 
     const monthActivities = await db.query.activities.findMany({
@@ -33,8 +33,8 @@ export const GET: APIRoute = async ({ locals }) => {
     for (const a of monthActivities) {
       typeMap.set(a.type, (typeMap.get(a.type) || 0) + 1);
     }
-    const activitiesByType = Array.from(typeMap.entries()});
-      .map(([type, count]) => ({ type, count })});
+    const activitiesByType = Array.from(typeMap.entries())
+      .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count);
 
     const allTracks = await db.query.memberTracks.findMany();
