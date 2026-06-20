@@ -24,27 +24,15 @@ const baseConfig = {
   vite: {
     plugins: [
       tailwindcss(),
-      // Strip console statements in production
-      {
-        name: 'remove-console',
-        /**
-         * @param {string} code
-         * @param {string} id
-         */
-        transform(code, id) {
-          // Only strip in production build and only from src files
-          if (process.env.NODE_ENV === 'production' && id.includes('/src/')) {
-            return code.replace(/console\.(log|warn|error|debug|info)\([^)]*\);?/g, '');
-          }
-          return code;
-        },
-      },
     ],
     resolve: {
       dedupe: ['react', 'react-dom'],
     },
+    optimizeDeps: {
+      exclude: ['@node-rs/argon2', '@node-rs/argon2-linux-x64-gnu', '@node-rs/argon2-linux-x64-musl'],
+    },
     ssr: {
-      noExternal: ['debug'],
+      noExternal: ['debug', '@smauii/shared', '@smauii/db', '@smauii/validation'],
     },
   }
 };

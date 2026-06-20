@@ -20,8 +20,7 @@ export const GET: APIRoute = async () => {
   } catch (error) {
     console.error('Health check failed:', error);
     return createErrorResponse('Database connection failed', 500, {
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
+      details: { timestamp: new Date().toISOString() },
     });
   }
 };

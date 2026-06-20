@@ -95,6 +95,8 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
   )}
 
   <script>
+    declare function showToast(message: string, type?: string, duration?: number): void;
+
     import { esc, unesc, renderPagination, icons, uploadImage } from '@lib/ui';
 
     const meta = document.getElementById('projects-meta') as HTMLElement;

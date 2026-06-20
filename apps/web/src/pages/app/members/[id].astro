@@ -189,6 +189,8 @@ try {
   )}
 
   <script>
+    declare function showToast(message: string, type?: string, duration?: number): void;
+
     // Approve/Reject actions
     document.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');

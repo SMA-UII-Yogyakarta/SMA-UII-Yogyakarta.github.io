@@ -52,7 +52,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
       });
       if (!existing) {
         await db.insert(learningProgress).values({ id: nanoid(), userId: user.id, lessonSlug: slug, completedAt: Date.now() });
-        checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
+        checkAndAwardBadges(user.id, db).catch((e) => { console.error('Badge check error:', e); });
       }
     } else {
       await db.delete(learningProgress).where(

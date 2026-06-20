@@ -74,16 +74,16 @@ import Layout from '@layouts/Layout.astro';
   </div>
 
   <script>
-    import { esc, renderPagination } from '@lib/ui';
+    import { esc } from '@lib/ui';
 
-    const loadingEl = document.getElementById('projects-loading');
-    const gridEl = document.getElementById('projects-grid');
-    const emptyEl = document.getElementById('projects-empty');
-    const errorEl = document.getElementById('projects-error');
-    const paginationEl = document.getElementById('pagination');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const pageIndicator = document.getElementById('page-indicator');
+    const loadingEl = document.getElementById('projects-loading') as HTMLElement;
+    const gridEl = document.getElementById('projects-grid') as HTMLElement;
+    const emptyEl = document.getElementById('projects-empty') as HTMLElement;
+    const errorEl = document.getElementById('projects-error') as HTMLElement;
+    const paginationEl = document.getElementById('pagination') as HTMLElement;
+    const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+    const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+    const pageIndicator = document.getElementById('page-indicator') as HTMLElement;
 
     let currentPage = 1;
     const PAGE_SIZE = 6;
@@ -125,14 +125,6 @@ import Layout from '@layouts/Layout.astro';
           ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-48 object-cover rounded-lg mt-3">` : ''}
         </a>
       `).join('');
-    }
-
-    function showLoading() {
-      loadingEl.classList.remove('hidden');
-      gridEl.classList.add('hidden');
-      emptyEl.classList.add('hidden');
-      errorEl.classList.add('hidden');
-      paginationEl.classList.add('hidden');
     }
 
     function showEmpty() {

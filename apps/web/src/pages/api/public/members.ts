@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ url }) => {
         role: users.role,
         joinedAt: users.joinedAt,
         avatarUrl: users.avatarUrl,
-      )
+      })
       .from(users)
       .where(eq(users.status, 'active'))
       .orderBy(users.joinedAt)
@@ -41,7 +41,7 @@ export const GET: APIRoute = async ({ url }) => {
       .select({
         userId: memberTracks.userId,
         track: memberTracks.track,
-      )
+      })
       .from(memberTracks)
       .where(inArray(memberTracks.userId, memberIds));
 

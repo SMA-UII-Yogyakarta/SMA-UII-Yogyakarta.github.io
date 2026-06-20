@@ -4,7 +4,7 @@ import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
-// Public endpoint — returns safe public data (no NISN/email/passwordHash});
+// Public endpoint — returns safe public data (no NISN/email/passwordHash)
 // Maintainers get full data with filters/search/pagination via ?admin=1
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
@@ -41,7 +41,9 @@ export const GET: APIRoute = async ({ locals, url }) => {
       if (trackUserIds) conditions.push(inArray(users.id, trackUserIds));
       if (search) {
         const escapedSearch = search.replace(/[%_]/g, '\\$&');
-        conditions.push(sql`(${users.name} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\' OR ${users.email} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\' OR ${users.nis} LIKE ${'%' + escapedSearch + '%'} ESCAPE '\\')`);
+        const searchPattern = '%' + escapedSearch + '%';
+        const esc = '\\';
+        conditions.push(sql`(${users.name} LIKE ${searchPattern} ESCAPE ${esc} OR ${users.email} LIKE ${searchPattern} ESCAPE ${esc} OR ${users.nis} LIKE ${searchPattern} ESCAPE ${esc})`);
       }
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -66,8 +68,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
         members: allUsers.map(u => ({ ...u, tracks: typeof u.tracks === 'string' ? u.tracks.split(',') : [] })),
         total: Number(countResult[0]?.count || 0), page, limit,
       });
-    } catch (error) {
-      console.error('Failed to fetch members (admin):', error);
+    } catch (err) {
+      console.error('Failed to fetch members (admin):', err);
       return createErrorResponse('Failed to fetch members', 500);
     }
   }
@@ -82,13 +84,13 @@ export const GET: APIRoute = async ({ locals, url }) => {
         role: users.role,
         githubUsername: users.githubUsername,
         joinedAt: users.joinedAt,
-        tracks: sql`GROUP_CONCAT(${memberTracks.track)`.as('tracks'),
+        tracks: sql`GROUP_CONCAT(${memberTracks.track})`.as('tracks'),
       })
       .from(users)
       .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
-      .where(eq(users.status, 'active')});
-      .groupBy(users.id})
-      .orderBy(desc(users.joinedAt));
+      .where(eq(users.status, 'active'))
+      .groupBy(users.id)
+      .orderBy(desc(users.joinedAt))
 
     const result = allUsers.map(u => ({
       ...u,
@@ -117,8 +119,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
         totalMembers: result.length,
       },
     });
-  } catch (error) {
-    console.error('Failed to fetch members (public):', error);
+  } catch (err) {
+    console.error('Failed to fetch members (public):', err);
     return createErrorResponse('Failed to fetch members', 500);
   }
 };

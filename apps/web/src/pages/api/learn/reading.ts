@@ -46,7 +46,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         isNull(readingSessions.endedAt)
       ));
 
-    checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
+    checkAndAwardBadges(user.id, db).catch((e) => { console.error('Badge check error:', e); });
   }
 
   return createSuccessResponse({ ok: true });

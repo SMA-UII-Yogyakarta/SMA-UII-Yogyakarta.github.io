@@ -61,6 +61,8 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
   </Modal>
 
   <script>
+    declare function showToast(message: string, type?: string, duration?: number): void;
+
     import { esc, renderPagination } from '@lib/ui';
 
     const contentEl = document.getElementById('members-content') as HTMLElement;

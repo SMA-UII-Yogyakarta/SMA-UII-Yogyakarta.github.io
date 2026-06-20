@@ -42,6 +42,8 @@ const { user } = Astro.locals;
   </div>
 
   <script>
+    declare function showToast(message: string, type?: string, duration?: number): void;
+
     function esc(str: string): string {
       if (!str) return '';
       return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));

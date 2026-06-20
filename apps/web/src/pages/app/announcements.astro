@@ -37,6 +37,8 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
   </Modal>
 
   <script>
+    declare function showToast(message: string, type?: string, duration?: number): void;
+
     import { esc, unesc, fmtDate, renderPagination, icons } from '@lib/ui';
 
     const modal = document.getElementById('add-modal');

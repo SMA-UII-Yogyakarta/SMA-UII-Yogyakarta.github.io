@@ -52,16 +52,16 @@ import Layout from '@layouts/Layout.astro';
   </div>
 
   <script>
-    import { esc, fmtDate } from '@lib/ui';
+    import { esc } from '@lib/ui';
 
-    const loadingEl = document.getElementById('members-loading');
-    const gridEl = document.getElementById('members-grid');
-    const emptyEl = document.getElementById('members-empty');
-    const errorEl = document.getElementById('members-error');
-    const paginationEl = document.getElementById('pagination');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const pageIndicator = document.getElementById('page-indicator');
+    const loadingEl = document.getElementById('members-loading') as HTMLElement;
+    const gridEl = document.getElementById('members-grid') as HTMLElement;
+    const emptyEl = document.getElementById('members-empty') as HTMLElement;
+    const errorEl = document.getElementById('members-error') as HTMLElement;
+    const paginationEl = document.getElementById('pagination') as HTMLElement;
+    const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+    const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+    const pageIndicator = document.getElementById('page-indicator') as HTMLElement;
 
     let currentPage = 1;
     const PAGE_SIZE = 6;
@@ -107,14 +107,6 @@ import Layout from '@layouts/Layout.astro';
           </div>
         </a>
       `).join('');
-    }
-
-    function showLoading() {
-      loadingEl.classList.remove('hidden');
-      gridEl.classList.add('hidden');
-      emptyEl.classList.add('hidden');
-      errorEl.classList.add('hidden');
-      paginationEl.classList.add('hidden');
     }
 
     function showEmpty() {
