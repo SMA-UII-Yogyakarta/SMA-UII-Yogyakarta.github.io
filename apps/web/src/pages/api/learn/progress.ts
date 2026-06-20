@@ -5,6 +5,7 @@ import { checkAndAwardBadges } from '@smauii/db/badges';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { learningProgressSchema } from '@smauii/validation';
 
 // GET /api/learn/progress?slug=... — cek apakah lesson sudah selesai
 export const GET: APIRoute = async ({ locals, url }) => {
@@ -36,8 +37,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (user.status !== 'active') return createErrorResponse('Forbidden', 403);
 
   try {
-    const { slug, completed } = await request.json();
-    if (!slug) return createErrorResponse('slug required', 400);
+    const body = await request.json();
+    const parsed = learningProgressSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+    
+    const { slug, completed } = parsed.data;
 
     if (completed) {
       const existing = await db.query.learningProgress.findFirst({

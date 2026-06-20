@@ -150,7 +150,7 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
       if (action === 'delete') {
         if (!confirm(`Hapus activity "${title}"?`)) return;
         const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-        res.ok ? load() : alert('Gagal menghapus activity');
+        res.ok ? load() : showToast('Gagal menghapus activity', 'error');
       }
     });
 
@@ -180,7 +180,7 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
         }),
       });
       if (res.ok) { modal?.classList.add('hidden'); form.reset(); load(); }
-      else alert('Gagal menyimpan');
+      else showToast('Gagal menyimpan', 'error');
     });
 
     // Filter chips

@@ -268,7 +268,7 @@ const { user } = Astro.locals;
         body: JSON.stringify({ userId, action }),
       });
       if (res.ok) loadAdmin();
-      else alert('Gagal memproses');
+      else showToast('Gagal memproses', 'error');
     }
 
     function renderMember(user: { name?: string; status?: string; class?: string; role?: string }) {

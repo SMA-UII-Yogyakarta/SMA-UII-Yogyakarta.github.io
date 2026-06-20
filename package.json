@@ -1,18 +1,15 @@
 {
     "name": "smauii-dev-foundation",
-    "type": "module",
     "version": "0.0.1",
-    "private": true,
-    "workspaces": [
-        "apps/web",
-        "apps/api",
-        "packages/*",
-        "packages/adapters"
-    ],
+    "devDependencies": {
+        "@playwright/test": "^1.59.1",
+        "concurrently": "^9.2.1"
+    },
     "engines": {
         "node": ">=22.12.0",
         "bun": ">=1.1.0"
     },
+    "private": true,
     "scripts": {
         "dev": "bun run --cwd apps/web astro dev",
         "dev:api": "bun run --cwd apps/api dev",
@@ -47,15 +44,17 @@
         "test:all": "bun test && playwright test",
         "ci": "bash apps/web/scripts/ci-local.sh",
         "check": "bun run --cwd apps/web astro check",
-        "typecheck": "bun run --cwd apps/web astro check"
+        "typecheck": "bun run --cwd apps/web tsc"
     },
     "trustedDependencies": [
         "esbuild",
         "sharp"
     ],
-    "devDependencies": {
-        "@playwright/test": "^1.59.1",
-        "concurrently": "^9.2.1",
-        "typescript": "^6.0.2"
-    }
+    "type": "module",
+    "workspaces": [
+        "apps/web",
+        "apps/api",
+        "packages/*",
+        "packages/adapters"
+    ]
 }

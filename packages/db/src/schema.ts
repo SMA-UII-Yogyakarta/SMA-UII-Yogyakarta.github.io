@@ -27,6 +27,8 @@ export const users = sqliteTable('users', {
   index('idx_users_email').on(table.email),
   index('idx_users_status').on(table.status),
   index('idx_users_badge_score').on(table.badgeScore),
+  index('idx_users_role').on(table.role),
+  index('idx_users_class').on(table.class),
 ]);
 
 // User relations
@@ -49,6 +51,7 @@ export const memberTracks = sqliteTable('member_tracks', {
 }, (table) => [
   index('idx_member_tracks_user_id').on(table.userId),
   index('idx_member_tracks_track').on(table.track),
+  index('idx_member_tracks_joined_at').on(table.joinedAt),
 ]);
 
 // Member tracks relations
@@ -83,7 +86,9 @@ export const memberCards = sqliteTable('member_cards', {
   cardNumber: text('card_number').notNull().unique(),
   qrCode: text('qr_code').notNull(),
   issuedAt: integer('issued_at').notNull(), // Unix timestamp (ms)
-});
+}, (table) => [
+  index('idx_member_cards_issued_at').on(table.issuedAt),
+]);
 
 // Member cards relations
 export const memberCardsRelations = relations(memberCards, ({ one }) => ({
@@ -105,6 +110,7 @@ export const activities = sqliteTable('activities', {
 }, (table) => [
   index('idx_activities_user_id').on(table.userId),
   index('idx_activities_created_at').on(table.createdAt),
+  index('idx_activities_type').on(table.type),
 ]);
 
 // Activities relations
@@ -166,6 +172,7 @@ export const projects = sqliteTable('projects', {
   createdAt: integer('created_at').notNull(), // Unix timestamp (ms)
 }, (table) => [
   index('idx_projects_user_id').on(table.userId),
+  index('idx_projects_created_at').on(table.createdAt),
 ]);
 
 // Projects relations
@@ -185,6 +192,7 @@ export const learningProgress = sqliteTable('learning_progress', {
 }, (table) => [
   index('idx_progress_user_id').on(table.userId),
   index('idx_progress_lesson').on(table.lessonSlug),
+  index('idx_progress_completed_at').on(table.completedAt),
 ]);
 
 // Reading sessions — waktu baca per lesson
@@ -202,6 +210,10 @@ export const readingSessions = sqliteTable('reading_sessions', {
 
 export const learningProgressRelations = relations(learningProgress, ({ one }) => ({
   user: one(users, { fields: [learningProgress.userId], references: [users.id] }),
+}));
+
+export const readingSessionsRelations = relations(readingSessions, ({ one }) => ({
+  user: one(users, { fields: [readingSessions.userId], references: [users.id] }),
 }));
 
 // ── Achievement Badges System ────────────────────────────────────────────────

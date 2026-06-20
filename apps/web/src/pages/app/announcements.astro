@@ -123,7 +123,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       } else if (action === 'delete') {
         if (!confirm(`Hapus pengumuman "${title}"?`)) return;
         const res = await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
-        res.ok ? load() : alert('Gagal menghapus');
+        res.ok ? load() : showToast('Gagal menghapus', 'error');
       } else if (action === 'pin') {
         const newPinState = pinned === '1' ? 0 : 1;
         const res = await fetch(`/api/announcements/${id}`, {
@@ -131,7 +131,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isPinned: newPinState }),
         });
-        res.ok ? load() : alert('Gagal mengubah pin status');
+        res.ok ? load() : showToast('Gagal mengubah pin status', 'error');
       }
     });
 
@@ -149,7 +149,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       });
 
       if (res.ok) { closeModal(); load(); }
-      else alert(id ? 'Gagal mengupdate' : 'Gagal membuat pengumuman');
+      else showToast(id ? 'Gagal mengupdate' : 'Gagal membuat pengumuman', 'error');
     });
 
     document.getElementById('open-modal')?.addEventListener('click', () => openModal());

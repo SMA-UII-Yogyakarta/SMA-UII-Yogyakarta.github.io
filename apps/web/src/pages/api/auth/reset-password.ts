@@ -5,19 +5,18 @@ import { eq } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { verifyResetToken } from '@smauii/shared/jwt';
+import { resetPasswordSchema } from '@smauii/validation';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { token, password } = body;
-
-    if (!token) {
-      return createErrorResponse('Token tidak ditemukan', 400, { code: 'MISSING_TOKEN' });
+    const parsed = resetPasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
     }
 
-    if (!password || password.length < 8) {
-      return createErrorResponse('Password minimal 8 karakter', 400, { code: 'WEAK_PASSWORD' });
-    }
+    const { token, password } = parsed.data;
 
     const userId = await verifyResetToken(token);
 

@@ -3,7 +3,7 @@ import { db } from '@smauii/db';
 import { users, memberTracks, memberCards, sessions, activities, projects, notifications, learningProgress, readingSessions } from '@smauii/db';
 import { eq, inArray, and } from 'drizzle-orm';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
-import { updateUserSchema } from '@smauii/validation';
+import { updateUserSchema, deleteUserSchema } from '@smauii/validation';
 
 export const GET: APIRoute = async ({ url, locals }) => {
   const { user } = locals;
@@ -121,8 +121,14 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   }
 
   try {
-    const { userId } = await request.json();
-    if (!userId) return createErrorResponse('User ID is required', 400);
+    const body = await request.json();
+    const parsed = deleteUserSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
+    }
+    
+    const { userId } = parsed.data;
     if (userId === user.id) return createErrorResponse('Cannot delete your own account', 400);
 
     await db.transaction(async (tx) => {

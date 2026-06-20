@@ -126,3 +126,36 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token harus diisi'),
+  password: z.string().min(8, 'Password minimal 8 karakter').max(100, 'Password maksimal 100 karakter'),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const loginSchemaWithNis = z.object({
+  identifier: z.string().min(1, 'NIS atau email harus diisi'),
+  password: z.string().min(1, 'Password harus diisi'),
+});
+
+export type LoginSchemaWithNisInput = z.infer<typeof loginSchemaWithNis>;
+
+export const learningProgressSchema = z.object({
+  slug: z.string().min(1, 'Slug harus diisi'),
+  completed: z.boolean().optional(),
+});
+
+export type LearningProgressInput = z.infer<typeof learningProgressSchema>;
+
+export const markNotificationReadSchema = z.object({
+  id: z.string().min(1, 'Notification ID harus diisi'),
+});
+
+export type MarkNotificationReadInput = z.infer<typeof markNotificationReadSchema>;
+
+export const deleteUserSchema = z.object({
+  userId: z.string().min(1, 'User ID harus diisi'),
+});
+
+export type DeleteUserInput = z.infer<typeof deleteUserSchema>;

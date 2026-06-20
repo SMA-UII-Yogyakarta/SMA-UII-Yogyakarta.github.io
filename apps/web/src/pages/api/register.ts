@@ -3,16 +3,28 @@ import { db } from '@smauii/db';
 import { users, memberTracks } from '@smauii/db';
 import { registerSchema } from '@smauii/validation';
 import { nanoid } from 'nanoid';
-import { ZodError } from 'zod';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 import { sendRegistrationEmail } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
+    const parsed = registerSchema.safeParse(body);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      parsed.error.issues.forEach(issue => {
+        if (issue.path[0]) {
+          fieldErrors[issue.path[0] as string] = issue.message;
+        }
+      });
+      return createErrorResponse(
+        'Validasi gagal',
+        422,
+        { code: 'VALIDATION_ERROR', details: fieldErrors }
+      );
+    }
     
-    // Validate input
-    const validated = registerSchema.parse(body);
+    const validated = parsed.data;
 
     // Check if user already exists (duplicate check before insert)
     const existing = await db.query.users.findFirst({
@@ -71,21 +83,6 @@ export const POST: APIRoute = async ({ request }) => {
 
   } catch (error) {
     console.error('Registration error:', error);
-    
-    if (error instanceof ZodError) {
-      const fieldErrors: Record<string, string> = {};
-      error.issues.forEach(issue => {
-        if (issue.path[0]) {
-          fieldErrors[issue.path[0] as string] = issue.message;
-        }
-      });
-      return createErrorResponse(
-        'Validasi gagal',
-        422,
-        { code: 'VALIDATION_ERROR', details: fieldErrors }
-      );
-    }
-    
     return createErrorResponse('Terjadi kesalahan saat pendaftaran', 500);
   }
 };

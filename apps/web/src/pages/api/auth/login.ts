@@ -5,6 +5,7 @@ import { users, sessions } from '@smauii/db';
 import { eq, or } from 'drizzle-orm';
 import { verify } from '@node-rs/argon2';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { loginSchemaWithNis } from '@smauii/validation';
 
 /**
  * Sync user data from SLiMS if configured
@@ -63,16 +64,13 @@ async function syncSlimsData(user: { id: string; nis: string; name: string; emai
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const body = await request.json();
-    const { identifier, password } = body;
-
-    // Validation
-    if (!identifier) {
-      return createErrorResponse('NIS atau Email harus diisi', 400, { code: 'MISSING_IDENTIFIER' });
+    const parsed = loginSchemaWithNis.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return createErrorResponse(firstError.message, 400);
     }
-
-    if (!password) {
-      return createErrorResponse('Password harus diisi', 400, { code: 'MISSING_PASSWORD' });
-    }
+    
+    const { identifier, password } = parsed.data;
 
     // Find user by NIS or email (nisn is optional, may be null)
     const user = await db.query.users.findFirst({

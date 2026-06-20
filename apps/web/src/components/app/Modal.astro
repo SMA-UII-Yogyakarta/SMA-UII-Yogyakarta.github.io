@@ -8,6 +8,7 @@ interface Props {
 const { id, title, draggable = false, maxWidth = 'max-w-md' } = Astro.props;
 const innerId = `${id}-inner`;
 const handleId = `${id}-handle`;
+const titleId = `${id}-title`;
 ---
 
 <div
@@ -15,6 +16,9 @@ const handleId = `${id}-handle`;
   data-inner-id={innerId}
   data-handle-id={handleId}
   data-draggable={draggable ? 'true' : null}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
   class={`hidden fixed inset-0 z-50 bg-black/60 ${draggable ? '' : 'sm:flex sm:items-center sm:justify-center sm:p-4'}`}
 >
   <div
@@ -27,7 +31,7 @@ const handleId = `${id}-handle`;
       <div class="w-10 h-1 bg-gray-700 rounded-full"></div>
     </div>
     <div id={handleId} class={`flex items-center justify-between px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0 ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-      <h2 class="text-lg font-bold">{title}</h2>
+      <h2 id={titleId} class="text-lg font-bold">{title}</h2>
       {draggable && <span class="hidden sm:block text-gray-600 text-xs">⠿ drag</span>}
     </div>
     <div class="px-6 pb-6 overflow-y-auto" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom))">

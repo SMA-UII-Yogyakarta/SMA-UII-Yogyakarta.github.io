@@ -95,7 +95,7 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
   </nav>
 
   <div class="p-4 border-t border-gray-800 relative" id="sidebar-user">
-    <button id="profile-dropdown-btn" class="w-full flex items-center gap-3 hover:bg-gray-800 p-2 rounded-lg transition group">
+    <button id="profile-dropdown-btn" aria-label="Profile menu" aria-expanded="false" aria-haspopup="true" class="w-full flex items-center gap-3 hover:bg-gray-800 p-2 rounded-lg transition group">
       {userAvatarUrl ? (
         <img src={userAvatarUrl} alt={userName} class="w-8 h-8 rounded-full object-cover shrink-0 group-hover:ring-2 group-hover:ring-blue-500 transition" />
       ) : (
@@ -130,7 +130,7 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
         Settings
       </a>
       <form action="/api/auth/logout" method="POST">
-        <button id="logout-btn" type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">
+        <button id="logout-btn" type="submit" aria-label="Logout" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
           </svg>
@@ -175,6 +175,8 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
 
   profileBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
+    const isExpanded = profileBtn.getAttribute('aria-expanded') === 'true';
+    profileBtn.setAttribute('aria-expanded', String(!isExpanded));
     if (isMinimized()) {
       profilePopup?.classList.toggle('hidden');
       profileDropdown?.classList.add('hidden');
@@ -189,6 +191,7 @@ const items = role === 'maintainer' ? (navItems.maintainerSidebar || navItems.ma
     if (!profileBtn?.contains(target)) {
       profileDropdown?.classList.add('hidden');
       profilePopup?.classList.add('hidden');
+      profileBtn?.setAttribute('aria-expanded', 'false');
     }
   });
 

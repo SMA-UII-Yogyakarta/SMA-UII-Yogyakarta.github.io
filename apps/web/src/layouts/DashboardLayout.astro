@@ -3,6 +3,7 @@ import '@styles/global.css';
 import Sidebar from '@components/Sidebar.astro';
 import Topbar from '@components/Topbar.astro';
 import BottomNav from '@components/BottomNav.astro';
+import Toast from '@components/app/Toast.astro';
 import { getSiteConfig } from '@smauii/shared';
 
 const config = getSiteConfig();
@@ -114,6 +115,8 @@ const userAvatarUrl = user?.avatarUrl ?? null;
   </div>
 
   <div id="dashboard-meta" data-role={role} data-username={userName} style="display:none"></div>
+
+  <Toast />
 
   <script>
     import { initDashboard } from '@lib/dashboard-init';
