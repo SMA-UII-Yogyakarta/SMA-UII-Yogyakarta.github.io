@@ -50,5 +50,11 @@
   }
 
   // Expose globally for use in inline scripts
-  (window as any).showToast = showToast;
+  declare global {
+    interface Window {
+      showToast: (message: string, type?: ToastType, duration?: number) => void;
+    }
+  }
+  
+  window.showToast = showToast;
 </script>

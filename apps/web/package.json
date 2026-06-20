@@ -31,8 +31,9 @@
     "react-dom": "^19.2.5",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
-    "unist-util-visit": "^5.0.0",
     "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.3",
+    "unist-util-visit": "^5.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

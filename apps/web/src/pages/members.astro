@@ -92,7 +92,7 @@ import Layout from '@layouts/Layout.astro';
         <a href="/app/members/${m.id}" class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition block group">
           <div class="flex items-center gap-3 mb-3">
             <div class="w-12 h-12 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400 font-bold text-lg">
-              ${m.name.charAt(0).toUpperCase()}
+              ${esc(m.name.charAt(0).toUpperCase())}
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="font-semibold text-gray-100 truncate group-hover:text-blue-400 transition">${esc(m.name)}</h3>
@@ -100,9 +100,9 @@ import Layout from '@layouts/Layout.astro';
             </div>
           </div>
           <div class="flex gap-1 flex-wrap">
-            <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs font-medium">${m.role === 'maintainer' ? 'Maintainer' : 'Member'}</span>
+            <span class="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs font-medium">${esc(m.role === 'maintainer' ? 'Maintainer' : 'Member')}</span>
             ${m.tracks?.slice(0, 2).map((t: string) => 
-              `<span class="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs">${t}</span>`
+              `<span class="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs">${esc(t)}</span>`
             ).join('') || ''}
           </div>
         </a>

@@ -22,6 +22,13 @@ export function updateSidebarState(isCollapsed: boolean) {
   setSidebar(isCollapsed ? 'minimized' : 'expanded');
 }
 
+interface Notification {
+  id: string;
+  message: string;
+  createdAt: string | number;
+  isRead?: boolean;
+}
+
 export async function loadNotifications() {
   try {
     const res = await fetch('/api/notifications');
@@ -32,7 +39,7 @@ export async function loadNotifications() {
     if (!notifications.length) return;
     badge?.classList.remove('hidden');
     if (notifList) {
-      notifList.innerHTML = notifications.map((n: any) => `
+      notifList.innerHTML = (notifications as Notification[]).map((n) => `
         <div class="p-2 hover:bg-gray-800 rounded cursor-pointer" onclick="window.markNotificationRead('${n.id}')">
           <p class="text-sm">${escapeHtml(n.message || '')}</p>
           <p class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleDateString('id-ID')}</p>

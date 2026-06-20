@@ -11,6 +11,8 @@ export const registerSchema = z.object({
     .max(3, 'Maksimal 3 track'),
 });
 
+export type TrackValue = 'robotika' | 'ai' | 'data-science' | 'network' | 'security' | 'software';
+
 export const apiRegisterSchema = registerSchema.extend({
   password: z.string().min(8, 'Password minimal 8 karakter'),
 });

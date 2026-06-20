@@ -1,7 +1,13 @@
 import type { APIRoute } from 'astro';
 import { createSuccessResponse, createErrorResponse } from '@smauii/shared';
 
-const CACHE = new Map<string, { data: any; expires: number }>();
+interface GitHubContributionData {
+  contributions: number;
+  hasGitHub: boolean;
+  message?: string;
+}
+
+const CACHE = new Map<string, { data: GitHubContributionData; expires: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const GET: APIRoute = async ({ url, locals }) => {

@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import { registerSchema, trackOptions, classOptions, type RegisterInput } from '@smauii/validation';
+import { registerSchema, trackOptions, classOptions, type RegisterInput, type TrackValue } from '@smauii/validation';
 import type { ZodError } from 'zod';
+import { VerifyStep } from './auth/steps/VerifyStep';
+import { DataStep } from './auth/steps/DataStep';
+import { GithubStep } from './auth/steps/GithubStep';
+import { TracksStep } from './auth/steps/TracksStep';
+import { ConfirmStep } from './auth/steps/ConfirmStep';
 import { getSiteConfig } from '@smauii/shared';
 
 const config = getSiteConfig();
@@ -27,21 +32,13 @@ export default function RegisterForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleTrackToggle = (track: string) => {
-    setFormData(prev => {
-      const tracks = prev.tracks.includes(track as any)
+  const handleTrackToggle = (track: TrackValue) => {
+    setFormData(prev => ({
+      ...prev,
+      tracks: prev.tracks.includes(track)
         ? prev.tracks.filter(t => t !== track)
-        : [...prev.tracks, track as any];
-      return { ...prev, tracks };
-    });
+        : [...prev.tracks, track],
+    }));
   };
 
   const nextStep = () => {
@@ -72,7 +69,6 @@ export default function RegisterForm() {
     setDataConfirmed(false);
 
     try {
-      // Check if user already exists
       const checkResponse = await fetch(`/api/register?nisn=${encodeURIComponent(nisn.trim())}`);
       const checkResult = await checkResponse.json();
 
@@ -103,19 +99,17 @@ export default function RegisterForm() {
         return;
       }
 
-      // Expired membership = warning saja, bukan blokir
-      // Keanggotaan perpustakaan ≠ keanggotaan Digital Lab
       const expiredWarning = data.isExpired
         ? `Catatan: keanggotaan kamu expired sejak ${data.expiredAt}. Silakan perpanjang ke institusi.`
         : '';
 
       setFormData(prev => ({
         ...prev,
-        nisn: data.nis || nisn.trim(),  // SLiMS tidak punya NISN, pakai NIS
-        nis:  data.nis || nisn.trim(),
+        nisn: data.nis || nisn.trim(),
+        nis: data.nis || nisn.trim(),
         name: data.name || '',
         email: data.email || '',
-        class: '',  // SLiMS tidak menyimpan kelas — user isi manual
+        class: '',
       }));
       if (expiredWarning) { setError(expiredWarning); setIsWarning(true); } else { setIsWarning(false); }
       setStep('data');
@@ -189,35 +183,10 @@ export default function RegisterForm() {
     { key: 'confirm', label: '5' },
   ];
 
-  const currentStepIndex = stepConfig.findIndex(s => s.key === step);
-
-  // Success Step - Immersive
-  if (step === ('success' as RegistrationStep)) {
-    return (
-      <>
-        <div className="fixed inset-0 bg-gray-950 z-40" />
-        <div className="relative z-50 min-h-screen flex items-center justify-center">
-          <div className="max-w-2xl mx-auto text-center py-16 px-4 animate-fade-in">
-            <div className="text-8xl mb-8 animate-bounce">🎉</div>
-            <h2 className="text-4xl font-bold mb-4 text-white">Pendaftaran Berhasil!</h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Pendaftaranmu sedang diproses. Tunggu persetujuan dari maintainer.
-            </p>
-            <a
-              href={`/success?nis=${encodeURIComponent(formData.nis)}`}
-              className="inline-block bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-semibold transition text-lg"
-            >
-              Lihat Status Pendaftaran →
-            </a>
-          </div>
-        </div>
-      </>
-    );
-  }
+const currentStepIndex = stepConfig.findIndex(s => s.key === step);
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
-      {/* Step Indicator */}
       <div className="flex items-center justify-center gap-1 mb-8">
         {stepConfig.map((s, idx) => (
           <div key={s.key} className="flex items-center">
@@ -237,289 +206,58 @@ export default function RegisterForm() {
         ))}
       </div>
 
-      {/* Step 1: Verify ID */}
       {step === 'verify' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Verifikasi ID</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Masukkan ID (NIS/NIM/Email) untuk verifikasi data dari database {config.institution.shortName}
-          </p>
-
-          <div className="mb-4">
-            <input
-              type="text"
-              value={nisn}
-              onChange={(e) => {
-                setNisn(e.target.value.trim().slice(0, 20));
-                setError('');
-              }}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-              placeholder="Masukkan ID"
-              maxLength={20}
-            />
-            {error && <p className={`text-xs mt-1 ${isWarning ? 'text-yellow-400' : 'text-red-400'}`}>{error}</p>}
-          </div>
-
-          <button
-            type="button"
-            onClick={verifyWithSlims}
-            disabled={nisn.length < 3 || loading}
-            className={`w-full px-4 py-2.5 rounded-lg font-semibold transition ${
-              nisn.length < 3 || loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
-            } text-white`}
-          >
-            {loading ? 'Memverifikasi...' : `Verifikasi dengan ${config.features.slimsIntegration ? 'SLiMS' : 'Database'}`}
-          </button>
-        </div>
+        <VerifyStep
+          nisn={nisn}
+          onNisnChange={setNisn}
+          onVerify={verifyWithSlims}
+          loading={loading}
+          error={error}
+          isWarning={isWarning}
+        />
       )}
-      {/* Step 2: Personal Data */}
+
       {step === 'data' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Data Pribadi</h3>
-          <p className="text-gray-400 text-sm mb-4">Data ini diambil dari database {config.features.slimsIntegration ? 'SLiMS' : 'Institusi'}</p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Nama Lengkap</label>
-              <input
-                type="text"
-                value={formData.name}
-                readOnly
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 opacity-70"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-                placeholder="email@example.com"
-              />
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Kelas <span className="text-red-400">*</span></label>
-              <select
-                value={formData.class}
-                onChange={(e) => setFormData(prev => ({ ...prev, class: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">-- Pilih Kelas --</option>
-                {classOptions.map(k => (
-                  <option key={k} value={k}>{k}</option>
-                ))}
-              </select>
-              {errors.class && <p className="text-red-400 text-xs mt-1">{errors.class}</p>}
-            </div>
-
-            {/* Confirmation Checkbox */}
-            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={dataConfirmed}
-                  onChange={(e) => setDataConfirmed(e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-gray-600 bg-gray-800 text-yellow-500 focus:ring-yellow-500"
-                />
-                <span className="text-sm text-yellow-400">
-                  Saya menyatakan data di atas sudah benar dan sesuai dengan identitas saya
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6">
-            <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
-              ← Kembali
-            </button>
-            <button
-              type="button"
-              onClick={validateAndNext}
-              disabled={!formData.email || !dataConfirmed}
-              className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
-                !formData.email || !dataConfirmed
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {!formData.email ? 'Isi email dulu →' : !dataConfirmed ? 'Konfirmasi dulu →' : 'Lanjutkan →'}
-            </button>
-          </div>
-        </div>
+        <DataStep
+          formData={formData}
+          onFormDataChange={(data) => setFormData(prev => ({ ...prev, ...data }))}
+          onNext={validateAndNext}
+          onPrev={prevStep}
+          errors={errors}
+          dataConfirmed={dataConfirmed}
+          onDataConfirmedChange={setDataConfirmed}
+        />
       )}
 
-      {/* Step 3: GitHub */}
       {step === 'github' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Akun GitHub</h3>
-          <p className="text-gray-400 text-sm mb-4">Apakah kamu punya akun GitHub?</p>
-
-          <div className="mb-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={hasGithub === true}
-                onChange={() => {
-                  setHasGithub(true);
-                  setFormData(prev => ({ ...prev, githubUsername: '' }));
-                }}
-                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm">Ya, saya punya akun GitHub</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer mt-2">
-              <input
-                type="checkbox"
-                checked={hasGithub === false}
-                onChange={() => {
-                  setHasGithub(false);
-                  setFormData(prev => ({ ...prev, githubUsername: '' }));
-                }}
-                className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm">Tidak, saya belum punya akun GitHub</span>
-            </label>
-          </div>
-
-          {hasGithub && (
-            <div>
-              <input
-                type="text"
-                name="githubUsername"
-                value={formData.githubUsername || ''}
-                onChange={handleChange}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
-                placeholder="username"
-              />
-            </div>
-          )}
-
-          <div className="flex gap-3 mt-6">
-            <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
-              ← Kembali
-            </button>
-            <button
-              type="button"
-              onClick={nextStep}
-              disabled={hasGithub === null || (hasGithub === true && !formData.githubUsername)}
-              className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
-                hasGithub === null || (hasGithub === true && !formData.githubUsername)
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {hasGithub === null ? 'Pilih dulu →' : (hasGithub === true && formData.githubUsername ? 'Lanjutkan →' : 'Lewati →')}
-            </button>
-          </div>
-        </div>
+        <GithubStep
+          hasGithub={hasGithub}
+          onHasGithubChange={setHasGithub}
+          githubUsername={formData.githubUsername || ''}
+          onGithubUsernameChange={(value) => setFormData(prev => ({ ...prev, githubUsername: value }))}
+          onNext={nextStep}
+          onPrev={prevStep}
+        />
       )}
 
-      {/* Step 4: Tracks */}
       {step === 'tracks' && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="font-bold mb-4">Pilih Track Minat</h3>
-          <p className="text-gray-400 text-sm mb-4">Pilih 1-3 track yang kamu minati</p>
-
-          <div className="grid md:grid-cols-2 gap-3">
-            {trackOptions.map(track => (
-              <button
-                key={track.value}
-                type="button"
-                onClick={() => handleTrackToggle(track.value)}
-                className={`text-left p-4 rounded-lg border-2 transition ${
-                  formData.tracks.includes(track.value as any)
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : 'border-gray-700 hover:border-gray-600'
-                }`}
-              >
-                <span className="font-semibold">{track.label}</span>
-              </button>
-            ))}
-          </div>
-          {errors.tracks && <p className="text-red-400 text-xs mt-2">{errors.tracks}</p>}
-
-          <div className="flex gap-3 mt-6">
-            <button type="button" onClick={prevStep} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
-              ← Kembali
-            </button>
-            <button
-              type="button"
-              onClick={validateAndNext}
-              disabled={formData.tracks.length === 0}
-              className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
-                formData.tracks.length === 0
-                  ? 'bg-gray-700 cursor-not-allowed text-gray-500'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {formData.tracks.length === 0 ? 'Pilih track dulu →' : 'Lanjutkan →'}
-            </button>
-          </div>
-        </div>
+        <TracksStep
+          selectedTracks={formData.tracks}
+          onTrackToggle={handleTrackToggle}
+          onNext={validateAndNext}
+          onPrev={prevStep}
+          error={errors.tracks}
+        />
       )}
 
-      {/* Step 5: Confirmation */}
       {step === 'confirm' && (
-        <>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="font-bold mb-4">Konfirmasi Pendaftaran</h3>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">NIS</span>
-                <span className="font-medium">{formData.nis}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Nama</span>
-                <span className="font-medium">{formData.name}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Email</span>
-                <span className="font-medium">{formData.email}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">Kelas</span>
-                <span className="font-medium">{formData.class}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-700">
-                <span className="text-gray-400">GitHub</span>
-                <span className="font-medium">{formData.githubUsername || '-'}</span>
-              </div>
-              <div className="py-2">
-                <span className="text-gray-400 block mb-2">Track Minat</span>
-                <div className="flex flex-wrap gap-2">
-                  {formData.tracks.map(t => (
-                    <span key={t} className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs">
-                      {trackOptions.find(o => o.value === t)?.label.replace(/^[^\s]+\s/, '')}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 text-yellow-400 text-sm">
-            ⚠️ Pastikan data sudah benar. Setelah submit, tunggu persetujuan maintainer.
-          </div>
-
-          {errors.submit && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-400 text-sm">
-              {errors.submit}
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button type="button" onClick={prevStep} disabled={loading} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
-              ← Kembali
-            </button>
-            <button type="submit" disabled={loading} className="flex-1 bg-green-600 hover:bg-green-500 disabled:bg-gray-700 text-white px-4 py-2.5 rounded-lg font-semibold transition">
-              {loading ? 'Mendaftarkan...' : 'Konfirmasi & Daftar'}
-            </button>
-          </div>
-        </>
+        <ConfirmStep
+          formData={formData}
+          onSubmit={() => handleSubmit({ preventDefault: () => {} } as any)}
+          onPrev={prevStep}
+          loading={loading}
+          error={errors.submit}
+        />
       )}
     </form>
   );

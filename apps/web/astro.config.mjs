@@ -22,7 +22,20 @@ const baseConfig = {
     },
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // Strip console statements in production
+      {
+        name: 'remove-console',
+        transform(code, id) {
+          // Only strip in production build and only from src files
+          if (process.env.NODE_ENV === 'production' && id.includes('/src/')) {
+            return code.replace(/console\.(log|warn|error|debug|info)\([^)]*\);?/g, '');
+          }
+          return code;
+        },
+      } /** @type {import('vite').Plugin} */,
+    ],
     resolve: {
       dedupe: ['react', 'react-dom'],
     },

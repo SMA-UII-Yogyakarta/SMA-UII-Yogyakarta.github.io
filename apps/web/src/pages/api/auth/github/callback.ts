@@ -38,7 +38,15 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     const githubUser = await githubUserResponse.json();
     const githubEmails = await githubEmailsResponse.json();
-    const primaryEmail = githubEmails.find((email: any) => email.primary)?.email;
+    
+    interface GitHubEmail {
+      email: string;
+      primary: boolean;
+      verified: boolean;
+      visibility: string | null;
+    }
+    
+    const primaryEmail = (githubEmails as GitHubEmail[]).find((email) => email.primary)?.email;
 
     // Check if user exists in database by GitHub username (from seed data)
     let existingUser = await db.query.users.findFirst({

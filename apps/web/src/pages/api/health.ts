@@ -1,12 +1,26 @@
 import type { APIRoute } from 'astro';
-import { createSuccessResponse } from '@smauii/shared';
+import { createSuccessResponse, createErrorResponse } from '@smauii/shared';
+import { db } from '@smauii/db';
+import { sql } from 'drizzle-orm';
 
 export const GET: APIRoute = async () => {
-  const health = {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-  };
-  
-  return createSuccessResponse(health);
+  try {
+    // Check database connection
+    await db.select({ count: sql`1` }).from(users).limit(1);
+    
+    const health = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      database: 'connected',
+    };
+    
+    return createSuccessResponse(health);
+  } catch (error) {
+    console.error('Health check failed:', error);
+    return createErrorResponse('Database connection failed', 503, {
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+    });
+  }
 };
