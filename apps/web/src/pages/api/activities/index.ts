@@ -31,12 +31,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
           id: activities.id, type: activities.type, title: activities.title,
           description: activities.description, url: activities.url,
           createdAt: activities.createdAt, userId: activities.userId, userName: users.name,
-        }});
-        .from(activities});
-        .leftJoin(users, eq(activities.userId, users.id)});
-        .where(whereClause});
-        .orderBy(desc(activities.createdAt)});
-        .limit(limit});
+        })
+        .from(activities)
+        .leftJoin(users, eq(activities.userId, users.id))
+        .where(whereClause)
+        .orderBy(desc(activities.createdAt))
+        .limit(limit)
         .offset(offset),
       db.select({ count: sql`COUNT(*)` }).from(activities).where(whereClause),
     ]);

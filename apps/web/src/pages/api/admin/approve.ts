@@ -29,8 +29,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (action === 'approve') {
       await db.transaction(async (tx) => {
-        await tx.update(users});
-          .set({ status: 'active', approvedAt: Date.now(), approvedBy: user.name }});
+        await tx.update(users)
+          .set({ status: 'active', approvedAt: Date.now(), approvedBy: user.name })
           .where(eq(users.id, userId));
 
         const cardNumber = `SMAUII-${Date.now().toString(36).toUpperCase()}`;

@@ -11,8 +11,8 @@ export const GET: APIRoute = async ({ url }) => {
     const offset = (page - 1) * limit;
 
     const countResult = await db
-      .select({ count: sql<number>`count(*)` }});
-      .from(users});
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
       .where(eq(users.status, 'active'));
     const total = countResult[0]?.count ?? 0;
 
@@ -24,11 +24,11 @@ export const GET: APIRoute = async ({ url }) => {
         role: users.role,
         joinedAt: users.joinedAt,
         avatarUrl: users.avatarUrl,
-      }});
-      .from(users});
-      .where(eq(users.status, 'active')});
-      .orderBy(users.joinedAt});
-      .limit(limit});
+      )
+      .from(users)
+      .where(eq(users.status, 'active')})
+      .orderBy(users.joinedAt)
+      .limit(limit)
       .offset(offset);
 
     if (membersData.length === 0) {
@@ -41,8 +41,8 @@ export const GET: APIRoute = async ({ url }) => {
       .select({
         userId: memberTracks.userId,
         track: memberTracks.track,
-      }});
-      .from(memberTracks});
+      )
+      .from(memberTracks)
       .where(inArray(memberTracks.userId, memberIds));
 
     const tracksByUser = new Map<string, string[]>();

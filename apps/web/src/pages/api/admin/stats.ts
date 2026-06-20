@@ -53,7 +53,7 @@ export const GET: APIRoute = async ({ locals }) => {
       pendingUsers.map(async (u) => {
         const tracks = await db.query.memberTracks.findMany({ where: eq(memberTracks.userId, u.id) });
         return { ...u, tracks: tracks.map(t => t.track) };
-      }});
+      })
     );
 
     return createSuccessResponse({

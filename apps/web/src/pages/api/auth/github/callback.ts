@@ -73,20 +73,20 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
     // Link GitHub ID if not already linked
     if (!existingUser.githubId) {
-      await db.update(users});
+      await db.update(users})
         .set({
           githubId: githubUser.id.toString(),
           githubUsername: githubUser.login,
           email: primaryEmail || existingUser.email,
-        }});
+        })
         .where(eq(users.id, existingUser.id));
     } else {
       // Update GitHub info if changed
-      await db.update(users});
+      await db.update(users})
         .set({
           githubUsername: githubUser.login,
           email: primaryEmail || existingUser.email,
-        }});
+        })
         .where(eq(users.id, existingUser.id));
     }
 

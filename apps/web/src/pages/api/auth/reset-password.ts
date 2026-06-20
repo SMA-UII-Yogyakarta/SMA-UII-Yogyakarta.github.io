@@ -42,8 +42,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     const passwordHash = await hash(password);
 
-    await db.update(users});
-      .set({ passwordHash }});
+    await db.update(users})
+      .set({ passwordHash })
       .where(eq(users.id, userId));
 
     await db.delete(sessions).where(eq(sessions.userId, userId));

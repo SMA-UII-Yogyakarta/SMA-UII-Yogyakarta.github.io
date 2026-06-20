@@ -28,8 +28,8 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
     }
 
     const { type, title, description, url } = parsed.data;
-    await db.update(activities});
-      .set({ type, title, description: description || null, url: url || null }});
+    await db.update(activities)
+      .set({ type, title, description: description || null, url: url || null })
       .where(eq(activities.id, id));
 
     return createSuccessResponse({ success: true });

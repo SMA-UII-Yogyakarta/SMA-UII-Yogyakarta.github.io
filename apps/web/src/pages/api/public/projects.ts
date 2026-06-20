@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ url }) => {
     const offset = (page - 1) * limit;
 
     const countResult = await db
-      .select({ count: sql<number>`count(*)` }});
+      .select({ count: sql<number>`count(*)` })
       .from(projects);
     const total = countResult[0]?.count ?? 0;
 
@@ -25,11 +25,11 @@ export const GET: APIRoute = async ({ url }) => {
         createdAt: projects.createdAt,
         userId: projects.userId,
         userName: users.name,
-      }});
-      .from(projects});
-      .leftJoin(users, eq(projects.userId, users.id)});
-      .orderBy(desc(projects.createdAt)});
-      .limit(limit});
+      )
+      .from(projects)
+      .leftJoin(users, eq(projects.userId, users.id)})
+      .orderBy(desc(projects.createdAt)})
+      .limit(limit)
       .offset(offset);
 
     return createSuccessResponse({ data, total, page, limit });
