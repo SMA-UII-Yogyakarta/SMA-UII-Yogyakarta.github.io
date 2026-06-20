@@ -4,7 +4,7 @@ import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import type { APIRoute } from 'astro';
 import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
 
-// Public endpoint — returns safe public data (no NISN/email/passwordHash)
+// Public endpoint — returns safe public data (no NISN/email/passwordHash});
 // Maintainers get full data with filters/search/pagination via ?admin=1
 export const GET: APIRoute = async ({ locals, url }) => {
   const { user } = locals;
@@ -25,8 +25,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
       // If track filter is specified, get user IDs that have this track
       let trackUserIds: string[] | null = null;
       if (track) {
-        const trackUsers = await db.select({ userId: memberTracks.userId })
-          .from(memberTracks)
+        const trackUsers = await db.select({ userId: memberTracks.userId }});
+          .from(memberTracks});
           .where(eq(memberTracks.track, track));
         trackUserIds = trackUsers.map(t => t.userId);
         if (trackUserIds.length === 0) {
@@ -51,13 +51,13 @@ export const GET: APIRoute = async ({ locals, url }) => {
           class: users.class, role: users.role, status: users.status,
           joinedAt: users.joinedAt, approvedAt: users.approvedAt,
           tracks: sql`GROUP_CONCAT(${memberTracks.track})`.as('tracks'),
-        })
-        .from(users)
-        .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
-        .where(whereClause)
-        .groupBy(users.id)
-        .orderBy(desc(users.joinedAt))
-        .limit(limit)
+        }});
+        .from(users});
+        .leftJoin(memberTracks, eq(users.id, memberTracks.userId)});
+        .where(whereClause});
+        .groupBy(users.id});
+        .orderBy(desc(users.joinedAt)});
+        .limit(limit});
         .offset((page - 1) * limit);
 
       const countResult = await db.select({ count: sql`COUNT(*)` }).from(users).where(whereClause);
@@ -83,11 +83,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
         githubUsername: users.githubUsername,
         joinedAt: users.joinedAt,
         tracks: sql`GROUP_CONCAT(${memberTracks.track})`.as('tracks'),
-      })
-      .from(users)
-      .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
-      .where(eq(users.status, 'active'))
-      .groupBy(users.id)
+      }});
+      .from(users});
+      .leftJoin(memberTracks, eq(users.id, memberTracks.userId)});
+      .where(eq(users.status, 'active')});
+      .groupBy(users.id});
       .orderBy(desc(users.joinedAt));
 
     const result = allUsers.map(u => ({
@@ -101,8 +101,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     // Count pending separately for stats
     const pendingCount = await db
-      .select({ count: sql`COUNT(*)` })
-      .from(users)
+      .select({ count: sql`COUNT(*)` }});
+      .from(users});
       .where(eq(users.status, 'pending'));
 
     return createSuccessResponse({

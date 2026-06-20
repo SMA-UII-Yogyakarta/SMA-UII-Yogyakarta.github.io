@@ -9,13 +9,12 @@ interface ConfirmStepProps {
     githubUsername?: string;
     tracks: TrackValue[];
   };
-  onSubmit: () => void;
   onPrev: () => void;
   loading: boolean;
   error?: string;
 }
 
-export function ConfirmStep({ formData, onSubmit, onPrev, loading, error }: ConfirmStepProps) {
+export function ConfirmStep({ formData, onPrev, loading, error }: ConfirmStepProps) {
   return (
     <>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">

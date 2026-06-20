@@ -4,7 +4,7 @@ import { getSiteConfig } from '@smauii/shared';
 
 const config = getSiteConfig();
 
-// Fallback mock data — digunakan saat SLIMS_API_URL tidak dikonfigurasi (development)
+// Fallback mock data — digunakan saat SLIMS_API_URL tidak dikonfigurasi (development});
 // Di production, set SLIMS_API_URL dan SLIMS_API_KEY di environment
 // Note: SLiMS tidak menyimpan data kelas, jadi field class selalu kosong
 const MOCK_SLIMS_DATA = [
@@ -28,7 +28,7 @@ const MOCK_SLIMS_DATA = [
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    // Field yang diterima: nis (NIS siswa, sesuai member_id di SLiMS)
+    // Field yang diterima: nis (NIS siswa, sesuai member_id di SLiMS});
     // Catatan: SLiMS SMA UII menggunakan NIS (bukan NISN) sebagai member_id
     const { nisn: nis } = body;
 

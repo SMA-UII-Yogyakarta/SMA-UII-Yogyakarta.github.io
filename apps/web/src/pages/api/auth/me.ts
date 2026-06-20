@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ locals }) => {
       return createErrorResponse('User not found', 404);
     }
 
-    // Return user data (exclude sensitive fields)
+    // Return user data (exclude sensitive fields});
     const userData = {
       id: fullUser.id,
       nisn: fullUser.nisn,

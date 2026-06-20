@@ -21,11 +21,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
       db.select({
           id: announcements.id, title: announcements.title, content: announcements.content,
           createdAt: announcements.createdAt, isPinned: announcements.isPinned, creatorName: users.name,
-        })
-        .from(announcements)
-        .leftJoin(users, eq(announcements.createdBy, users.id))
-        .orderBy(desc(announcements.isPinned), desc(announcements.createdAt))
-        .limit(limit)
+        }});
+        .from(announcements});
+        .leftJoin(users, eq(announcements.createdBy, users.id)});
+        .orderBy(desc(announcements.isPinned), desc(announcements.createdAt)});
+        .limit(limit});
         .offset(offset),
       db.select({ count: sql`COUNT(*)` }).from(announcements),
     ]);
@@ -62,14 +62,14 @@ export const POST: APIRoute = async ({ locals, request }) => {
 
     await notifyAllActiveMembers(`📢 Pengumuman baru: ${title}`);
 
-    const activeMembers = await db.select({ email: users.email, name: users.name })
-      .from(users)
+    const activeMembers = await db.select({ email: users.email, name: users.name }});
+      .from(users});
       .where(eq(users.status, 'active'));
     
     await Promise.allSettled(
       activeMembers
-        .filter(m => m.email)
-        .map(m => sendAnnouncementEmail(m.email!, title, content))
+        .filter(m => m.email});
+        .map(m => sendAnnouncementEmail(m.email!, title, content)});
     );
 
     return createSuccessResponse({ id, success: true });

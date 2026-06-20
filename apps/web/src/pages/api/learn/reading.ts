@@ -21,12 +21,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const { slug, action, duration } = parsed.data;
 
   if (action === 'start') {
-    await db.update(readingSessions)
-      .set({ endedAt: Date.now(), duration: 0 })
+    await db.update(readingSessions});
+      .set({ endedAt: Date.now(), duration: 0 }});
       .where(and(
         eq(readingSessions.userId, user.id),
         eq(readingSessions.lessonSlug, slug),
-        isNull(readingSessions.endedAt)
+        isNull(readingSessions.endedAt});
       ));
 
     await db.insert(readingSessions).values({
@@ -38,12 +38,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   if (action === 'end' && duration != null) {
-    await db.update(readingSessions)
-      .set({ endedAt: Date.now(), duration })
+    await db.update(readingSessions});
+      .set({ endedAt: Date.now(), duration }});
       .where(and(
         eq(readingSessions.userId, user.id),
         eq(readingSessions.lessonSlug, slug),
-        isNull(readingSessions.endedAt)
+        isNull(readingSessions.endedAt});
       ));
 
     checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));

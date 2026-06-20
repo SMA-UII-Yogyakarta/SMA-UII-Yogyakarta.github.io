@@ -2,9 +2,18 @@ import type { APIRoute } from 'astro';
 import { createSuccessResponse, createErrorResponse } from '@smauii/shared';
 
 interface GitHubContributionData {
-  contributions: number;
   hasGitHub: boolean;
   message?: string;
+  username?: string;
+  valid?: boolean;
+  stats?: {
+    commits: number;
+    pullRequests: number;
+    issues: number;
+    repoCount: number;
+  };
+  topRepos?: string[];
+  recentActivity?: Array<{ type: string; repo: string; date: string }>;
 }
 
 const CACHE = new Map<string, { data: GitHubContributionData; expires: number }>();
@@ -41,7 +50,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Fetch user's public events (commits, PRs, issues)
+    // Fetch user's public events (commits, PRs, issues});
     const eventsRes = await fetch(
       `https://api.github.com/users/${githubUsername}/events/public?per_page=30`,
       { headers, signal: AbortSignal.timeout(10000) }

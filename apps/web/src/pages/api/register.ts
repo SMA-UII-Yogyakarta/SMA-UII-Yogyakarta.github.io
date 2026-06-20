@@ -26,11 +26,11 @@ export const POST: APIRoute = async ({ request }) => {
     
     const validated = parsed.data;
 
-    // Check if user already exists (duplicate check before insert)
+    // Check if user already exists (duplicate check before insert});
     const existing = await db.query.users.findFirst({
       where: (users, { or, eq }) => or(
         eq(users.nis, validated.nis),
-        eq(users.email, validated.email)
+        eq(users.email, validated.email});
       ),
     });
 
@@ -72,9 +72,9 @@ export const POST: APIRoute = async ({ request }) => {
       }
     });
 
-    sendRegistrationEmail(validated.email, validated.name).catch(err =>
-      console.error('Failed to send registration email:', err)
-    );
+    sendRegistrationEmail(validated.email, validated.name).catch((err) => {
+      console.error('Failed to send registration email:', err);
+    });
 
     return createSuccessResponse({
       success: true,

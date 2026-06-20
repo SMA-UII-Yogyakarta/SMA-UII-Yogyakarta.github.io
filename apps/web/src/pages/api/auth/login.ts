@@ -49,8 +49,8 @@ async function syncSlimsData(user: { id: string; nis: string; name: string; emai
       if (nameChanged) updateData.name = data.name;
       if (emailChanged) updateData.email = data.email;
 
-      await db.update(users)
-        .set(updateData)
+      await db.update(users});
+        .set(updateData});
         .where(eq(users.id, user.id));
 
       console.log(`[login] Synced SLiMS data for ${user.nis}: ${Object.keys(updateData).join(', ')}`);
@@ -72,7 +72,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     
     const { identifier, password } = parsed.data;
 
-    // Find user by NIS or email (nisn is optional, may be null)
+    // Find user by NIS or email (nisn is optional, may be null});
     const user = await db.query.users.findFirst({
       where: or(
         eq(users.nis, identifier),
@@ -116,10 +116,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    // Sync data from SLiMS (non-blocking, don't fail login if sync fails)
+    // Sync data from SLiMS (non-blocking, don't fail login if sync fails});
     syncSlimsData(user).catch(() => {});
 
-    // Invalidate all existing sessions for this user (session fixation protection)
+    // Invalidate all existing sessions for this user (session fixation protection});
     await db.delete(sessions).where(eq(sessions.userId, user.id));
 
     // Create new session

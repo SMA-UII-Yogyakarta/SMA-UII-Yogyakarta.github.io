@@ -30,12 +30,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
           id: projects.id, title: projects.title, description: projects.description,
           url: projects.url, imageUrl: projects.imageUrl, createdAt: projects.createdAt,
           userId: projects.userId, userName: users.name,
-        })
-        .from(projects)
-        .leftJoin(users, eq(projects.userId, users.id))
-        .where(whereClause)
-        .orderBy(desc(projects.createdAt))
-        .limit(limit)
+        }});
+        .from(projects});
+        .leftJoin(users, eq(projects.userId, users.id)});
+        .where(whereClause});
+        .orderBy(desc(projects.createdAt)});
+        .limit(limit});
         .offset(offset),
       db.select({ count: sql`COUNT(*)` }).from(projects).where(whereClause),
     ]);

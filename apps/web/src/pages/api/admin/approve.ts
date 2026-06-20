@@ -29,8 +29,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     if (action === 'approve') {
       await db.transaction(async (tx) => {
-        await tx.update(users)
-          .set({ status: 'active', approvedAt: Date.now(), approvedBy: user.name })
+        await tx.update(users});
+          .set({ status: 'active', approvedAt: Date.now(), approvedBy: user.name }});
           .where(eq(users.id, userId));
 
         const cardNumber = `SMAUII-${Date.now().toString(36).toUpperCase()}`;
@@ -41,18 +41,19 @@ export const POST: APIRoute = async ({ request, locals }) => {
       await createNotification(userId, `Selamat! Akun kamu telah disetujui. Kartu anggota sudah tersedia.`);
       // Kirim email approval
       if (targetUser.email) {
-        await sendApprovalEmail(targetUser.email, targetUser.name).catch(err => 
-          console.error('Failed to send approval email:', err)
-        );
+        await sendApprovalEmail(targetUser.email, targetUser.name).catch((err) => {
+          console.error('Failed to send approval email:', err);
+        });
       }
       return createSuccessResponse({ success: true, message: 'User approved successfully' });
 
     } else if (action === 'reject') {
       if (targetUser.email) {
-        sendRejectionEmail(targetUser.email, targetUser.name).catch(err =>
-          console.error('Failed to send rejection email:', err)
-        );
+        sendRejectionEmail(targetUser.email, targetUser.name).catch((err) => {
+          console.error('Failed to send rejection email:', err);
+        });
       }
+      
       await db.transaction(async (tx) => {
         await tx.delete(memberTracks).where(eq(memberTracks.userId, userId));
         await tx.delete(sessions).where(eq(sessions.userId, userId));

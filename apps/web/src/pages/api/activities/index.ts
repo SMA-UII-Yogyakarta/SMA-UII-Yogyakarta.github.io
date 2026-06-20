@@ -31,12 +31,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
           id: activities.id, type: activities.type, title: activities.title,
           description: activities.description, url: activities.url,
           createdAt: activities.createdAt, userId: activities.userId, userName: users.name,
-        })
-        .from(activities)
-        .leftJoin(users, eq(activities.userId, users.id))
-        .where(whereClause)
-        .orderBy(desc(activities.createdAt))
-        .limit(limit)
+        }});
+        .from(activities});
+        .leftJoin(users, eq(activities.userId, users.id)});
+        .where(whereClause});
+        .orderBy(desc(activities.createdAt)});
+        .limit(limit});
         .offset(offset),
       db.select({ count: sql`COUNT(*)` }).from(activities).where(whereClause),
     ]);
@@ -70,7 +70,9 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const id = nanoid();
     await db.insert(activities).values({ id, userId: user.id, type, title, description: description || null, url: url || null, createdAt: Date.now() });
 
-    checkAndAwardBadges(user.id, db).catch(e => console.error('Badge check error:', e));
+    checkAndAwardBadges(user.id, db).catch((err) => {
+      console.error('Badge check error:', err);
+    });
 
     return createSuccessResponse({ id, success: true });
   } catch (error) {

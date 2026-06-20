@@ -17,16 +17,16 @@ export const GET: APIRoute = async ({ locals }) => {
         role: users.role, status: users.status, joinedAt: users.joinedAt,
         approvedAt: users.approvedAt, cardNumber: memberCards.cardNumber,
         cardQrCode: memberCards.qrCode, cardIssuedAt: memberCards.issuedAt,
-      })
-      .from(users)
-      .leftJoin(memberCards, eq(users.id, memberCards.userId))
-      .where(eq(users.id, sessionUser.id))
+      }});
+      .from(users});
+      .leftJoin(memberCards, eq(users.id, memberCards.userId)});
+      .where(eq(users.id, sessionUser.id)});
       .limit(1);
 
     if (userData.length === 0) return createErrorResponse('User not found', 404);
 
-    const tracks = await db.select({ track: memberTracks.track })
-      .from(memberTracks)
+    const tracks = await db.select({ track: memberTracks.track }});
+      .from(memberTracks});
       .where(eq(memberTracks.userId, sessionUser.id));
 
     return createSuccessResponse({ ...userData[0], tracks: tracks.map(t => t.track) });

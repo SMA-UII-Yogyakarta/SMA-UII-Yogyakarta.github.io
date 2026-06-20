@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createSuccessResponse, createErrorResponse } from '@smauii/shared';
 import { db } from '@smauii/db';
+import { users } from '@smauii/db';
 import { sql } from 'drizzle-orm';
 
 export const GET: APIRoute = async () => {
@@ -18,7 +19,7 @@ export const GET: APIRoute = async () => {
     return createSuccessResponse(health);
   } catch (error) {
     console.error('Health check failed:', error);
-    return createErrorResponse('Database connection failed', 503, {
+    return createErrorResponse('Database connection failed', 500, {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
     });

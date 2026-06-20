@@ -29,13 +29,13 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
     const { title, description, url, imageUrl } = parsed.data;
 
-    await db.update(projects)
+    await db.update(projects});
       .set({
         title: title ?? project.title,
         description: description ?? project.description,
         url: url ?? project.url,
         imageUrl: imageUrl !== undefined ? (imageUrl || null) : project.imageUrl,
-      })
+      }});
       .where(eq(projects.id, id));
 
     return createSuccessResponse({ success: true });

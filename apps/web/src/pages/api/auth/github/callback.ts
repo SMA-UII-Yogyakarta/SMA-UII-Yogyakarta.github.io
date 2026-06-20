@@ -48,7 +48,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     
     const primaryEmail = (githubEmails as GitHubEmail[]).find((email) => email.primary)?.email;
 
-    // Check if user exists in database by GitHub username (from seed data)
+    // Check if user exists in database by GitHub username (from seed data});
     let existingUser = await db.query.users.findFirst({
       where: eq(users.githubUsername, githubUser.login),
     });
@@ -60,7 +60,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
       });
     }
 
-    // If still not found, check if any user exists (for first-time GitHub login)
+    // If still not found, check if any user exists (for first-time GitHub login});
     if (!existingUser) {
       const allUsers = await db.query.users.findMany();
       if (allUsers.length === 0) {
@@ -73,24 +73,24 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
     // Link GitHub ID if not already linked
     if (!existingUser.githubId) {
-      await db.update(users)
+      await db.update(users});
         .set({
           githubId: githubUser.id.toString(),
           githubUsername: githubUser.login,
           email: primaryEmail || existingUser.email,
-        })
+        }});
         .where(eq(users.id, existingUser.id));
     } else {
       // Update GitHub info if changed
-      await db.update(users)
+      await db.update(users});
         .set({
           githubUsername: githubUser.login,
           email: primaryEmail || existingUser.email,
-        })
+        }});
         .where(eq(users.id, existingUser.id));
     }
 
-    // Invalidate all existing sessions for this user (session fixation protection)
+    // Invalidate all existing sessions for this user (session fixation protection});
     await db.delete(sessions).where(eq(sessions.userId, userId));
 
     // Create new session

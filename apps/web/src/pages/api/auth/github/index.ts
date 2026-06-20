@@ -32,7 +32,7 @@ export function extractReturnTo(state: string): string {
   const pipe = state.indexOf('|');
   if (pipe === -1) return '/app/overview';
   const returnTo = state.slice(pipe + 1);
-  // Validasi: hanya allow path internal (tidak boleh redirect ke domain lain)
+  // Validasi: hanya allow path internal (tidak boleh redirect ke domain lain});
   return returnTo.startsWith('/') ? returnTo : '/app/overview';
 }
 

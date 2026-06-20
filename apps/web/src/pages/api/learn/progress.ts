@@ -56,7 +56,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
       }
     } else {
       await db.delete(learningProgress).where(
-        and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug))
+        and(eq(learningProgress.userId, user.id), eq(learningProgress.lessonSlug, slug)});
       );
     }
 

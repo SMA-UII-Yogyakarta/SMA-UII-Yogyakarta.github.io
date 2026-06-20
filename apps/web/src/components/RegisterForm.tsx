@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { registerSchema, trackOptions, classOptions, type RegisterInput, type TrackValue } from '@smauii/validation';
+import { registerSchema, type RegisterInput, type TrackValue } from '@smauii/validation';
 import type { ZodError } from 'zod';
 import { VerifyStep } from './auth/steps/VerifyStep';
 import { DataStep } from './auth/steps/DataStep';
