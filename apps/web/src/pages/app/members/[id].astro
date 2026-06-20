@@ -1,0 +1,230 @@
+---
+import DashboardLayout from '@layouts/DashboardLayout.astro';
+import PageHeader from '@components/app/PageHeader.astro';
+import { requireMaintainer } from '@lib/guards';
+
+const redirect = requireMaintainer(Astro); if (redirect) return redirect;
+
+interface MemberDetail {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    nis?: string;
+    nisn?: string;
+    class?: string;
+    role: string;
+    status: string;
+    githubUsername?: string;
+    githubId?: string;
+    avatarUrl?: string;
+    joinedAt: number;
+    approvedBy?: string;
+  };
+  tracks: string[];
+  activityCount?: number;
+  projectCount?: number;
+}
+
+const { id } = Astro.params;
+if (!id) {
+  return Astro.redirect('/app/members');
+}
+
+let member: MemberDetail | null = null;
+let error = '';
+
+try {
+  const res = await fetch(`${import.meta.env.PUBLIC_API_URL || ''}/api/admin/users?id=${id}`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+    },
+  });
+  
+  if (!res.ok) {
+    error = 'Member tidak ditemukan';
+  } else {
+    const json = await res.json();
+    member = json.data || null;
+  }
+} catch (e) {
+  error = 'Gagal memuat data member';
+}
+---
+
+<DashboardLayout title={member ? member.user.name : 'Member Not Found'}>
+  {error ? (
+    <div class="max-w-2xl mx-auto">
+      <PageHeader subtitle="Detail Anggota" />
+      <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
+        <p class="text-red-400 text-lg mb-4">{error}</p>
+        <a href="/app/members" class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold transition">
+          ← Kembali ke Daftar Member
+        </a>
+      </div>
+    </div>
+  ) : member ? (
+    <div class="max-w-4xl mx-auto space-y-6">
+      <PageHeader subtitle="Detail Anggota" />
+
+      <!-- Profile Card -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div class="flex items-start gap-4 mb-6">
+          <div class="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+            {member.user.avatarUrl ? (
+              <img src={member.user.avatarUrl} alt={member.user.name} class="w-20 h-20 rounded-full object-cover" />
+            ) : (
+              member.user.name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div class="flex-1">
+            <h1 class="text-2xl font-bold text-white mb-1">{member.user.name}</h1>
+            <p class="text-gray-400 text-sm mb-2">{member.user.email}</p>
+            <div class="flex gap-2 mb-2">
+              <span class={`px-2 py-1 rounded text-xs font-medium ${
+                member.user.status === 'active' ? 'text-green-400 bg-green-400/10' :
+                member.user.status === 'pending' ? 'text-yellow-400 bg-yellow-400/10' :
+                'text-red-400 bg-red-400/10'
+              }`}>
+                {member.user.status}
+              </span>
+              <span class="px-2 py-1 rounded text-xs font-medium text-blue-400 bg-blue-400/10 capitalize">
+                {member.user.role}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+          <div class="space-y-3">
+            <div>
+              <p class="text-gray-400 text-xs mb-1">NISN</p>
+              <p class="text-white font-medium">{member.user.nisn || '-'}</p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-xs mb-1">NIS</p>
+              <p class="text-white font-medium">{member.user.nis || '-'}</p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-xs mb-1">Kelas</p>
+              <p class="text-white font-medium">{member.user.class || '-'}</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <p class="text-gray-400 text-xs mb-1">GitHub</p>
+              <p class="text-white font-medium">
+                {member.user.githubUsername ? (
+                  <a href={`https://github.com/${member.user.githubUsername}`} target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
+                    @{member.user.githubUsername}
+                  </a>
+                ) : '-'}
+              </p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-xs mb-1">Bergabung</p>
+              <p class="text-white font-medium">
+                {member.user.joinedAt ? new Date(member.user.joinedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+              </p>
+            </div>
+            <div>
+              <p class="text-gray-400 text-xs mb-1">Disetujui Oleh</p>
+              <p class="text-white font-medium">{member.user.approvedBy || 'Belum disetujui'}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracks -->
+        {member.tracks.length > 0 && (
+          <div class="border-t border-gray-800 mt-6 pt-6">
+            <p class="text-gray-400 text-xs mb-3">Track Minat</p>
+            <div class="flex flex-wrap gap-2">
+              {member.tracks.map(track => (
+                <span class="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-sm font-medium">
+                  {track}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Stats -->
+        <div class="border-t border-gray-800 mt-6 pt-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-blue-400">{member.activityCount ?? 0}</p>
+              <p class="text-xs text-gray-400 mt-1">Activities</p>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+              <p class="text-2xl font-bold text-green-400">{member.projectCount ?? 0}</p>
+              <p class="text-xs text-gray-400 mt-1">Projects</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3">
+        <a href="/app/members" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition text-center">
+          ← Kembali
+        </a>
+        {member.user.status === 'pending' && (
+          <>
+            <button data-action="approve" data-id={member.user.id} class="flex-1 bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-lg font-semibold transition">
+              Approve
+            </button>
+            <button data-action="reject" data-id={member.user.id} class="flex-1 bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-lg font-semibold transition">
+              Reject
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div class="max-w-2xl mx-auto text-center py-12">
+      <div class="text-6xl mb-4">⏳</div>
+      <p class="text-gray-400">Loading...</p>
+    </div>
+  )}
+
+  <script>
+    // Approve/Reject actions
+    document.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
+      if (!btn) return;
+      
+      const { action, id } = btn.dataset;
+      
+      if (action === 'approve') {
+        if (!confirm('Setujui anggota ini?')) return;
+        const res = await fetch('/api/admin/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: id, action: 'approve' }),
+        });
+        if (res.ok) {
+          showToast('Member approved', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast('Gagal approve member', 'error');
+        }
+      }
+      
+      if (action === 'reject') {
+        if (!confirm('Tolak dan hapus anggota ini?')) return;
+        const res = await fetch('/api/admin/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: id, action: 'reject' }),
+        });
+        if (res.ok) {
+          showToast('Member ditolak', 'success');
+          setTimeout(() => window.location.href = '/app/members', 1000);
+        } else {
+          showToast('Gagal reject member', 'error');
+        }
+      }
+    });
+  </script>
+</DashboardLayout>
