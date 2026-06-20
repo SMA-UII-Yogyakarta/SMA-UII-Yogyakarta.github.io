@@ -253,7 +253,6 @@ const currentStepIndex = stepConfig.findIndex(s => s.key === step);
       {step === 'confirm' && (
         <ConfirmStep
           formData={formData}
-          onSubmit={() => handleSubmit({ preventDefault: () => {} } as any)}
           onPrev={prevStep}
           loading={loading}
           error={errors.submit}

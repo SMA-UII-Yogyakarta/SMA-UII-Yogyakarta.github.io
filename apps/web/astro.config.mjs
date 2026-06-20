@@ -25,11 +25,12 @@ const baseConfig = {
     plugins: [
       tailwindcss(),
       // Strip console statements in production
-      /** @type {import('vite').Plugin} */
-      ({
+      {
         name: 'remove-console',
-        /** @param {string} code */
-        /** @param {string} id */
+        /**
+         * @param {string} code
+         * @param {string} id
+         */
         transform(code, id) {
           // Only strip in production build and only from src files
           if (process.env.NODE_ENV === 'production' && id.includes('/src/')) {
@@ -37,7 +38,7 @@ const baseConfig = {
           }
           return code;
         },
-      }),
+      },
     ],
     resolve: {
       dedupe: ['react', 'react-dom'],
