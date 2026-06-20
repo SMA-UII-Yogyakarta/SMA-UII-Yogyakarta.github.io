@@ -15,7 +15,7 @@ export const GET: APIRoute = async ({ url }) => {
       .from(projects);
     const total = countResult[0]?.count ?? 0;
 
-    const data = await db
+const data = await db
       .select({
         id: projects.id,
         title: projects.title,
@@ -25,10 +25,10 @@ export const GET: APIRoute = async ({ url }) => {
         createdAt: projects.createdAt,
         userId: projects.userId,
         userName: users.name,
-      )
+      })
       .from(projects)
       .leftJoin(users, eq(projects.userId, users.id))
-      .orderBy(desc(projects.createdAt)})
+      .orderBy(desc(projects.createdAt))
       .limit(limit)
       .offset(offset);
 

@@ -42,8 +42,8 @@ export const GET: APIRoute = async ({ locals }) => {
     for (const t of allTracks) {
       trackMap.set(t.track, (trackMap.get(t.track) || 0) + 1);
     }
-    const trackPopularity = Array.from(trackMap.entries()});
-      .map(([track, count]) => ({ track, count })});
+    const trackPopularity = Array.from(trackMap.entries())
+      .map(([track, count]) => ({ track, count }))
       .sort((a, b) => b.count - a.count);
 
     const allProjects = await db.query.projects.findMany();

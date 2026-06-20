@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
   try {
     const userNotifications = await db
-      .select({ id: notifications.id, message: notifications.message, isRead: notifications.isRead, createdAt: notifications.createdAt )
+      .select({ id: notifications.id, message: notifications.message, isRead: notifications.isRead, createdAt: notifications.createdAt })
       .from(notifications)
       .where(eq(notifications.userId, user.id))
       .orderBy(desc(notifications.createdAt))

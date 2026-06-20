@@ -50,12 +50,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
           id: users.id, name: users.name, email: users.email, nis: users.nis, nisn: users.nisn,
           class: users.class, role: users.role, status: users.status,
           joinedAt: users.joinedAt, approvedAt: users.approvedAt,
-          tracks: sql`GROUP_CONCAT(${memberTracks.track)`.as('tracks'),
+          tracks: sql`GROUP_CONCAT(${memberTracks.track})`.as('tracks'),
         })
         .from(users)
         .leftJoin(memberTracks, eq(users.id, memberTracks.userId))
         .where(whereClause)
-        .groupBy(users.id})
+        .groupBy(users.id)
         .orderBy(desc(users.joinedAt))
         .limit(limit)
         .offset((page - 1) * limit);

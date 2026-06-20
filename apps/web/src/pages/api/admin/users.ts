@@ -48,7 +48,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
       const trackUsers = await db.query.memberTracks.findMany({
         where: and(
           inArray(memberTracks.userId, userIds),
-          eq(memberTracks.track, track});
+          eq(memberTracks.track, track)
         ),
       });
       const trackUserIds = new Set(trackUsers.map(t => t.userId));
