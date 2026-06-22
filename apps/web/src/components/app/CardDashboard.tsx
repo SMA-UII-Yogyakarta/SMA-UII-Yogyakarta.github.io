@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, getCachedData } from '../../lib/api-client';
 
 interface Card {
   cardNumber: string;
@@ -22,9 +22,12 @@ interface CardDashboardProps {
 }
 
 export default function CardDashboard({ initialUser, initialCard }: CardDashboardProps) {
-  const [user, setUser] = useState<User | null>(initialUser || null);
-  const [card, setCard] = useState<Card | null>(initialCard || null);
-  const [loading, setLoading] = useState(!initialCard && !initialUser);
+  const cachedProfile = getCachedData<any>('/api/profile');
+  const cachedUser: User | null = cachedProfile?.data ? { id: cachedProfile.data.id, name: cachedProfile.data.name, role: cachedProfile.data.role, status: cachedProfile.data.status, class: cachedProfile.data.class, nisn: cachedProfile.data.nisn } : null;
+  const cachedCard: Card | null = cachedProfile?.data?.card ? { cardNumber: cachedProfile.data.card.cardNumber, qrCode: cachedProfile.data.card.qrCode || cachedProfile.data.cardQrCode, issuedAt: cachedProfile.data.card.issuedAt || cachedProfile.data.cardIssuedAt } : null;
+  const [user, setUser] = useState<User | null>(cachedUser ?? initialUser ?? null);
+  const [card, setCard] = useState<Card | null>(cachedCard ?? initialCard ?? null);
+  const [loading, setLoading] = useState(!cachedUser && !initialUser && !cachedCard && !initialCard);
   const [activeTab, setActiveTab] = useState<'card' | 'qr'>('card');
   const [showPdfInstruction, setShowPdfInstruction] = useState(false);
 
@@ -37,7 +40,7 @@ export default function CardDashboard({ initialUser, initialCard }: CardDashboar
   }, [initialUser, initialCard]);
 
   const loadCardData = async () => {
-    setLoading(true);
+    if (!cachedProfile?.data) setLoading(true);
     try {
       const res = await apiFetch<any>('/api/profile');
       if (res.data) {

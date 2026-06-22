@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch, isExternalApiMode, getApiBaseUrl } from '../../lib/api-client';
+import { apiFetch, getCachedData, isExternalApiMode, getApiBaseUrl } from '../../lib/api-client';
 
 interface User {
   id?: string;
@@ -52,9 +52,25 @@ interface OverviewDashboardProps {
 }
 
 export default function OverviewDashboard({ initialUser, initialAdminData }: OverviewDashboardProps) {
+  const cachedStats = getCachedData<any>('/api/admin/stats');
+  const cachedAnn = getCachedData<any>('/api/announcements');
+  let cachedAdminData: AdminData | null = null;
+  if (cachedStats?.data) {
+    const s = cachedStats.data;
+    const a = cachedAnn?.data?.announcements || cachedAnn?.data || [];
+    cachedAdminData = {
+      members: s.members || { total: 0, active: 0, pending: 0, inactive: 0 },
+      activitiesThisMonth: s.activitiesThisMonth || 0,
+      totalProjects: s.totalProjects || 0,
+      trackPopularity: s.trackPopularity || [],
+      recentMembers: s.recentMembers || [],
+      pendingUsers: s.pendingUsers || [],
+      announcements: (Array.isArray(a) ? a : []).slice(0, 3),
+    };
+  }
   const [user, setUser] = useState<User | null>(initialUser || null);
-  const [adminData, setAdminData] = useState<AdminData | null>(initialAdminData || null);
-  const [loading, setLoading] = useState(!initialAdminData);
+  const [adminData, setAdminData] = useState<AdminData | null>(cachedAdminData ?? initialAdminData ?? null);
+  const [loading, setLoading] = useState(!cachedAdminData && !initialAdminData);
   const [actionLoading, setActionLoading] = useState<Record<string, 'approve' | 'reject' | null>>({});
 
   useEffect(() => {
@@ -88,7 +104,7 @@ export default function OverviewDashboard({ initialUser, initialAdminData }: Ove
   }, [user, initialAdminData]);
 
   const loadAdminData = async () => {
-    setLoading(true);
+    if (!cachedAdminData) setLoading(true);
     try {
       const [statsRes, annRes] = await Promise.all([
         apiFetch<any>('/api/admin/stats'),

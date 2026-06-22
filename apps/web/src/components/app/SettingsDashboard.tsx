@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, getCachedData } from '../../lib/api-client';
 
 interface UserSettings {
   id: string;
@@ -18,8 +18,9 @@ interface SettingsDashboardProps {
 }
 
 export default function SettingsDashboard({ initialData }: SettingsDashboardProps) {
-  const [data, setData] = useState<UserSettings | null>(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
+  const cachedSettings = getCachedData<UserSettings>('/api/profile');
+  const [data, setData] = useState<UserSettings | null>(cachedSettings?.data ?? initialData ?? null);
+  const [loading, setLoading] = useState(!cachedSettings?.data && !initialData);
   const [nameInput, setNameInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -34,7 +35,7 @@ export default function SettingsDashboard({ initialData }: SettingsDashboardProp
   }, [initialData]);
 
   const loadSettingsData = async () => {
-    setLoading(true);
+    if (!cachedSettings?.data) setLoading(true);
     try {
       const res = await apiFetch<UserSettings>('/api/profile');
       if (res.data) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, getCachedData } from '../../lib/api-client';
 
 interface MemberDetail {
   user: {
@@ -28,8 +28,10 @@ interface MemberDetailDashboardProps {
 }
 
 export default function MemberDetailDashboard({ id, initialData }: MemberDetailDashboardProps) {
-  const [member, setMember] = useState<MemberDetail | null>(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
+  const apiPath = `/api/admin/users?id=${id || 'fallback'}`;
+  const cachedMemberData = getCachedData<MemberDetail>(apiPath);
+  const [member, setMember] = useState<MemberDetail | null>(cachedMemberData?.data ?? initialData ?? null);
+  const [loading, setLoading] = useState(!cachedMemberData?.data && !initialData);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<'approve' | 'reject' | null>(null);
 
@@ -53,7 +55,7 @@ export default function MemberDetailDashboard({ id, initialData }: MemberDetailD
   }, []);
 
   const loadMemberDetail = async (memberId = id) => {
-    setLoading(true);
+    if (!cachedMemberData?.data) setLoading(true);
     setError(null);
     try {
       const res = await apiFetch<any>(`/api/admin/users?id=${memberId}`);

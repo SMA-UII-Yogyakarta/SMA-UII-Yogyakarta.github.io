@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, getCachedData } from '../../lib/api-client';
 
 interface LeaderboardUser {
   rank: number;
@@ -37,8 +37,10 @@ interface LeaderboardDashboardProps {
 }
 
 export default function LeaderboardDashboard({ initialData }: LeaderboardDashboardProps) {
-  const [data, setData] = useState<LeaderboardData | null>(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
+  const cachedRaw = getCachedData<any>('/api/leaderboard?limit=50');
+  const cachedLeaderboard: LeaderboardData | null = cachedRaw?.data?.leaderboard ? { leaderboard: cachedRaw.data.leaderboard, allBadges: cachedRaw.data.allBadges || [], recentBadges: cachedRaw.data.recentBadges || [] } : null;
+  const [data, setData] = useState<LeaderboardData | null>(cachedLeaderboard ?? initialData ?? null);
+  const [loading, setLoading] = useState(!cachedLeaderboard && !initialData);
 
   useEffect(() => {
     if (!initialData) {
@@ -49,7 +51,7 @@ export default function LeaderboardDashboard({ initialData }: LeaderboardDashboa
   }, [initialData]);
 
   const loadLeaderboardData = async () => {
-    setLoading(true);
+    if (!cachedLeaderboard) setLoading(true);
     try {
       const res = await apiFetch<any>('/api/leaderboard?limit=50');
       // Hono API returns { leaderboard, allBadges, recentBadges } directly under data or root

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { apiFetch } from '../../lib/api-client';
+import { apiFetch, getCachedData } from '../../lib/api-client';
 
 interface UserBadge {
   id: string;
@@ -53,8 +53,9 @@ interface ProfileDashboardProps {
 }
 
 export default function ProfileDashboard({ initialData }: ProfileDashboardProps) {
-  const [data, setData] = useState<ProfileData | null>(initialData || null);
-  const [loading, setLoading] = useState(!initialData);
+  const cachedProfile = getCachedData<ProfileData>('/api/profile');
+  const [data, setData] = useState<ProfileData | null>(cachedProfile?.data ?? initialData ?? null);
+  const [loading, setLoading] = useState(!cachedProfile?.data && !initialData);
   const [githubData, setGitHubData] = useState<GitHubData | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export default function ProfileDashboard({ initialData }: ProfileDashboardProps)
   }, [data]);
 
   const loadProfileData = async () => {
-    setLoading(true);
+    if (!cachedProfile?.data) setLoading(true);
     try {
       const res = await apiFetch<ProfileData>('/api/profile');
       if (res.data) {

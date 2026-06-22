@@ -91,9 +91,35 @@ const userAvatarUrl = user?.avatarUrl ?? null;
     /* Desktop/tablet: reset padding bottom (no BottomNav) */
     @media (min-width: 640px) {
       #dashboard-content { padding-bottom: 1rem !important; }
-    }  </style>
+    }
+    /* ── Navigation progress bar ── */
+    #nav-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6, #3b82f6);
+      background-size: 200% 100%;
+      z-index: 9999;
+      width: 0;
+      transition: width 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #nav-progress.active {
+      opacity: 1;
+      animation: progress-indeterminate 1.5s ease infinite;
+    }
+    @keyframes progress-indeterminate {
+      0% { width: 0%; background-position: 0% 0; }
+      30% { width: 50%; }
+      70% { width: 70%; }
+      100% { width: 85%; background-position: 200% 0; }
+    }
+  </style>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased overflow-hidden">
+  <div id="nav-progress"></div>
   <div class="flex h-dvh"  style="height: 100dvh">
     <Sidebar role={role} userName={userName} userEmail={userEmail} userAvatarUrl={userAvatarUrl} />
 
@@ -256,6 +282,23 @@ const userAvatarUrl = user?.avatarUrl ?? null;
       })();
     } else {
       init();
+    }
+
+    // ── Navigation progress bar for ViewTransitions ──
+    const progressBar = document.getElementById('nav-progress');
+    if (progressBar) {
+      document.addEventListener('astro:before-swap', () => {
+        progressBar.classList.add('active');
+      });
+      document.addEventListener('astro:after-swap', () => {
+        progressBar.classList.remove('active');
+        progressBar.style.width = '100%';
+        progressBar.style.opacity = '1';
+        setTimeout(() => {
+          progressBar.style.width = '0';
+          progressBar.style.opacity = '0';
+        }, 200);
+      });
     }
   </script>
 
