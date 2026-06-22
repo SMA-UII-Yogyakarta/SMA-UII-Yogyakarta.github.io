@@ -1,8 +1,9 @@
 import type { MiddlewareHandler } from 'astro';
 import { lucia } from '@lib/auth';
-import { db } from '@smauii/db';
-import { users } from '@smauii/db';
+import { db, users } from '@smauii/db';
 import { eq } from 'drizzle-orm';
+import { ErrorCode } from '@smauii/shared';
+import { setSecurityHeaders } from '@lib/security';
 
 // In-memory rate limiter
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -43,7 +44,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       || context.request.headers.get('x-real-ip')
       || 'unknown';
     if (!rateLimit(ip, routeConfig.max, routeConfig.window)) {
-      return new Response(JSON.stringify({ error: 'Too many requests', code: 'RATE_LIMITED' }), {
+      return new Response(JSON.stringify({ error: 'Too many requests', code: ErrorCode.RATE_LIMITED }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -83,19 +84,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
   const response = await next();
 
-  // Security headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  const connectSrc = import.meta.env.PROD
-    ? "'self' https://github.com https://api.github.com https://github.githubassets.com https://avatars.githubusercontent.com"
-    : "'self' https://github.com https://api.github.com https://github.githubassets.com https://avatars.githubusercontent.com https://astro.build";
-  response.headers.set(
-    'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src ${connectSrc}; font-src 'self' https://cdn.jsdelivr.net`
-  );
+  setSecurityHeaders(response);
 
   return response;
 };
