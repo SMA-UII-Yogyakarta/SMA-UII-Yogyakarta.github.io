@@ -71,7 +71,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     declare function showToast(message: string, type?: string, duration?: number): void;
 
     import { esc, renderPagination, setBtnLoading, confirmAction, setupPullToRefresh, staggerList, setupSwipeAction } from '@lib/ui';
-    import { apiFetch } from '@lib/api-client';
+    import { apiFetch, getCachedData } from '@lib/api-client';
 
     const contentEl = document.getElementById('members-content') as HTMLElement;
     const pwInput = document.getElementById('new-password') as HTMLInputElement;
@@ -150,18 +150,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
         </div>`;
     }
 
-    async function load() {
-      const params = new URLSearchParams({ admin: '1', page: String(currentPage), limit: String(PAGE_LIMIT) });
-      if (currentStatus) params.set('status', currentStatus);
-      if (currentTrack) params.set('track', currentTrack);
-      if (currentClass) params.set('class', currentClass);
-      if (currentSearch) params.set('search', currentSearch);
-
-      const { data, error } = await apiFetch<any>(`/api/members?${params}`);
-      if (error) {
-        showToast('Gagal memuat data anggota', 'error');
-        return;
-      }
+    function renderMembersUI(data: any): void {
       const { members = [], total = 0, page = 1, limit = PAGE_LIMIT } = data || {};
 
       // Update status filter buttons
@@ -198,6 +187,21 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       }
 
       renderPagination('members-pagination', 'members-content', total, page, limit, 'anggota', 'window.goToPage');
+    }
+
+    async function load() {
+      const params = new URLSearchParams({ admin: '1', page: String(currentPage), limit: String(PAGE_LIMIT) });
+      if (currentStatus) params.set('status', currentStatus);
+      if (currentTrack) params.set('track', currentTrack);
+      if (currentClass) params.set('class', currentClass);
+      if (currentSearch) params.set('search', currentSearch);
+
+      const { data, error } = await apiFetch<any>(`/api/members?${params}`);
+      if (error) {
+        showToast('Gagal memuat data anggota', 'error');
+        return;
+      }
+      renderMembersUI(data);
     }
 
     window.goToPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
@@ -404,6 +408,11 @@ function validatePassword(password: string): string | null {
     window.filterMembers = (s: string) => { currentStatus = s; currentPage = 1; load(); };
     window.searchMembers = (v: string) => { currentSearch = v; currentPage = 1; load(); };
 
+    // Sync cache: render cached data immediately to skip skeleton flash on ViewTransitions
+    const defaultCacheKey = `/api/members?admin=1&page=${currentPage}&limit=${PAGE_LIMIT}`;
+    const cached = getCachedData<any>(defaultCacheKey);
+    if (cached?.data) renderMembersUI(cached.data);
+    // Background refresh: fetch fresh data without showing loading
     load();
   </script>
 </DashboardLayout>

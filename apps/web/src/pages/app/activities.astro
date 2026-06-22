@@ -68,7 +68,7 @@ const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
     declare function showToast(message: string, type?: string, duration?: number): void;
 
     import { esc, fmtDate, renderPagination, icons, setBtnLoading, confirmAction, setupPullToRefresh, staggerList } from '@lib/ui';
-    import { apiFetch } from '@lib/api-client';
+    import { apiFetch, getCachedData } from '@lib/api-client';
 
     const meta = document.getElementById('activities-meta') as HTMLElement;
     const currentUserId = meta.dataset.userId || '';
@@ -124,14 +124,7 @@ const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
         </div>`;
     }
 
-    async function load() {
-      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
-      if (currentFilter) params.set('type', currentFilter);
-      const { data, error } = await apiFetch<any>(`/api/activities?${params}`);
-      if (error) {
-        showToast('Gagal memuat data aktivitas', 'error');
-        return;
-      }
+    function renderActivitiesUI(data: any): void {
       const activities: any[] = data?.activities || [];
       const total: number = data?.total || 0;
 
@@ -157,6 +150,17 @@ const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
       }
 
       renderPagination('activities-pagination', 'activities-list', total, currentPage, PAGE_LIMIT, 'aktivitas', 'window.actPage');
+    }
+
+    async function load() {
+      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
+      if (currentFilter) params.set('type', currentFilter);
+      const { data, error } = await apiFetch<any>(`/api/activities?${params}`);
+      if (error) {
+        showToast('Gagal memuat data aktivitas', 'error');
+        return;
+      }
+      renderActivitiesUI(data);
     }
 
     window.actPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
@@ -282,6 +286,11 @@ const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
       });
     });
 
+    // Sync cache: render cached data immediately to skip skeleton flash on ViewTransitions
+    const defaultCacheKey = `/api/activities?page=${currentPage}&limit=${PAGE_LIMIT}`;
+    const cached = getCachedData<any>(defaultCacheKey);
+    if (cached?.data) renderActivitiesUI(cached.data);
+    // Background refresh: fetch fresh data without showing loading
     load();
   </script>
 </DashboardLayout>

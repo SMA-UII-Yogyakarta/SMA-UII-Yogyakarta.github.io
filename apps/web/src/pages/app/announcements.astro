@@ -42,7 +42,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     declare function showToast(message: string, type?: string, duration?: number): void;
 
     import { esc, unesc, fmtDate, renderPagination, icons, setBtnLoading, confirmAction, setupPullToRefresh, staggerList, setupSwipeAction } from '@lib/ui';
-    import { apiFetch } from '@lib/api-client';
+    import { apiFetch, getCachedData } from '@lib/api-client';
 
     const modal = document.getElementById('add-modal');
     const form = document.getElementById('announcement-form') as HTMLFormElement;
@@ -109,12 +109,7 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
         </div>`;
     }
 
-    async function load() {
-      const { data, error } = await apiFetch<any>(`/api/announcements?page=${currentPage}&limit=${PAGE_LIMIT}`);
-      if (error) {
-        showToast('Gagal memuat data pengumuman', 'error');
-        return;
-      }
+    function renderAnnouncementsUI(data: any): void {
       const list: any[] = data?.announcements || [];
       const total: number = data?.total || 0;
 
@@ -140,6 +135,15 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       }
 
       renderPagination('ann-pagination', 'announcements-list', total, currentPage, PAGE_LIMIT, 'pengumuman', 'window.annPage');
+    }
+
+    async function load() {
+      const { data, error } = await apiFetch<any>(`/api/announcements?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      if (error) {
+        showToast('Gagal memuat data pengumuman', 'error');
+        return;
+      }
+      renderAnnouncementsUI(data);
     }
 
     window.annPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
@@ -299,6 +303,11 @@ function validateField(name: string, value: string): string | null {
     document.getElementById('open-modal')?.addEventListener('click', () => openModal());
     document.getElementById('close-modal')?.addEventListener('click', closeModal);
 
+    // Sync cache: render cached data immediately to skip skeleton flash on ViewTransitions
+    const defaultCacheKey = `/api/announcements?page=${currentPage}&limit=${PAGE_LIMIT}`;
+    const cached = getCachedData<any>(defaultCacheKey);
+    if (cached?.data) renderAnnouncementsUI(cached.data);
+    // Background refresh: fetch fresh data without showing loading
     load();
   </script>
 </DashboardLayout>
