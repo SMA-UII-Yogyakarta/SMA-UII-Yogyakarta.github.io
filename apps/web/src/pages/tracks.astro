@@ -1,5 +1,14 @@
 ---
 import Layout from '@layouts/Layout.astro';
+
+const colorClasses: Record<string, { border: string; text: string; bg: string }> = {
+  blue: { border: 'hover:border-blue-500/80', text: 'text-blue-400', bg: 'bg-blue-500/10' },
+  indigo: { border: 'hover:border-indigo-500/80', text: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  purple: { border: 'hover:border-purple-500/80', text: 'text-purple-400', bg: 'bg-purple-500/10' },
+  cyan: { border: 'hover:border-cyan-500/80', text: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  red: { border: 'hover:border-red-500/80', text: 'text-red-400', bg: 'bg-red-500/10' },
+  green: { border: 'hover:border-green-500/80', text: 'text-green-400', bg: 'bg-green-500/10' },
+};
 ---
 <Layout title="Track Minat">
   <div class="max-w-5xl mx-auto px-4 py-16">
@@ -30,26 +39,30 @@ import Layout from '@layouts/Layout.astro';
         { icon:"💻", name:"Software Engineering", slug:"software-engineering", color:"green",
           desc:"Web, mobile, dan open source development. Dari frontend hingga backend, dari ide hingga deployment.",
           topics:["Web Development","Git & Open Source","API Design","Mobile App","Kontribusi ke Proyek Nyata"] },
-      ].map(t => (
-        <div class={`bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-${t.color}-500 transition`}>
-          <div class="flex items-start gap-4">
-            <span class="text-3xl">{t.icon}</span>
-            <div class="flex-1">
-              <h2 class="text-xl font-bold mb-2">{t.name}</h2>
-              <p class="text-gray-400 mb-4">{t.desc}</p>
-              <div class="flex flex-wrap gap-2 mb-4">
-                {t.topics.map(topic => (
-                  <span class="text-xs bg-gray-800 border border-gray-700 px-2 py-1 rounded-md">{topic}</span>
-                ))}
+      ].map(t => {
+        const cls = colorClasses[t.color] || colorClasses.blue;
+        return (
+          <div class={`bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 transition-all duration-300 ${cls.border} hover:shadow-lg hover:shadow-black/30 group relative overflow-hidden`}>
+            <div class="absolute inset-0 bg-linear-to-b from-white/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            <div class="flex items-start gap-5 relative z-10">
+              <span class="text-4xl p-3.5 bg-gray-950/60 rounded-2xl border border-gray-800/80 group-hover:scale-110 transition-transform duration-300 flex-shrink-0 flex items-center justify-center">{t.icon}</span>
+              <div class="flex-1">
+                <h2 class="text-xl font-bold mb-2 group-hover:text-white transition-colors">{t.name}</h2>
+                <p class="text-gray-400 mb-4 text-sm leading-relaxed">{t.desc}</p>
+                <div class="flex flex-wrap gap-2 mb-5">
+                  {t.topics.map(topic => (
+                    <span class="text-xs bg-gray-950/40 border border-gray-800/80 px-2.5 py-1 rounded-lg text-gray-400 font-semibold">{topic}</span>
+                  ))}
+                </div>
+                <a href={`/learn/${t.slug}`}
+                  class={`btn-ripple inline-flex items-center gap-1.5 text-sm font-semibold transition px-4 py-2 bg-gray-950/60 hover:bg-blue-600 hover:text-white border border-gray-850 rounded-xl ${cls.text}`}>
+                  Mulai Belajar <span class="group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </a>
               </div>
-              <a href={`/learn/${t.slug}`}
-                class="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 transition">
-                Mulai Belajar →
-              </a>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   </div>
 </Layout>

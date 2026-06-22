@@ -5,25 +5,28 @@ import Modal from '@components/app/Modal.astro';
 import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const canAdd = user!.status === 'active' && user!.role !== 'alumni';
+const canAdd = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
+
 ---
 
 <DashboardLayout title="Projects">
   <PageHeader subtitle="Showcase karya anggota komunitas" actionLabel={canAdd ? "Tambah Project" : undefined} />
 
-  <div id="projects-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
+  <div id="projects-meta" data-user-id={user?.id ?? ''} data-user-role={user?.role ?? ''} style="display:none"></div>
+
 
   <!-- Search & filter -->
   <div class="flex flex-wrap gap-3 mb-4">
     <div class="relative flex-1 min-w-[200px]">
       <input type="text" id="search-input" placeholder="Cari project..."
-        class="w-full pl-9 pr-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 text-gray-200 hover:border-gray-700/80">
+      <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
       </svg>
     </div>
-    {user!.role === 'maintainer' && (
-      <select id="user-filter" class="px-3 py-2 bg-gray-900 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition text-gray-300">
+    {user?.role === 'maintainer' && (
+
+      <select id="user-filter" class="px-4 py-2.5 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 text-gray-300 hover:border-gray-700/80 cursor-pointer">
         <option value="">Semua Member</option>
       </select>
     )}
@@ -41,30 +44,31 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
         <input type="hidden" name="imageUrl" value="">
 
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Judul <span class="text-red-400">*</span></label>
-          <input type="text" name="title" required placeholder="Nama project kamu"
-            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Judul <span class="text-red-400">*</span></label>
+          <input type="text" name="title" required data-validate="min:3" placeholder="Nama project kamu"
+            class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 invalid:border-red-500">
+          <p class="text-xs text-red-400 mt-1.5 hidden" data-error="title"></p>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">Deskripsi</label>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Deskripsi</label>
           <textarea name="description" rows="3" placeholder="Ceritakan tentang project ini..."
-            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600 resize-none"></textarea>
+            class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 resize-none"></textarea>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5" for="project-url">URL Project</label>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider" for="project-url">URL Project</label>
           <input type="url" id="project-url" name="url" placeholder="https://github.com/user/repo"
             autocomplete="url"
-            class="w-full px-3 py-2.5 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+            class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600">
         </div>
 
         <!-- Image upload zone -->
         <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1.5">
-            Gambar Cover <span class="text-gray-600 font-normal">· JPG, PNG, WebP · maks 2MB</span>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+            Gambar Cover <span class="text-gray-600 font-normal lowercase">· JPG, PNG, WebP · maks 2MB</span>
           </label>
-          <div id="image-zone" class="relative h-36 rounded-xl border border-dashed border-gray-700 bg-gray-950 overflow-hidden group">
+          <div id="image-zone" class="relative h-36 rounded-2xl border border-dashed border-gray-800 bg-gray-950/60 overflow-hidden group">
             <label id="upload-label" class="absolute inset-0 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-900 transition">
               <svg class="w-8 h-8 text-gray-600 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -73,12 +77,12 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
               <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
             </label>
             <img id="preview-img" src="" alt="Preview" class="hidden absolute inset-0 w-full h-full object-cover">
-            <div id="image-overlay" class="hidden absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition flex items-center justify-center gap-2">
-              <label class="px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 text-white rounded-lg text-xs cursor-pointer transition">
+            <div id="image-overlay" class="hidden absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition flex items-center justify-center gap-3">
+              <label class="px-4 py-2 bg-gray-900/90 hover:bg-gray-800 text-white rounded-xl text-xs font-semibold cursor-pointer transition-all duration-300 border border-gray-800/85">
                 Ganti
                 <input type="file" id="image-input-replace" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
               </label>
-              <button type="button" id="remove-image" class="px-3 py-1.5 bg-red-900/90 hover:bg-red-800 text-red-300 rounded-lg text-xs transition">Hapus</button>
+              <button type="button" id="remove-image" class="px-4 py-2 bg-red-900/20 hover:bg-red-900/40 text-red-400 rounded-xl text-xs font-semibold transition-all duration-300 border border-red-500/20">Hapus</button>
             </div>
           </div>
           <p id="upload-status" class="text-xs mt-1.5 hidden"></p>
@@ -86,9 +90,9 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
 
         <div class="flex gap-3 pt-1">
           <button type="submit" id="submit-btn"
-            class="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg text-sm font-medium transition">Simpan</button>
+            class="btn-ripple flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300">Simpan</button>
           <button type="button" id="close-modal"
-            class="px-5 py-2.5 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+            class="btn-ripple px-5 py-2.5 bg-gray-850 border border-gray-800/85 text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all duration-300">Batal</button>
         </div>
       </form>
     </Modal>
@@ -97,7 +101,8 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
   <script>
     declare function showToast(message: string, type?: string, duration?: number): void;
 
-    import { esc, unesc, renderPagination, icons, uploadImage } from '@lib/ui';
+    import { esc, unesc, renderPagination, icons, uploadImage, setBtnLoading, confirmAction, setupPullToRefresh, staggerList } from '@lib/ui';
+    import { apiFetch } from '@lib/api-client';
 
     const meta = document.getElementById('projects-meta') as HTMLElement;
     const currentUserId = meta.dataset.userId || '';
@@ -107,6 +112,11 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     const form = document.getElementById('project-form') as HTMLFormElement | null;
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
     const modalTitle = modal?.querySelector('h2');
+
+    // Pull-to-refresh
+    setupPullToRefresh(gridEl.parentElement as HTMLElement, async () => {
+      await load();
+    });
 
     // Image upload elements
     const imageInput = document.getElementById('image-input') as HTMLInputElement | null;
@@ -123,6 +133,37 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     const PAGE_LIMIT = 12;
 
     // Image upload handlers
+function validateField(name: string, value: string): string | null {
+      const min = (form?.querySelector(`[name="${name}"]`) as HTMLElement)?.dataset?.validate?.match(/min:(\d+)/)?.[1];
+      if (!value.trim()) return 'Field ini wajib diisi';
+      if (min && value.length < parseInt(min)) return `Minimal ${min} karakter`;
+      return null;
+    }
+
+    function showError(field: string, message: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.remove('hidden');
+      if (errEl) errEl.textContent = message;
+      inputEl?.classList.add('border-red-500');
+    }
+
+    function clearError(field: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.add('hidden');
+      inputEl?.classList.remove('border-red-500');
+    }
+
+    form?.querySelectorAll('[data-validate]').forEach(el => {
+      el.addEventListener('blur', () => {
+        const input = el as HTMLInputElement | HTMLTextAreaElement;
+        const error = validateField(input.name, input.value);
+        if (error) showError(input.name, error);
+        else clearError(input.name);
+      });
+    });
+
     function setImagePreview(url: string) {
       if (!imageUrlField || !previewImg || !imageOverlay || !uploadLabel) return;
       imageUrlField.value = url;
@@ -171,13 +212,13 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     function renderCard(p: any): string {
       const canEdit = p.userId === currentUserId || isAdmin;
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition">
-          <div class="aspect-video bg-gray-800">
-            ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-full object-cover">` : imgPlaceholder}
+        <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl overflow-hidden hover:border-gray-750 hover:shadow-md transition-all duration-300 relative group flex flex-col h-full">
+          <div class="aspect-video bg-gray-950 overflow-hidden relative">
+            ${p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="${esc(p.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">` : imgPlaceholder}
           </div>
-          <div class="p-4">
+          <div class="p-5 flex-1 flex flex-col justify-between">
             <div class="flex justify-between items-start gap-2 mb-1">
-              <h3 class="font-semibold">${esc(p.title)}</h3>
+              <h3 class="font-bold text-gray-200 group-hover:text-blue-400 transition-colors">${esc(p.title)}</h3>
               ${canEdit ? `
                 <div class="flex gap-1 flex-shrink-0">
                   <button data-action="edit"
@@ -204,14 +245,33 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       if (userIdFilter) params.set('userId', userIdFilter);
       
       try {
-        const res = await fetch(`/api/projects?${params}`);
-        const { data } = await res.json();
+        const { data, error } = await apiFetch<any>(`/api/projects?${params}`);
+        if (error) {
+          showToast('Gagal memuat data project', 'error');
+          return;
+        }
         const projects: any[] = data?.projects || [];
         const total: number = data?.total || 0;
 
         gridEl.innerHTML = projects.length
           ? projects.map(renderCard).join('')
-          : '<div class="col-span-full text-center py-10"><p class="text-gray-500 text-sm">Belum ada project</p></div>';
+          : `<div class="col-span-full text-center py-16">
+              <svg class="w-20 h-20 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p class="text-gray-400 text-sm mb-1">Belum ada project</p>
+              <p class="text-gray-500 text-xs mb-4">Showcase karya pertamamu ke komunitas</p>
+              <button onclick="__modal['add-modal'].open()" class="btn-ripple bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Project
+              </button>
+            </div>`;
+
+        // Staggered entry animation for grid
+        if (projects.length) {
+          const items = Array.from(gridEl.children) as HTMLElement[];
+          staggerList(gridEl, items, 80);
+        }
 
         renderPagination('projects-pagination', 'projects-grid', total, currentPage, PAGE_LIMIT, 'project', 'window.projPage');
       } catch (error) {
@@ -234,12 +294,12 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       if (imageUrl) setImagePreview(imageUrl);
       if (modalTitle) modalTitle.textContent = id ? 'Edit Project' : 'Tambah Project';
       if (submitBtn) submitBtn.textContent = id ? 'Update' : 'Simpan';
-      modal?.classList.remove('hidden');
-      setTimeout(() => (form.querySelector('[name="title"]') as HTMLInputElement)?.focus(), 50);
+      __modal['add-modal'].open();
+      setTimeout(() => (form.querySelector('[name="title"]') as HTMLInputElement)?.focus(), 100);
     }
 
     function closeModal() {
-      modal?.classList.add('hidden');
+      __modal['add-modal'].close();
       form?.reset();
       resetImage();
     }
@@ -251,9 +311,23 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       const { action, id, title, description, url, imageUrl } = btn.dataset;
       if (action === 'edit') openModal(id, title, unesc(description || ''), unesc(url || ''), imageUrl || '');
       if (action === 'delete') {
-        if (!confirm(`Hapus project "${title}"?`)) return;
-        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-        res.ok ? load() : showToast('Gagal menghapus project', 'error');
+        const card = btn.closest<HTMLElement>('[class*="bg-gray-900"]');
+        if (!card) return;
+        const ok = await confirmAction({ message: `Hapus project "${title}"?`, confirmText: 'Hapus' });
+        if (!ok) return;
+        
+        // Optimistic delete
+        const nextSibling = card.nextElementSibling;
+        const parent = card.parentElement;
+        card.remove();
+        
+        const { error } = await apiFetch(`/api/projects/${id}`, { method: 'DELETE' });
+        if (error) {
+          // Rollback
+          if (nextSibling) parent?.insertBefore(card, nextSibling);
+          else parent?.appendChild(card);
+          showToast('Gagal menghapus project', 'error');
+        }
       }
     });
 
@@ -265,16 +339,19 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
       const fd = new FormData(form!);
       const id = fd.get('id') as string;
       const title = (fd.get('title') as string)?.trim();
-      if (!title) { showToast('Judul tidak boleh kosong', 'warning'); return; }
+      
+      // Validate title
+      const error = validateField('title', title);
+      if (error) { showError('title', error); return; }
+      else clearError('title');
 
       const rawUrl = (fd.get('url') as string)?.trim() || null;
       const url = rawUrl && !rawUrl.match(/^https?:\/\//) ? `https://${rawUrl}` : rawUrl;
 
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan...'; }
+      setBtnLoading(submitBtn, true, 'Menyimpan...');
 
-      const res = await fetch(id ? `/api/projects/${id}` : '/api/projects', {
+      const { error: apiError } = await apiFetch<any>(id ? `/api/projects/${id}` : '/api/projects', {
         method: id ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           description: (fd.get('description') as string)?.trim() || null,
@@ -283,12 +360,11 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
         }),
       });
 
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = id ? 'Update' : 'Simpan'; }
+      setBtnLoading(submitBtn, false);
 
-      if (res.ok) { closeModal(); load(); }
+      if (!apiError) { closeModal(); load(); }
       else {
-        const json = await res.json().catch(() => ({}));
-        showToast(json.error || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'), 'error');
+        showToast(apiError || (id ? 'Gagal mengupdate project' : 'Gagal menyimpan project'), 'error');
       }
     });
 
@@ -307,8 +383,7 @@ const canAdd = user!.status === 'active' && user!.role !== 'alumni';
     // User filter (maintainer only)
     const userFilter = document.getElementById('user-filter') as HTMLSelectElement | null;
     if (userFilter && isAdmin) {
-      fetch('/api/admin/users')
-        .then(r => r.json())
+      apiFetch<any>('/api/admin/users')
         .then(res => {
           const users = res.data?.users || [];
           users.forEach((u: any) => {

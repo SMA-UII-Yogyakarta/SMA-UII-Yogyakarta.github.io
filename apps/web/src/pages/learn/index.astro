@@ -13,6 +13,30 @@ for (const l of allLessons) {
     trackStats[l.data.track] = (trackStats[l.data.track] || 0) + 1;
   }
 }
+
+const trackColors: Record<string, string> = {
+  'robotika-iot': 'blue',
+  'ai': 'indigo',
+  'data-science': 'purple',
+  'jaringan-komputer': 'cyan',
+  'keamanan-siber': 'red',
+  'software-engineering': 'green',
+  'desain-uiux': 'pink',
+  'digital-marketing': 'orange',
+  'peta-karir': 'emerald',
+};
+
+const colorClasses: Record<string, { border: string; text: string; bg: string }> = {
+  blue: { border: 'hover:border-blue-500/80 hover:shadow-blue-500/5', text: 'group-hover:text-blue-400', bg: 'bg-blue-500/10' },
+  indigo: { border: 'hover:border-indigo-500/80 hover:shadow-indigo-500/5', text: 'group-hover:text-indigo-400', bg: 'bg-indigo-500/10' },
+  purple: { border: 'hover:border-purple-500/80 hover:shadow-purple-500/5', text: 'group-hover:text-purple-400', bg: 'bg-purple-500/10' },
+  cyan: { border: 'hover:border-cyan-500/80 hover:shadow-cyan-500/5', text: 'group-hover:text-cyan-400', bg: 'bg-cyan-500/10' },
+  red: { border: 'hover:border-red-500/80 hover:shadow-red-500/5', text: 'group-hover:text-red-400', bg: 'bg-red-500/10' },
+  green: { border: 'hover:border-green-500/80 hover:shadow-green-500/5', text: 'group-hover:text-green-400', bg: 'bg-green-500/10' },
+  pink: { border: 'hover:border-pink-500/80 hover:shadow-pink-500/5', text: 'group-hover:text-pink-400', bg: 'bg-pink-500/10' },
+  orange: { border: 'hover:border-orange-500/80 hover:shadow-orange-500/5', text: 'group-hover:text-orange-400', bg: 'bg-orange-500/10' },
+  emerald: { border: 'hover:border-emerald-500/80 hover:shadow-emerald-500/5', text: 'group-hover:text-emerald-400', bg: 'bg-emerald-500/10' },
+};
 ---
 
 <Layout title="Belajar">
@@ -21,7 +45,7 @@ for (const l of allLessons) {
       <h1 class="text-3xl font-bold mb-3">Materi Pembelajaran</h1>
       <p class="text-gray-400">Konten open source yang bisa diakses, diaudit, dan dikembangkan bersama.</p>
       <a href="https://github.com/SMA-UII-Yogyakarta/smauii-dev-content" target="_blank"
-        class="inline-flex items-center gap-2 mt-4 text-sm text-blue-400 hover:text-blue-300 transition">
+        class="btn-ripple inline-flex items-center gap-2 mt-4 text-sm text-blue-400 hover:text-blue-300 transition-all duration-300 px-4 py-2 bg-gray-900/60 border border-gray-800/80 rounded-xl hover:border-gray-700/80">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         Kontribusi konten di GitHub
       </a>
@@ -31,13 +55,16 @@ for (const l of allLessons) {
       {trackIndexes.map(track => {
         const slug = track.id.replace('/README', '');
         const count = trackStats[slug] || 0;
+        const colorName = trackColors[slug] || 'blue';
+        const cls = colorClasses[colorName] || colorClasses.blue;
         return (
           <a href={`/learn/${slug}`}
-            class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-blue-500/50 transition group">
-            <div class="text-3xl mb-3">{track.data.icon || '📚'}</div>
-            <h2 class="font-bold mb-1 group-hover:text-blue-400 transition">{track.data.title}</h2>
-            <p class="text-sm text-gray-400 mb-3 line-clamp-2">{track.data.description}</p>
-            <p class="text-xs text-gray-600">{count} materi</p>
+            class={`btn-ripple bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 transition-all duration-300 ${cls.border} hover:shadow-lg group block relative overflow-hidden`}>
+            <div class="absolute inset-0 bg-linear-to-b from-white/1 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block">{track.data.icon || '📚'}</div>
+            <h2 class={`font-bold mb-1.5 transition-colors ${cls.text}`}>{track.data.title}</h2>
+            <p class="text-sm text-gray-400 mb-4 line-clamp-2 leading-relaxed">{track.data.description}</p>
+            <p class="text-xs text-gray-500 font-semibold">{count} materi</p>
           </a>
         );
       })}

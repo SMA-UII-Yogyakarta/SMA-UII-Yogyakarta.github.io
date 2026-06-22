@@ -3,6 +3,10 @@ import DashboardLayout from '@layouts/DashboardLayout.astro';
 import PageHeader from '@components/app/PageHeader.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import Modal from '@components/app/Modal.astro';
+import FilterBar from '@components/ui/FilterBar.astro';
+import AvatarListItem from '@components/ui/AvatarListItem.astro';
+import Badge from '@components/ui/Badge.astro';
+import IconButton from '@components/ui/IconButton.astro';
 import { requireMaintainer } from '@lib/guards';
 import { trackOptions, classOptions } from '@smauii/validation';
 const redirect = requireMaintainer(Astro); if (redirect) return redirect;
@@ -14,31 +18,33 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
   <!-- Track filter chips -->
   <div class="flex flex-wrap gap-2 mb-3" id="track-filters" data-testid="track-filters">
     <button data-track="" data-testid="filter-track-all"
-      class="track-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua Track</button>
-    {trackOptions.map(opt => (
+      class="track-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white border border-blue-600 transition-all duration-300">Semua Track</button>
+    {trackOptions.map((opt: {value: string; label: string}) => (
       <button data-track={opt.value} data-testid={`filter-track-${opt.value}`}
-        class="track-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">{opt.label.replace(/^[^\s]+\s/, '')}</button>
+        class="track-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80 transition-all duration-300">{opt.label.replace(/^[^\s]+\s/, '')}</button>
     ))}
   </div>
 
   <div class="flex flex-col sm:flex-row gap-3 mb-4">
     <div class="flex gap-2" id="status-filters" data-testid="member-filters">
       <button data-status="" data-testid="filter-all"
-        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-blue-600 text-white transition">Semua</button>
+        class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white border border-blue-600 transition-all duration-300">Semua</button>
       <button data-status="pending" data-testid="filter-pending"
-        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Pending</button>
+        class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80 transition-all duration-300">Pending</button>
       <button data-status="active" data-testid="filter-active"
-        class="filter-btn px-3 py-1.5 rounded-lg text-sm bg-gray-800 text-gray-400 hover:text-white transition">Active</button>
+        class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80 transition-all duration-300">Active</button>
+      <button data-status="rejected" data-testid="filter-rejected"
+        class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80 transition-all duration-300">Rejected</button>
     </div>
     <select id="class-filter" data-testid="class-filter"
-      class="px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+      class="px-4 py-2 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 hover:border-gray-700/80 cursor-pointer">
       <option value="">Semua Kelas</option>
-      {classOptions.map(c => (<option value={c}>{c}</option>))}
+      {classOptions.map((c: string) => (<option value={c}>{c}</option>))}
     </select>
     <input type="text" id="search-input" data-testid="member-search"
       placeholder="Cari nama, email, NISN..."
       autocomplete="off"
-      class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500">
+      class="flex-1 px-4 py-2 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 hover:border-gray-700/80">
   </div>
 
   <div id="members-content" data-testid="members-list"><SkeletonList count={5} /></div>
@@ -52,24 +58,25 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
   <Modal id="password-modal" title="Set Password Anggota" draggable>
     <p class="text-sm text-gray-400 mb-4">Set password untuk: <span id="modal-member-name" class="text-white font-medium"></span></p>
-    <input type="password" id="new-password" placeholder="Password baru (min. 6 karakter)"
-      class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 mb-4">
+    <input type="password" id="new-password" placeholder="Password baru (min. 6 karakter)" data-validate="min:6"
+      class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 mb-2 invalid:border-red-500 hover:border-gray-700/80">
+    <p class="text-xs text-red-400 mb-4 hidden" data-error="password"></p>
     <div class="flex gap-3">
-      <button id="cancel-password" class="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-sm transition">Batal</button>
-      <button id="confirm-password" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm transition">Set Password</button>
+      <button id="cancel-password" class="btn-ripple flex-1 px-4 py-2.5 bg-gray-850 border border-gray-800/85 hover:bg-gray-800 text-gray-300 rounded-xl text-sm font-semibold transition-all duration-300">Batal</button>
+      <button id="confirm-password" class="btn-ripple flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition-all duration-300">Set Password</button>
     </div>
   </Modal>
 
   <script>
     declare function showToast(message: string, type?: string, duration?: number): void;
 
-    import { esc, renderPagination } from '@lib/ui';
+    import { esc, renderPagination, setBtnLoading, confirmAction, setupPullToRefresh, staggerList, setupSwipeAction } from '@lib/ui';
+    import { apiFetch } from '@lib/api-client';
 
     const contentEl = document.getElementById('members-content') as HTMLElement;
-    const passwordModal = document.getElementById('password-modal');
-    const detailModal = document.getElementById('detail-modal');
     const pwInput = document.getElementById('new-password') as HTMLInputElement;
     const classFilter = document.getElementById('class-filter') as HTMLSelectElement;
+    const confirmBtn = document.getElementById('confirm-password') as HTMLButtonElement;
 
     let currentStatus = '';
     let currentTrack = '';
@@ -79,6 +86,28 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     let selectedUserId = '';
     const PAGE_LIMIT = 20;
 
+    // Pull-to-refresh
+    setupPullToRefresh(contentEl.parentElement as HTMLElement, async () => {
+      await load();
+    });
+
+    // Swipe-to-action (for quick approve/reject on mobile)
+    setupSwipeAction(contentEl, async (id, action) => {
+      if (action === 'approve' || action === 'reject') {
+        const ok = await confirmAction({ 
+          message: action === 'approve' ? 'Setujui anggota ini?' : 'Tolak dan hapus anggota ini?',
+          confirmText: action === 'approve' ? 'Approve' : 'Reject'
+        });
+        if (!ok) return;
+        const { error } = await apiFetch('/api/admin/approve', { 
+          method: 'POST', 
+          body: JSON.stringify({ userId: id, action }) 
+        });
+        if (!error) load();
+        else showToast('Gagal', 'error');
+      }
+    });
+
     const statusColors: Record<string, string> = {
       pending: 'text-yellow-400 bg-yellow-400/10',
       active:  'text-green-400 bg-green-400/10',
@@ -86,8 +115,17 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     };
 
     function renderMember(m: any): string {
+      const isPending = m.status === 'pending';
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:border-gray-700 transition cursor-pointer" data-action="view-detail" data-id="${m.id}">
+        <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-5 flex items-center justify-between hover:border-gray-750 hover:shadow-md transition-all duration-300 cursor-pointer" data-action="view-detail" data-id="${m.id}" data-swipe-id="${m.id}">
+          ${isPending ? `
+            <!-- Swipe action for pending members -->
+            <div class="swipe-action" data-action="approve" data-id="${m.id}">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+          ` : ''}
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
               ${esc(m.name).charAt(0).toUpperCase()}
@@ -100,14 +138,14 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
           </div>
           <div class="flex items-center gap-2 flex-shrink-0" onclick="event.stopPropagation()">
             <span class="px-2 py-0.5 rounded text-xs font-medium ${statusColors[m.status] || 'text-gray-400 bg-gray-800'}">${esc(m.status)}</span>
-            ${m.status === 'pending' ? `
+            ${isPending ? `
               <button data-action="approve" data-id="${m.id}"
-                class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
+                class="btn-ripple bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
               <button data-action="reject" data-id="${m.id}"
-                class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
+                class="btn-ripple bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
             ` : ''}
             <button data-action="set-password" data-id="${m.id}" data-name="${esc(m.name)}"
-              class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs transition" title="Set Password">🔑</button>
+              class="btn-ripple bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs transition" title="Set Password">🔑</button>
           </div>
         </div>`;
     }
@@ -119,24 +157,45 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       if (currentClass) params.set('class', currentClass);
       if (currentSearch) params.set('search', currentSearch);
 
-      const { data } = await fetch(`/api/members?${params}`).then(r => r.json());
+      const { data, error } = await apiFetch<any>(`/api/members?${params}`);
+      if (error) {
+        showToast('Gagal memuat data anggota', 'error');
+        return;
+      }
       const { members = [], total = 0, page = 1, limit = PAGE_LIMIT } = data || {};
 
       // Update status filter buttons
       document.querySelectorAll<HTMLElement>('.filter-btn').forEach(btn => {
         const active = btn.dataset.status === currentStatus;
-        btn.className = `filter-btn px-3 py-1.5 rounded-lg text-sm transition ${active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
+        btn.className = `filter-btn btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-300 ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-900/60 text-gray-400 hover:text-white border-gray-800/80 hover:border-gray-700/80'}`;
       });
 
       // Update track filter buttons
       document.querySelectorAll<HTMLElement>('.track-btn').forEach(btn => {
         const active = btn.dataset.track === currentTrack;
-        btn.className = `track-btn px-3 py-1.5 rounded-lg text-sm transition ${active ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`;
+        btn.className = `track-btn btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-300 ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-900/60 text-gray-400 hover:text-white border-gray-800/80 hover:border-gray-700/80'}`;
       });
 
       contentEl.innerHTML = members.length
         ? '<div class="space-y-3">' + members.map(renderMember).join('') + '</div>'
-        : '<p class="text-gray-500 text-center py-8 text-sm">Tidak ada anggota ditemukan</p>';
+        : `<div class="text-center py-16">
+            <svg class="w-20 h-20 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <p class="text-gray-400 text-sm mb-1">Tidak ada anggota ditemukan</p>
+            <p class="text-gray-500 text-xs mb-4">Coba ubah filter atau kata kunci pencarian</p>
+            <button onclick="currentStatus='';currentTrack='';currentClass='';currentSearch='';currentPage=1;load();" 
+              class="btn-ripple bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
+              Reset Filter
+            </button>
+          </div>`;
+
+      // Staggered entry animation
+      const container = contentEl.firstElementChild as HTMLElement;
+      if (container && members.length) {
+        const items = Array.from(container.children) as HTMLElement[];
+        staggerList(container, items);
+      }
 
       renderPagination('members-pagination', 'members-content', total, page, limit, 'anggota', 'window.goToPage');
     }
@@ -151,8 +210,11 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       const { action, id, name } = btn.dataset;
 
       if (action === 'view-detail') {
-        const res = await fetch(`/api/admin/users?id=${id}`);
-        const { data } = await res.json();
+        const { data, error } = await apiFetch<any>(`/api/admin/users?id=${id}`);
+        if (error) {
+          showToast('Gagal memuat detail anggota', 'error');
+          return;
+        }
         if (data?.user) {
           const detailContent = document.getElementById('detail-content');
           if (detailContent) {
@@ -185,36 +247,73 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
               ` : ''}
             `;
           }
-          detailModal?.classList.remove('hidden');
+          __modal['detail-modal'].open();
         }
       }
       if (action === 'approve') {
-        if (!confirm('Setujui anggota ini?')) return;
-        const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'approve' }) });
-        if (res.ok) { currentPage = 1; load(); } else showToast('Gagal', 'error');
+        const card = btn.closest<HTMLElement>('[data-swipe-id]');
+        const ok = await confirmAction({ message: 'Setujui anggota ini?', confirmText: 'Approve' });
+        if (!ok) return;
+        
+        // Optimistic update
+        const statusBadge = card?.querySelector('[class*="bg-yellow-400"]');
+        if (statusBadge) {
+          statusBadge.className = 'px-2 py-0.5 rounded text-xs font-medium text-green-400 bg-green-400/10';
+          statusBadge.textContent = 'active';
+        }
+        card?.querySelector('[data-action="approve"]')?.remove();
+        card?.querySelector('[data-action="reject"]')?.remove();
+        
+        const { error } = await apiFetch('/api/admin/approve', { 
+          method: 'POST', 
+          body: JSON.stringify({ userId: id, action: 'approve' }) 
+        });
+        if (error) {
+          load(); // Rollback
+          showToast('Gagal approve member', 'error');
+        }
       }
       if (action === 'reject') {
-        if (!confirm('Tolak dan hapus anggota ini?')) return;
-        const res = await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, action: 'reject' }) });
-        if (res.ok) { currentPage = 1; load(); } else showToast('Gagal', 'error');
+        const card = btn.closest<HTMLElement>('[data-swipe-id]');
+        const ok = await confirmAction({ message: 'Tolak dan hapus anggota ini?', confirmText: 'Reject' });
+        if (!ok) return;
+        
+        // Optimistic delete
+        const nextSibling = card?.nextElementSibling;
+        const parent = card?.parentElement;
+        card?.remove();
+        
+        const { error } = await apiFetch('/api/admin/approve', { 
+          method: 'POST', 
+          body: JSON.stringify({ userId: id, action: 'reject' }) 
+        });
+        if (error) {
+          // Rollback
+          if (nextSibling) parent?.insertBefore(card, nextSibling);
+          else parent?.appendChild(card);
+          showToast('Gagal reject member', 'error');
+        }
       }
       if (action === 'set-password') {
         selectedUserId = id!;
         const nameEl = document.getElementById('modal-member-name');
         if (nameEl) nameEl.textContent = name || '';
         pwInput.value = '';
-        passwordModal?.classList.remove('hidden');
+        __modal['password-modal'].open();
       }
       if (action === 'toggle-alumni') {
         const role = btn.dataset.role === 'alumni' ? 'member' : 'alumni';
-        if (!confirm(`${role === 'alumni' ? 'Jadikan' : 'Kembalikan'} ${esc(name || '')} sebagai ${role}?`)) return;
-        const res = await fetch('/api/admin/users', {
+        const ok = await confirmAction({ 
+          message: `${role === 'alumni' ? 'Jadikan' : 'Kembalikan'} ${esc(name || '')} sebagai ${role}?`,
+          confirmText: role === 'alumni' ? 'Jadikan Alumni' : 'Kembalikan'
+        });
+        if (!ok) return;
+        const { error } = await apiFetch<any>('/api/admin/users', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: id, role }),
         });
-        if (res.ok) { detailModal?.classList.add('hidden'); load(); }
-        else { const json = await res.json().catch(() => ({})); showToast(json.error || 'Gagal mengubah role', 'error'); }
+        if (!error) { __modal['detail-modal'].close(); load(); }
+        else { showToast(error || 'Gagal mengubah role', 'error'); }
       }
     });
 
@@ -248,30 +347,56 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       load();
     });
 
-    // --- Password modal ---
+    // --- Password modal dengan validation ---
+
+function validatePassword(password: string): string | null {
+      if (!password.trim()) return 'Password tidak boleh kosong';
+      if (password.length < 6) return 'Password minimal 6 karakter';
+      return null;
+    }
+
+    const passwordErrorEl = document.querySelector('[data-error="password"]') as HTMLElement | null;
+
+    pwInput?.addEventListener('blur', () => {
+      const error = validatePassword(pwInput.value);
+      if (error) {
+        passwordErrorEl?.classList.remove('hidden');
+        passwordErrorEl!.textContent = error;
+        pwInput.classList.add('border-red-500');
+      } else {
+        passwordErrorEl?.classList.add('hidden');
+        pwInput.classList.remove('border-red-500');
+      }
+    });
 
     document.getElementById('cancel-password')?.addEventListener('click', () => {
-      passwordModal?.classList.add('hidden');
+      __modal['password-modal'].close();
       selectedUserId = '';
     });
 
     document.getElementById('confirm-password')?.addEventListener('click', async () => {
       const password = pwInput.value;
-      if (!password) { showToast('Password tidak boleh kosong', 'warning'); return; }
-      if (password.length < 6) { showToast('Password minimal 6 karakter', 'warning'); return; }
+      const error = validatePassword(password);
+      if (error) {
+        passwordErrorEl?.classList.remove('hidden');
+        passwordErrorEl!.textContent = error;
+        pwInput.classList.add('border-red-500');
+        return;
+      }
 
-      const res = await fetch('/api/admin/set-password', {
+      setBtnLoading(confirmBtn, true, 'Menyimpan...');
+      const { error: apiError } = await apiFetch<any>('/api/admin/set-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUserId, password }),
       });
-      if (res.ok) {
+      setBtnLoading(confirmBtn, false);
+
+      if (!apiError) {
         showToast('Password berhasil diatur', 'success');
-        passwordModal?.classList.add('hidden');
+        __modal['password-modal'].close();
         selectedUserId = '';
       } else {
-        const json = await res.json();
-        showToast(json.error || 'Gagal set password', 'error');
+        showToast(apiError || 'Gagal set password', 'error');
       }
     });
 

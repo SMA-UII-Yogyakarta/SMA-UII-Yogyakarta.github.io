@@ -1,15 +1,16 @@
 ---
 import AuthLayout from '@layouts/AuthLayout.astro';
-if (Astro.locals.user) return Astro.redirect('/app/overview');
+// SSG mode: bypass server-side check (client-side redirect handles this via script below)
+if (import.meta.env.DEPLOY_MODE !== 'ssg' && Astro.locals.user) return Astro.redirect('/app/overview');
 ---
 
 <AuthLayout title="Masuk" subtitle="Akses dashboard anggota SMA UII Lab">
   <!-- GitHub Login -->
   <a
     href="/api/auth/github"
-    class="flex items-center justify-center gap-3 w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 px-5 py-3 rounded-xl font-medium transition-all duration-200 group"
+    class="btn-ripple flex items-center justify-center gap-3 w-full bg-gray-900/60 hover:bg-gray-800/80 border border-gray-800/80 hover:border-gray-700/80 px-5 py-3.5 rounded-xl font-semibold transition-all duration-300 group"
   >
-    <svg class="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+    <svg class="w-5 h-5 text-gray-300 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
     </svg>
     <span class="text-gray-300 group-hover:text-white transition-colors">Masuk dengan GitHub</span>
@@ -20,7 +21,7 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
       <div class="w-full border-t border-gray-800"></div>
     </div>
     <div class="relative flex justify-center text-xs">
-      <span class="px-3 bg-gray-900/60 text-gray-600">atau</span>
+      <span class="px-3 bg-gray-950 text-gray-500">atau</span>
     </div>
   </div>
 
@@ -32,7 +33,7 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
         type="text"
         id="identifier"
         name="identifier"
-        class="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 focus:bg-gray-800 transition-all placeholder-gray-600"
+        class="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 hover:border-gray-700/80"
         placeholder="NIS atau email"
         autocomplete="username"
       />
@@ -46,20 +47,20 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
         id="password"
         name="password"
         data-testid="login-password"
-        class="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 focus:bg-gray-800 transition-all placeholder-gray-600"
+        class="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 hover:border-gray-700/80"
         placeholder="••••••••"
         autocomplete="current-password"
       />
       <p id="password-error" class="text-red-400 text-xs mt-1.5 hidden"></p>
     </div>
 
-    <div id="error-message" data-testid="login-error" class="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm hidden"></div>
+    <div id="error-message" data-testid="login-error" class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm hidden"></div>
 
     <button
       type="submit"
       id="submit-btn"
       data-testid="login-submit"
-      class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 mt-2"
+      class="btn-ripple w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg shadow-blue-600/15 mt-2"
     >
       Masuk
     </button>
@@ -72,63 +73,98 @@ if (Astro.locals.user) return Astro.redirect('/app/overview');
 </AuthLayout>
 
 <script>
+  import { setBtnLoading } from '@lib/ui';
+  import { apiFetch, getToken, setToken } from '@lib/api-client';
+
+  // SSG mode: redirect already-logged-in users client-side
+  if (getToken()) {
+    window.location.replace('/app/overview');
+  }
+
   const form = document.getElementById('login-form') as HTMLFormElement;
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
   const errorMessage = document.getElementById('error-message') as HTMLDivElement;
+  const identifierInput = document.getElementById('identifier') as HTMLInputElement;
+  const passwordInput = document.getElementById('password') as HTMLInputElement;
+
+  // Inline validation on blur
+  identifierInput?.addEventListener('blur', () => {
+    const el = document.getElementById('identifier-error')!;
+    if (!identifierInput.value.trim()) {
+      el.textContent = 'NIS atau Email harus diisi';
+      el.classList.remove('hidden');
+      identifierInput.classList.add('border-red-500');
+    } else {
+      el.classList.add('hidden');
+      identifierInput.classList.remove('border-red-500');
+    }
+  });
+
+  passwordInput?.addEventListener('blur', () => {
+    const el = document.getElementById('password-error')!;
+    if (!passwordInput.value) {
+      el.textContent = 'Password harus diisi';
+      el.classList.remove('hidden');
+      passwordInput.classList.add('border-red-500');
+    } else {
+      el.classList.add('hidden');
+      passwordInput.classList.remove('border-red-500');
+    }
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMessage.classList.add('hidden');
     document.getElementById('identifier-error')?.classList.add('hidden');
     document.getElementById('password-error')?.classList.add('hidden');
+    identifierInput?.classList.remove('border-red-500');
+    passwordInput?.classList.remove('border-red-500');
 
-    const identifier = (document.getElementById('identifier') as HTMLInputElement).value;
-    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const identifier = identifierInput.value;
+    const password = passwordInput.value;
 
     let hasError = false;
-    if (!identifier) {
+    if (!identifier.trim()) {
       const el = document.getElementById('identifier-error')!;
       el.textContent = 'NIS atau Email harus diisi';
       el.classList.remove('hidden');
+      identifierInput?.classList.add('border-red-500');
       hasError = true;
     }
     if (!password) {
       const el = document.getElementById('password-error')!;
       el.textContent = 'Password harus diisi';
       el.classList.remove('hidden');
+      passwordInput?.classList.add('border-red-500');
       hasError = true;
     }
     if (hasError) return;
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Memproses...';
+    setBtnLoading(submitBtn, true, 'Memproses...');
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
-      });
+    // Use apiFetch so PUBLIC_API_URL is prepended in SSG/Jamstack mode
+    const { data, error, code, details } = await apiFetch<{ token: string; user: any }>(
+      '/api/auth/login',
+      { method: 'POST', body: JSON.stringify({ identifier, password }) }
+    );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (result.code === 'PENDING_APPROVAL' && result.details?.nisn) {
-          window.location.href = `/check-status?nisn=${encodeURIComponent(result.details.nisn)}`;
-          return;
-        }
-        errorMessage.textContent = result.error || 'Login gagal';
-        errorMessage.classList.remove('hidden');
+    if (error) {
+      // Redirect to check-status if pending approval
+      if (code === 'PENDING_APPROVAL' && details?.nisn) {
+        window.location.href = `/check-status?nisn=${encodeURIComponent(details.nisn)}`;
         return;
       }
-
-      window.location.href = '/app/overview';
-    } catch {
-      errorMessage.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+      errorMessage.textContent = error || 'Login gagal';
       errorMessage.classList.remove('hidden');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Masuk';
+      setBtnLoading(submitBtn, false);
+      return;
     }
+
+    // Store JWT token for SSG/Jamstack mode (no-op in SSR mode since token is null)
+    if (data?.token) {
+      setToken(data.token);
+    }
+
+    window.location.href = '/app/overview';
   });
 </script>

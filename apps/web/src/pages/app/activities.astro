@@ -6,22 +6,24 @@ import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
-const canLog = user!.status === 'active' && user!.role !== 'alumni';
+const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
+
 ---
 
 <DashboardLayout title="Activities">
   <PageHeader subtitle="Log kontribusi dan kegiatan" actionLabel={canLog ? "Log Activity" : undefined} />
 
-  <div id="activities-meta" data-user-id={user!.id} data-user-role={user!.role} style="display:none"></div>
+  <div id="activities-meta" data-user-id={user?.id ?? ''} data-user-role={user?.role ?? ''} style="display:none"></div>
+
 
   <!-- Filter chips -->
   <div id="filter-bar" class="flex flex-wrap gap-2 mb-4">
-    <button data-filter="" class="filter-chip active px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white">Semua</button>
-    <button data-filter="contribution" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Contribution</button>
-    <button data-filter="event" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Event</button>
-    <button data-filter="workshop" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Workshop</button>
-    <button data-filter="meeting" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Meeting</button>
-    <button data-filter="other" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700">Other</button>
+    <button data-filter="" class="filter-chip active btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-blue-600 text-white border border-blue-600">Semua</button>
+    <button data-filter="contribution" class="filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80">Contribution</button>
+    <button data-filter="event" class="filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80">Event</button>
+    <button data-filter="workshop" class="filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80">Workshop</button>
+    <button data-filter="meeting" class="filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80">Meeting</button>
+    <button data-filter="other" class="filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80">Other</button>
   </div>
 
   <div id="activities-list"><SkeletonList count={5} /></div>
@@ -31,8 +33,8 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
       <form id="activity-form" class="space-y-3">
         <input type="hidden" name="id" value="">
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Tipe *</label>
-          <select name="type" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Tipe *</label>
+          <select name="type" required class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 cursor-pointer">
             <option value="contribution">Contribution</option>
             <option value="event">Event</option>
             <option value="workshop">Workshop</option>
@@ -41,20 +43,22 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
           </select>
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Judul *</label>
-          <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Judul *</label>
+          <input type="text" name="title" required data-validate="min:3"
+            class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 invalid:border-red-500">
+          <p class="text-xs text-red-400 mt-1.5 hidden" data-error="title"></p>
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">Deskripsi</label>
-          <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500"></textarea>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Deskripsi</label>
+          <textarea name="description" rows="3" class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600"></textarea>
         </div>
         <div>
-          <label class="block text-xs text-gray-400 mb-1">URL</label>
-          <input type="url" name="url" class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">URL</label>
+          <input type="url" name="url" class="w-full px-4 py-3 bg-gray-950/60 border border-gray-800/80 rounded-xl text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600">
         </div>
         <div class="flex gap-3 pt-2">
-          <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Simpan</button>
-          <button type="button" id="close-modal" class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+          <button type="submit" class="btn-ripple flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300">Simpan</button>
+          <button type="button" id="close-modal" class="btn-ripple px-4 py-2.5 bg-gray-850 text-gray-300 border border-gray-800/85 rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all duration-300">Batal</button>
         </div>
       </form>
     </Modal>
@@ -63,7 +67,8 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
   <script>
     declare function showToast(message: string, type?: string, duration?: number): void;
 
-    import { esc, fmtDate, renderPagination, icons } from '@lib/ui';
+    import { esc, fmtDate, renderPagination, icons, setBtnLoading, confirmAction, setupPullToRefresh, staggerList } from '@lib/ui';
+    import { apiFetch } from '@lib/api-client';
 
     const meta = document.getElementById('activities-meta') as HTMLElement;
     const currentUserId = meta.dataset.userId || '';
@@ -71,6 +76,11 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
     const listEl = document.getElementById('activities-list') as HTMLElement;
     const modal = document.getElementById('add-modal');
     const form = document.getElementById('activity-form') as HTMLFormElement | null;
+
+    // Pull-to-refresh
+    setupPullToRefresh(listEl.parentElement as HTMLElement, async () => {
+      await load();
+    });
 
     let currentPage = 1;
     let currentFilter = '';
@@ -88,8 +98,8 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
       const canEdit = a.userId === currentUserId || isAdmin;
       const canDelete = a.userId === currentUserId || isAdmin;
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-start gap-3 hover:border-gray-700 transition">
-          <span class="px-2 py-0.5 rounded text-xs font-medium mt-0.5 shrink-0 ${typeColor[a.type] || typeColor.other}">${esc(a.type)}</span>
+        <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-5 flex items-start gap-4 hover:border-gray-700/80 transition-all duration-300">
+          <span class="px-2 py-0.5 rounded text-xs font-semibold mt-0.5 shrink-0 ${typeColor[a.type] || typeColor.other}">${esc(a.type)}</span>
           <div class="flex-1 min-w-0">
             <p class="font-medium text-sm">${esc(a.title)}</p>
             ${a.description ? `<p class="text-xs text-gray-400 mt-0.5">${esc(a.description)}</p>` : ''}
@@ -117,14 +127,34 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
     async function load() {
       const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_LIMIT) });
       if (currentFilter) params.set('type', currentFilter);
-      const res = await fetch(`/api/activities?${params}`);
-      const { data } = await res.json();
+      const { data, error } = await apiFetch<any>(`/api/activities?${params}`);
+      if (error) {
+        showToast('Gagal memuat data aktivitas', 'error');
+        return;
+      }
       const activities: any[] = data?.activities || [];
       const total: number = data?.total || 0;
 
       listEl.innerHTML = activities.length
         ? '<div class="space-y-3">' + activities.map(renderCard).join('') + '</div>'
-        : '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada aktivitas</p></div>';
+        : `<div class="text-center py-16">
+            <svg class="w-20 h-20 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <p class="text-gray-400 text-sm mb-1">Belum ada aktivitas</p>
+            <p class="text-gray-500 text-xs mb-4">Mulai log kontribusi dan kegiatanmu</p>
+            <button onclick="__modal['add-modal'].open()" class="btn-ripple bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Log Activity
+            </button>
+          </div>`;
+
+      // Staggered entry animation
+      const container = listEl.firstElementChild as HTMLElement;
+      if (container && activities.length) {
+        const items = Array.from(container.children) as HTMLElement[];
+        staggerList(container, items);
+      }
 
       renderPagination('activities-pagination', 'activities-list', total, currentPage, PAGE_LIMIT, 'aktivitas', 'window.actPage');
     }
@@ -132,6 +162,37 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
     window.actPage = (page: number) => { currentPage = page; load(); window.scrollTo(0, 0); };
 
     // Event delegation
+    function validateField(name: string, value: string): string | null {
+      const min = (form?.querySelector(`[name="${name}"]`) as HTMLElement)?.dataset?.validate?.match(/min:(\d+)/)?.[1];
+      if (!value.trim()) return 'Field ini wajib diisi';
+      if (min && value.length < parseInt(min)) return `Minimal ${min} karakter`;
+      return null;
+    }
+
+    function showError(field: string, message: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.remove('hidden');
+      if (errEl) errEl.textContent = message;
+      inputEl?.classList.add('border-red-500');
+    }
+
+    function clearError(field: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.add('hidden');
+      inputEl?.classList.remove('border-red-500');
+    }
+
+    form?.querySelectorAll('[data-validate]').forEach(el => {
+      el.addEventListener('blur', () => {
+        const input = el as HTMLInputElement | HTMLTextAreaElement;
+        const error = validateField(input.name, input.value);
+        if (error) showError(input.name, error);
+        else clearError(input.name);
+      });
+    });
+
     listEl.addEventListener('click', async (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
       if (!btn) return;
@@ -145,14 +206,28 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
         (form.querySelector('[name="type"]') as HTMLSelectElement).value = type || 'contribution';
         (form.querySelector('[name="description"]') as HTMLTextAreaElement).value = description || '';
         (form.querySelector('[name="url"]') as HTMLInputElement).value = url || '';
-        modal?.classList.remove('hidden');
+        __modal['add-modal'].open();
         return;
       }
 
       if (action === 'delete') {
-        if (!confirm(`Hapus activity "${title}"?`)) return;
-        const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-        res.ok ? load() : showToast('Gagal menghapus activity', 'error');
+        const card = btn.closest<HTMLElement>('[class*="bg-gray-900"]');
+        if (!card) return;
+        const ok = await confirmAction({ message: `Hapus activity "${title}"?`, confirmText: 'Hapus' });
+        if (!ok) return;
+        
+        // Optimistic delete
+        const nextSibling = card.nextElementSibling;
+        const parent = card.parentElement;
+        card.remove();
+        
+        const { error } = await apiFetch(`/api/activities/${id}`, { method: 'DELETE' });
+        if (error) {
+          // Rollback
+          if (nextSibling) parent?.insertBefore(card, nextSibling);
+          else parent?.appendChild(card);
+          showToast('Gagal menghapus activity', 'error');
+        }
       }
     });
 
@@ -160,28 +235,37 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
       form?.reset();
       const idField = form?.querySelector('[name="id"]') as HTMLInputElement | null;
       if (idField) idField.value = '';
-      modal?.classList.remove('hidden');
+      __modal['add-modal'].open();
     });
-    document.getElementById('close-modal')?.addEventListener('click', () => { modal?.classList.add('hidden'); form?.reset(); });
+    document.getElementById('close-modal')?.addEventListener('click', () => { __modal['add-modal'].close(); form?.reset(); });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form!);
       const activityId = fd.get('id') as string;
+      const title = fd.get('title') as string;
+      
+      // Validate
+      const error = validateField('title', title);
+      if (error) { showError('title', error); return; }
+      else clearError('title');
+      
       const method = activityId ? 'PATCH' : 'POST';
       const url = activityId ? `/api/activities/${activityId}` : '/api/activities';
+      const submitBtn = form?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      setBtnLoading(submitBtn, true, 'Menyimpan...');
 
-      const res = await fetch(url, {
+      const { error: apiError } = await apiFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: fd.get('type'),
-          title: fd.get('title'),
+          title,
           description: fd.get('description') || null,
           url: fd.get('url') || null,
         }),
       });
-      if (res.ok) { modal?.classList.add('hidden'); form.reset(); load(); }
+      setBtnLoading(submitBtn, false);
+      if (!apiError) { __modal['add-modal'].close(); form.reset(); load(); }
       else showToast('Gagal menyimpan', 'error');
     });
 
@@ -189,10 +273,10 @@ const canLog = user!.status === 'active' && user!.role !== 'alumni';
     document.querySelectorAll('.filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-chip').forEach(b => {
-          b.className = 'filter-chip px-3 py-1.5 rounded-lg text-xs font-medium transition bg-gray-800 text-gray-300 hover:bg-gray-700';
+          b.className = 'filter-chip btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-gray-900/60 text-gray-400 hover:text-white border border-gray-800/80 hover:border-gray-700/80';
         });
         currentFilter = (btn as HTMLElement).dataset.filter || '';
-        btn.className = 'filter-chip active px-3 py-1.5 rounded-lg text-xs font-medium transition bg-blue-600 text-white';
+        btn.className = 'filter-chip active btn-ripple px-3.5 py-1.5 rounded-xl text-xs font-semibold transition bg-blue-600 text-white border border-blue-600';
         currentPage = 1;
         load();
       });

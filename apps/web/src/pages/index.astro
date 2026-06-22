@@ -5,127 +5,412 @@ import { getSiteConfig } from '@smauii/shared';
 const config = getSiteConfig();
 
 const tracks = [
-  { icon: "🤖", name: "Robotika/IoT", desc: "Bikin robot yang bisa gerak sendiri. Dari Arduino sampai kompetisi nasional." },
-  { icon: "🧠", name: "AI (Kecerdasan Buatan)", desc: "Ajarin komputer belajar sendiri. Computer vision, chatbot, dan lainnya." },
-  { icon: "📊", name: "Data Science", desc: "Ubah data jadi insight keren. Visualisasi, analisis, prediksi." },
-  { icon: "🌐", name: "Jaringan Komputer", desc: "Bangun infrastruktur internet. Server, cloud, sampai keamanan jaringan." },
-  { icon: "🔐", name: "Keamanan Siber", desc: "Jadi ethical hacker. CTF, bug bounty, dan security research." },
-  { icon: "💻", name: "Software Engineering", desc: "Coding web, mobile, atau kontribusi ke open source dunia." },
+  { icon: "🤖", name: "Robotika & IoT",        border: "border-gray-700/60 hover:border-blue-500/40",    text: "text-blue-400",    iconBg: "rgba(59,130,246,0.08)",  iconBorder: "rgba(59,130,246,0.18)",  desc: "Dari mikrokontroler, sensor, sampai ikut kompetisi robot nasional." },
+  { icon: "🧠", name: "AI & Machine Learning",  border: "border-gray-700/60 hover:border-indigo-500/40",  text: "text-indigo-400",  iconBg: "rgba(99,102,241,0.08)",  iconBorder: "rgba(99,102,241,0.18)",  desc: "Computer vision, NLP, chatbot, sampai generative AI." },
+  { icon: "📊", name: "Data Science",            border: "border-gray-700/60 hover:border-purple-500/40",  text: "text-purple-400",  iconBg: "rgba(168,85,247,0.08)", iconBorder: "rgba(168,85,247,0.18)", desc: "Analisis data, visualisasi interaktif, dan deploy model ML." },
+  { icon: "🌐", name: "Jaringan Komputer",       border: "border-gray-700/60 hover:border-cyan-500/40",    text: "text-cyan-400",    iconBg: "rgba(6,182,212,0.08)",   iconBorder: "rgba(6,182,212,0.18)",   desc: "Server, routing, cloud, dan infrastruktur jaringan." },
+  { icon: "🔐", name: "Keamanan Siber",          border: "border-gray-700/60 hover:border-rose-500/40",    text: "text-rose-400",    iconBg: "rgba(244,63,94,0.08)",   iconBorder: "rgba(244,63,94,0.18)",   desc: "CTF, bug bounty, reverse engineering, dan penetration testing." },
+  { icon: "💻", name: "Software Engineering",    border: "border-gray-700/60 hover:border-emerald-500/40", text: "text-emerald-400", iconBg: "rgba(16,185,129,0.08)",  iconBorder: "rgba(16,185,129,0.18)", desc: "Web, mobile, open source, dan cloud deployment." },
+];
+
+const stats = [
+  { value: "6",    label: "Track Aktif",    icon: "🗂" },
+  { value: "100+", label: "Anggota",        icon: "👥" },
+  { value: "50+",  label: "Proyek",         icon: "🚀" },
+  { value: "5+",   label: "Tahun Berjalan", icon: "🏅" },
+];
+
+const steps = [
+  { num: "01", label: "Pilih track sesuai minat", sub: "Ada 6 jalur spesialisasi", color: "text-blue-400",    ring: "border-blue-500/20",    bg: "bg-blue-500/8"    },
+  { num: "02", label: "Kerjakan proyek nyata",    sub: "Bukan tugas, tapi produk", color: "text-purple-400",  ring: "border-purple-500/20",  bg: "bg-purple-500/8"  },
+  { num: "03", label: "Kolaborasi & belajar",     sub: "Bareng komunitas aktif",   color: "text-emerald-400", ring: "border-emerald-500/20", bg: "bg-emerald-500/8" },
+  { num: "04", label: "Bangun portofolio",         sub: "Yang bisa dibanggakan",    color: "text-orange-400",  ring: "border-orange-500/20",  bg: "bg-orange-500/8"  },
 ];
 ---
+
 <Layout title="Beranda">
-  <!-- Hero -->
-  <section class="max-w-5xl mx-auto px-4 pt-24 pb-16 text-center">
-    <div class="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs px-3 py-1 rounded-full mb-6">
-      🚀 Belajar · Bikin · Berkontribusi
+
+  <!-- ══════════════════════════════
+       HERO
+       ══════════════════════════════ -->
+  <section class="relative max-w-5xl mx-auto px-4 pt-20 pb-10 sm:pt-24 sm:pb-14 text-center overflow-visible">
+
+    <!-- Badge -->
+    <div class="badge-entrance inline-flex items-center gap-2 bg-gray-800/80 border border-gray-700/60 text-gray-300 text-xs px-3.5 py-1.5 rounded-full mb-6 sm:mb-8">
+      <span class="relative flex h-1.5 w-1.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60"></span>
+        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-400"></span>
+      </span>
+      Open Platform · Siswa SMA UII Yogyakarta
     </div>
-    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-      <span class="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        {config.site.name}
-      </span><br>
-      <span class="text-2xl md:text-3xl font-normal text-gray-400">{config.site.description.split(' — ')[0]}</span>
+
+    <!-- Heading -->
+    <h1 class="hero-title relative z-10 text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.06] mb-4 sm:mb-6 px-2 py-1">
+      <span class="block text-white mb-1">Ruang Eksplorasi</span>
+      <span class="block"
+            style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 50%, #c084fc 100%);
+                   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Digital untuk Kamu
+      </span>
     </h1>
-    <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-      Tempat buat kamu yang suka ngulik teknologi — dari bikin robot, ngoding AI,
-      sampe jadi ethical hacker. Belajar bareng, bikin proyek nyata, ikut kompetisi.
+
+    <p class="hero-sub text-sm sm:text-base text-gray-400 max-w-md mx-auto mb-8 sm:mb-10 leading-relaxed px-2">
+      Dari bikin robot, nge-hack sistem, sampai deploy AI — semua bisa dimulai dari sini. Komunitas terbuka, proyek nyata.
     </p>
-    <div class="flex gap-3 justify-center flex-wrap">
-      <a href="/tracks" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
-        Mulai Eksplorasi →
+
+    <!-- CTAs -->
+    <div class="hero-cta flex gap-2.5 justify-center flex-wrap mb-10 sm:mb-12">
+      <a href="/tracks" id="cta-explore"
+         class="inline-flex items-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-500 transition-colors duration-200">
+        Mulai Eksplorasi
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
       </a>
-      <a href={config.socials.github} target="_blank"
-         class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
-        ★ Lihat Proyek
+      <a href={config.socials.github} target="_blank" id="cta-github"
+         class="inline-flex items-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-semibold text-sm text-gray-300 bg-gray-800/80 border border-gray-700/60 hover:bg-gray-800 hover:text-white transition-colors duration-200">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+        GitHub
       </a>
     </div>
 
-  </section>
-
-  <!-- Why Join -->
-  <section class="max-w-5xl mx-auto px-4 py-16 border-t border-gray-800">
-    <h2 class="text-2xl font-bold mb-8 text-center">Kenapa Ikut Lab?</h2>
-    <div class="grid sm:grid-cols-3 gap-6">
-      <div class="text-center">
-        <div class="text-4xl mb-3">🎯</div>
-        <h3 class="font-bold mb-2">Proyek Nyata</h3>
-        <p class="text-sm text-gray-400">Bukan cuma teori. Bikin proyek yang bisa dipake orang lain, kontribusi ke open source.</p>
-      </div>
-      <div class="text-center">
-        <div class="text-4xl mb-3">🏆</div>
-        <h3 class="font-bold mb-2">Ikut Kompetisi</h3>
-        <p class="text-sm text-gray-400">Persiapan OPSI, OSN, CTF, Kaggle, dan kompetisi lainnya bareng komunitas.</p>
-      </div>
-      <div class="text-center">
-        <div class="text-4xl mb-3">🤝</div>
-        <h3 class="font-bold mb-2">Belajar Bareng</h3>
-        <p class="text-sm text-gray-400">Senior bantu junior, alumni jadi mentor. Stuck? Tanya aja, semua pernah pemula.</p>
-      </div>
+    <!-- Code chips — desktop only -->
+    <div class="hero-chips pointer-events-none select-none hidden lg:block" aria-hidden="true">
+      <span class="chip chip-1 absolute left-[8%] top-[24%] px-3 py-1.5 rounded-lg text-xs font-mono bg-gray-900 border border-gray-800 text-blue-400/80">$ git commit -m "fix: bug"</span>
+      <span class="chip chip-2 absolute right-[5%] top-[28%] px-3 py-1.5 rounded-lg text-xs font-mono bg-gray-900 border border-gray-800 text-purple-400/80">model.fit(X_train)</span>
+      <span class="chip chip-3 absolute left-[6%] bottom-[18%] px-3 py-1.5 rounded-lg text-xs font-mono bg-gray-900 border border-gray-800 text-cyan-400/80">ping 192.168.1.1</span>
+      <span class="chip chip-4 absolute right-[6%] bottom-[22%] px-3 py-1.5 rounded-lg text-xs font-mono bg-gray-900 border border-gray-800 text-emerald-400/80">npm run deploy</span>
     </div>
   </section>
 
-  <!-- Divider -->
-  <div class="flex justify-center py-2">
-    <div class="w-96 h-px bg-gray-700"></div>
-  </div>
-
-  <!-- Tracks -->
-  <section class="max-w-5xl mx-auto px-4 py-16">
-    <h2 class="text-2xl font-bold mb-2">Track yang Bisa Kamu Ikuti</h2>
-    <p class="text-gray-400 mb-8">Pilih yang sesuai minatmu, atau coba semuanya!</p>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {tracks.map(t => (
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500 transition cursor-default">
-          <div class="text-2xl mb-3">{t.icon}</div>
-          <h3 class="font-semibold mb-1">{t.name}</h3>
-          <p class="text-sm text-gray-400">{t.desc}</p>
+  <!-- ══════════════════════════
+       STATS
+       ══════════════════════════ -->
+  <div class="max-w-4xl mx-auto px-4 mb-0">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+      {stats.map((s) => (
+        <div class="stat-card flex flex-col items-center justify-center gap-0.5 py-4 px-3 rounded-xl border border-gray-800 bg-gray-900 cursor-default hover:border-gray-700 transition-colors duration-200">
+          <span class="text-lg sm:text-xl">{s.icon}</span>
+          <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">{s.value}</span>
+          <span class="text-[11px] sm:text-xs text-gray-500">{s.label}</span>
         </div>
       ))}
     </div>
-    <div class="text-center mt-8">
-      <a href="/tracks" class="text-blue-400 hover:text-blue-300 font-semibold">
-        Lihat detail track →
-      </a>
+  </div>
+
+  <!-- ══════════════════════════
+       KENAPA JOIN
+       ══════════════════════════ -->
+  <section class="relative max-w-5xl mx-auto px-4 pt-12 pb-10 sm:pt-16 sm:pb-12">
+    <div class="border-t border-gray-800/60 pt-10 sm:pt-12">
+
+      <div class="text-center mb-8">
+        <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest mb-2.5 block">Mengapa bergabung</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">Ini bukan sekadar klub IT</h2>
+        <p class="text-gray-500 mt-2.5 max-w-lg mx-auto text-xs sm:text-sm leading-relaxed">Platform nyata, bukan simulasi. Semua yang kamu buat di sini bisa langsung dipakai.</p>
+      </div>
+
+      <!-- Mobile: carousel -->
+      <div class="relative sm:hidden">
+        <div class="pointer-events-none absolute left-0 top-0 bottom-4 w-8 z-10 bg-linear-to-r from-gray-950 to-transparent" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute right-0 top-0 bottom-4 w-8 z-10 bg-linear-to-l from-gray-950 to-transparent" aria-hidden="true"></div>
+        <div id="why-carousel" class="flex gap-3 overflow-x-auto pb-4 px-4"
+             style="scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+          <div class="why-card flex-none w-[78vw] max-w-[300px] rounded-xl p-5 border border-gray-800 bg-gray-900" style="scroll-snap-align: center;">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3.5 bg-blue-500/10 border border-blue-500/20">🎯</div>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Proyek Nyata</h3>
+            <p class="text-xs text-gray-400 leading-relaxed">Bukan cuma teori. Bikin produk yang bisa dipakai orang lain dan kontribusi ke open source.</p>
+          </div>
+          <div class="why-card flex-none w-[78vw] max-w-[300px] rounded-xl p-5 border border-gray-800 bg-gray-900" style="scroll-snap-align: center;">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3.5 bg-purple-500/10 border border-purple-500/20">🏆</div>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Kompetisi Bergengsi</h3>
+            <p class="text-xs text-gray-400 leading-relaxed">OPSI, OSN, CTF nasional, Kaggle, sampai hackathon bareng komunitas berpengalaman.</p>
+          </div>
+          <div class="why-card flex-none w-[78vw] max-w-[300px] rounded-xl p-5 border border-gray-800 bg-gray-900" style="scroll-snap-align: center;">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3.5 bg-emerald-500/10 border border-emerald-500/20">🤝</div>
+            <h3 class="font-semibold text-white text-sm mb-1.5">Kultur Mentorship</h3>
+            <p class="text-xs text-gray-400 leading-relaxed">Senior bantu junior, alumni jadi mentor aktif. Stuck? Tanya aja — semua pernah jadi pemula.</p>
+          </div>
+        </div>
+        <div class="flex justify-center gap-2 mt-0.5" id="why-dots" role="tablist">
+          <button class="why-dot h-1.5 rounded-full transition-all duration-300" data-index="0" aria-label="Slide 1" aria-selected="true"></button>
+          <button class="why-dot h-1.5 rounded-full transition-all duration-300" data-index="1" aria-label="Slide 2" aria-selected="false"></button>
+          <button class="why-dot h-1.5 rounded-full transition-all duration-300" data-index="2" aria-label="Slide 3" aria-selected="false"></button>
+        </div>
+      </div>
+
+      <!-- Desktop: grid -->
+      <div class="hidden sm:grid sm:grid-cols-3 gap-3">
+        <div class="why-card rounded-xl p-6 border border-gray-800 bg-gray-900 hover:border-gray-700 transition-colors duration-200">
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center text-2xl mb-4 bg-blue-500/10 border border-blue-500/20">🎯</div>
+          <h3 class="font-semibold text-white mb-2">Proyek Nyata</h3>
+          <p class="text-sm text-gray-400 leading-relaxed">Bukan cuma teori. Bikin produk yang bisa dipakai orang lain dan kontribusi ke open source dunia.</p>
+        </div>
+        <div class="why-card rounded-xl p-6 border border-gray-800 bg-gray-900 hover:border-gray-700 transition-colors duration-200">
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center text-2xl mb-4 bg-purple-500/10 border border-purple-500/20">🏆</div>
+          <h3 class="font-semibold text-white mb-2">Kompetisi Bergengsi</h3>
+          <p class="text-sm text-gray-400 leading-relaxed">Persiapan OPSI, OSN, CTF nasional, Kaggle, sampai hackathon bareng komunitas berpengalaman.</p>
+        </div>
+        <div class="why-card rounded-xl p-6 border border-gray-800 bg-gray-900 hover:border-gray-700 transition-colors duration-200">
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center text-2xl mb-4 bg-emerald-500/10 border border-emerald-500/20">🤝</div>
+          <h3 class="font-semibold text-white mb-2">Kultur Mentorship</h3>
+          <p class="text-sm text-gray-400 leading-relaxed">Senior bantu junior, alumni jadi mentor aktif. Stuck? Tanya aja — semua di sini pernah jadi pemula.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- How It Works — compact, anti-doomscroll -->
-  <section class="max-w-5xl mx-auto px-4 py-12 border-t border-gray-800">
-    <h2 class="text-2xl font-bold mb-6 text-center">Gimana Cara Kerjanya?</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-      <div class="bg-gray-900/50 rounded-xl p-4">
-        <div class="text-2xl font-bold text-blue-400 mb-1">1</div>
-        <p class="text-xs text-gray-400">Pilih track yang kamu suka</p>
+  <!-- ══════════════════════════
+       TRACK / PILIH JALANMU
+       ══════════════════════════ -->
+  <section class="relative max-w-5xl mx-auto px-4 pb-10 sm:pb-12">
+    <div class="border-t border-gray-800/60 pt-10 sm:pt-12">
+
+      <div class="text-center mb-7 sm:mb-8">
+        <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest mb-2.5 block">Track & Spesialisasi</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">Pilih Jalanmu</h2>
+        <p class="text-gray-500 mt-2.5 max-w-md mx-auto text-xs sm:text-sm leading-relaxed">Setiap track punya kurikulum sendiri. Mulai dari satu, lama-lama eksplor yang lain.</p>
       </div>
-      <div class="bg-gray-900/50 rounded-xl p-4">
-        <div class="text-2xl font-bold text-purple-400 mb-1">2</div>
-        <p class="text-xs text-gray-400">Mulai dari proyek kecil</p>
+
+      <!-- Mobile: masonry 2-col -->
+      <div class="sm:hidden">
+        <div class="columns-2 gap-2.5">
+
+          <!-- Item 1 — TINGGI -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);">🤖</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">Robotika & IoT</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Dari desain mekanik, Arduino & ESP32, integrasi sensor, sampai kompetisi robot nasional.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">Hardware</span></div>
+          </a>
+
+          <!-- Item 2 — PENDEK -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);">🧠</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">AI & ML</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Computer vision, NLP, dan generative AI.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full">AI</span></div>
+          </a>
+
+          <!-- Item 3 — TINGGI -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2);">📊</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">Data Science</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Ubah data mentah jadi insight — pandas, SQL, visualisasi, sampai deploy model ML ke produksi.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">Data</span></div>
+          </a>
+
+          <!-- Item 4 — PENDEK -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);">🌐</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">Jaringan Komputer</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Server, cloud, dan infrastruktur jaringan.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">Network</span></div>
+          </a>
+
+          <!-- Item 5 — TINGGI -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);">🔐</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">Keamanan Siber</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Jadi ethical hacker — CTF nasional, bug bounty, reverse engineering, dan pentest sistem nyata.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">Security</span></div>
+          </a>
+
+          <!-- Item 6 — PENDEK -->
+          <a href="/tracks" class="track-card break-inside-avoid block mb-2.5 rounded-xl border border-gray-800 bg-gray-900 overflow-hidden active:scale-[0.97] transition-transform duration-100">
+            <div class="p-3.5">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-2.5" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);">💻</div>
+              <p class="text-xs font-semibold text-white leading-snug mb-1">Software Eng.</p>
+              <p class="text-[11px] text-gray-500 leading-relaxed">Web, mobile, open source, dan cloud.</p>
+            </div>
+            <div class="px-3.5 pb-3"><span class="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">Coding</span></div>
+          </a>
+
+        </div>
+        <a href="/tracks" class="mt-2.5 w-full flex items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-800 bg-gray-900 text-sm text-gray-400 active:bg-gray-800 transition-colors duration-150">
+          Lihat semua track
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </a>
       </div>
-      <div class="bg-gray-900/50 rounded-xl p-4">
-        <div class="text-2xl font-bold text-green-400 mb-1">3</div>
-        <p class="text-xs text-gray-400">Belajar bareng komunitas</p>
+
+      <!-- Desktop: 3-col grid -->
+      <div class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {tracks.map((t) => (
+          <a href="/tracks" class={`track-card block rounded-xl p-5 border bg-gray-900 transition-all duration-200 group ${t.border}`}>
+            <div class="w-11 h-11 rounded-lg flex items-center justify-center text-xl mb-3.5 group-hover:scale-105 transition-transform duration-200"
+                 style={`background:${t.iconBg};border:1px solid ${t.iconBorder};`}>
+              {t.icon}
+            </div>
+            <h3 class={`font-semibold mb-1.5 group-hover:text-white transition-colors duration-200 ${t.text}`}>{t.name}</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">{t.desc}</p>
+          </a>
+        ))}
       </div>
-      <div class="bg-gray-900/50 rounded-xl p-4">
-        <div class="text-2xl font-bold text-orange-400 mb-1">4</div>
-        <p class="text-xs text-gray-400">Bikin portofolio keren</p>
+      <div class="hidden sm:block text-center mt-6">
+        <a href="/tracks" class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white font-medium transition-colors duration-200 group">
+          Lihat semua track
+          <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section class="max-w-3xl mx-auto px-4 py-16 text-center border-t border-gray-800">
-    <h2 class="text-2xl font-bold mb-4">Yuk, Mulai Sekarang!</h2>
-    <p class="text-gray-400 mb-8">
-      Semua orang bisa belajar. Yang penting konsisten dan mau bertanya.
-    </p>
-    <div class="flex gap-3 justify-center flex-wrap">
-      <a href={`${config.deployment.repository}/blob/main/CONTRIBUTING.md`} target="_blank"
-         class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-semibold transition">
-        Cara Berkontribusi
-      </a>
-      <a href="/tracks"
-         class="border border-gray-700 hover:border-blue-500 px-6 py-2.5 rounded-lg font-semibold transition">
-        Lihat Track
-      </a>
+  <!-- ══════════════════════════
+       MULAI DARI NOL
+       ══════════════════════════ -->
+  <section class="relative max-w-4xl mx-auto px-4 pb-10 sm:pb-12">
+    <div class="border-t border-gray-800/60 pt-10 sm:pt-12">
+
+      <div class="text-center mb-7 sm:mb-8">
+        <span class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest mb-2.5 block">Cara kerja</span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">Mulai dari Nol, Serius</h2>
+        <p class="text-gray-500 mt-2.5 text-xs sm:text-sm">4 langkah sederhana untuk mulai berkontribusi.</p>
+      </div>
+
+      <!-- Mobile: vertical stepper -->
+      <div class="sm:hidden space-y-2.5">
+        {steps.map((s, i) => (
+          <div class="step-card flex items-start gap-4 p-4 rounded-xl border border-gray-800 bg-gray-900">
+            <!-- Number -->
+            <div class={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-mono font-extrabold text-sm border ${s.ring} ${s.bg} ${s.color}`}>
+              {s.num}
+            </div>
+            <!-- Text -->
+            <div class="min-w-0 pt-1">
+              <p class="text-sm font-semibold text-white leading-snug">{s.label}</p>
+              <p class="text-[11px] text-gray-500 mt-0.5">{s.sub}</p>
+            </div>
+            <!-- Connector dot for non-last items -->
+            {i < steps.length - 1 && (
+              <div class="absolute left-[calc(1rem+1.25rem)] mt-14 w-px h-2.5 bg-gray-800" aria-hidden="true"></div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <!-- Desktop: horizontal steps -->
+      <div class="hidden sm:block relative">
+        <!-- Connecting line -->
+        <div class="absolute top-7 left-[12.5%] right-[12.5%] h-px bg-gray-800" aria-hidden="true"></div>
+        <div class="grid grid-cols-4 gap-3">
+          {steps.map((s) => (
+            <div class="step-card flex flex-col items-center text-center p-5 rounded-xl border border-gray-800 bg-gray-900 hover:border-gray-700 transition-colors duration-200">
+              <div class={`w-14 h-14 rounded-full flex items-center justify-center mb-3 font-mono font-extrabold text-xl border ${s.ring} ${s.bg} ${s.color}`}>
+                {s.num}
+              </div>
+              <p class="text-sm font-semibold text-white leading-snug mb-1">{s.label}</p>
+              <p class="text-xs text-gray-500">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- ══════════════════════════
+       CTA
+       ══════════════════════════ -->
+  <section class="relative max-w-2xl mx-auto px-4 pb-16 sm:pb-20 pt-10 sm:pt-12 text-center">
+    <div class="border-t border-gray-800/60 pt-10 sm:pt-12">
+      <div class="text-3xl mb-5 text-gray-700 select-none">⬡</div>
+      <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">Siap bergabung?</h2>
+      <p class="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed text-sm">
+        Platform ini dibangun oleh siswa, untuk siswa. Kontribusi sekecil apapun berarti.
+      </p>
+      <div class="flex gap-2.5 justify-center flex-wrap">
+        <a href={`${config.deployment.repository}/blob/main/CONTRIBUTING.md`} target="_blank" id="cta-contribute"
+           class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-500 transition-colors duration-200">
+          Cara Berkontribusi
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </a>
+        <a href="/tracks" id="cta-tracks-footer"
+           class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm text-gray-300 bg-gray-800/80 border border-gray-700/60 hover:bg-gray-800 hover:text-white transition-colors duration-200">
+          Jelajahi Track
+        </a>
+      </div>
+    </div>
+  </section>
+
 </Layout>
+
+<style>
+  /* ── Hero entrance ── */
+  .badge-entrance { animation: badge-in 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+  @keyframes badge-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .hero-title { animation: slide-up 0.6s cubic-bezier(0.22,1,0.36,1) 0.08s both; }
+  .hero-sub   { animation: slide-up 0.6s cubic-bezier(0.22,1,0.36,1) 0.16s both; }
+  .hero-cta   { animation: slide-up 0.6s cubic-bezier(0.22,1,0.36,1) 0.22s both; }
+  @keyframes slide-up { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── Code chips ── */
+  .chip { animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+  .chip-1 { animation-name:float-a; animation-duration:7s; }
+  .chip-2 { animation-name:float-b; animation-duration:8s; animation-delay:1s; }
+  .chip-3 { animation-name:float-a; animation-duration:9s; animation-delay:0.5s; }
+  .chip-4 { animation-name:float-b; animation-duration:7.5s; animation-delay:2s; }
+  @keyframes float-a { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  @keyframes float-b { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+
+  /* ── Scroll reveal ── */
+  .why-card, .track-card, .step-card, .stat-card {
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.2s ease;
+  }
+  .why-card.visible, .track-card.visible, .step-card.visible, .stat-card.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* ── Carousel ── */
+  #why-carousel::-webkit-scrollbar { display:none; }
+  #why-carousel { scrollbar-width:none; -ms-overflow-style:none; }
+  .why-dot[aria-selected="true"]  { width:1.5rem; background-color:#3b82f6; }
+  .why-dot[aria-selected="false"] { width:0.5rem; background-color:#374151; }
+</style>
+
+<script>
+  // Scroll reveals
+  const animatedEls = document.querySelectorAll('.why-card, .track-card, .step-card, .stat-card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const parent = entry.target.parentElement;
+        if (parent) {
+          const siblings = Array.from(parent.querySelectorAll(':scope > .why-card,:scope > .track-card,:scope > .step-card,:scope > .stat-card'));
+          const idx = siblings.indexOf(entry.target as HTMLElement);
+          (entry.target as HTMLElement).style.transitionDelay = `${idx * 55}ms`;
+        }
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  animatedEls.forEach(el => observer.observe(el));
+
+  // Carousel dots
+  const carousel = document.getElementById('why-carousel');
+  const dots = document.querySelectorAll<HTMLButtonElement>('.why-dot');
+  if (carousel && dots.length) {
+    let tick = false;
+    carousel.addEventListener('scroll', () => {
+      if (tick) return; tick = true;
+      requestAnimationFrame(() => {
+        const w = carousel.scrollWidth / 3;
+        const active = Math.round(carousel.scrollLeft / w);
+        dots.forEach((d, i) => d.setAttribute('aria-selected', String(i === active)));
+        tick = false;
+      });
+    }, { passive: true });
+    dots.forEach((d) => d.addEventListener('click', () => {
+      const w = carousel.scrollWidth / 3;
+      carousel.scrollTo({ left: w * Number(d.dataset.index), behavior: 'smooth' });
+    }));
+  }
+</script>

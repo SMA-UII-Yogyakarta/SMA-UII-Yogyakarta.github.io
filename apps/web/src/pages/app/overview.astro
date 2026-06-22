@@ -1,339 +1,48 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import { requireAuth } from '@lib/guards';
+import OverviewDashboard from '@components/app/OverviewDashboard';
+import { db } from '@smauii/db';
+import { users, memberTracks, activities, announcements } from '@smauii/db';
+import { desc, eq, sql } from 'drizzle-orm';
+
 const redirect = requireAuth(Astro); if (redirect) return redirect;
 const { user } = Astro.locals;
+
+// SSR: Fetch data in frontmatter for admin dashboard only in SSR mode
+let adminData = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+
+if (!isSSG && user && user.role === 'maintainer') {
+  try {
+    const [membersCount, activeCount, pendingCount, inactiveCount, activitiesThisMonth, totalProjects, trackPopularity, recentMembers, pendingUsers, recentAnnouncements] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(users).then(r => r[0].count),
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'active')).then(r => r[0]?.count || 0),
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'pending')).then(r => r[0]?.count || 0),
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'inactive')).then(r => r[0]?.count || 0),
+      db.select({ count: sql<number>`count(*)` }).from(activities).where(sql`strftime('%Y-%m', activities.createdAt) = strftime('%Y-%m', 'now')`).then(r => r[0]?.count || 0),
+      db.select({ count: sql<number>`count(*)` }).from(memberTracks).then(r => r[0]?.count || 0),
+      db.select({ track: memberTracks.track, count: sql<number>`count(*)` }).from(memberTracks).groupBy(memberTracks.track).orderBy(sql`count(*) DESC`).limit(5),
+      db.select({ id: users.id, name: users.name, class: users.class, status: users.status, joinedAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(5),
+      db.select({ id: users.id, name: users.name, class: users.class, tracks: sql<string>`json_group_array(${memberTracks.track})` }).from(users).leftJoin(memberTracks, eq(users.id, memberTracks.userId)).where(eq(users.status, 'pending')).groupBy(users.id).limit(5),
+      db.select({ id: announcements.id, title: announcements.title, content: announcements.content, createdAt: announcements.createdAt }).from(announcements).orderBy(desc(announcements.createdAt)).limit(3),
+    ]);
+    
+    adminData = {
+      members: { total: membersCount, active: activeCount, pending: pendingCount, inactive: inactiveCount },
+      activitiesThisMonth,
+      totalProjects,
+      trackPopularity: trackPopularity.map(t => ({ track: t.track, count: t.count })),
+      recentMembers: recentMembers.map(m => ({ ...m, joinedAt: m.joinedAt })),
+      pendingUsers: pendingUsers.map(u => ({ ...u, tracks: JSON.parse(u.tracks as string) })),
+      announcements: recentAnnouncements,
+    };
+  } catch (error) {
+    console.error('SSR adminData query failed, falling back to client-side load:', error);
+  }
+}
 ---
 
-<DashboardLayout title="Dashboard">
-  <!-- Greeting SSR — render instan -->
-  <div class="mb-4">
-    {user!.role === 'maintainer' ? (
-      <h1 class="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
-    ) : (
-      <h1 class="text-xl sm:text-2xl font-bold">Halo, {user!.name}! 👋</h1>
-    )}
-    <p class="text-gray-400 text-sm">
-      {user!.role === 'maintainer' ? 'Kelola komunitas Digital Lab SMA UII' : 'Member dashboard'}
-    </p>
-  </div>
-
-  <div id="overview-content">
-    <div class="space-y-4 animate-pulse">
-      <div class="h-8 bg-gray-800 rounded w-1/4"></div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({length: 4}).map(() => (
-          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 h-24"></div>
-        ))}
-      </div>
-      <div class="grid lg:grid-cols-3 gap-6">
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 h-48"></div>
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 h-48 lg:col-span-2"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="overview-meta"
-    data-role={user!.role}
-    data-name={user!.name}
-    data-status={user!.status}
-    data-class={user!.class}
-    style="display:none">
-  </div>
-
-  <script>
-    declare function showToast(message: string, type?: string, duration?: number): void;
-
-    function esc(str: string): string {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, (c: string) => (({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#x27;'} as Record<string,string>)[c] ?? c));
-    }
-
-    const meta = document.getElementById('overview-meta') as HTMLElement | null;
-    if (!meta) throw new Error('overview-meta not found');
-    const role = meta.dataset.role;
-    const name = meta.dataset.name;
-    const status = meta.dataset.status;
-    const userClass = meta.dataset.class;
-
-    if (role === 'maintainer') {
-      loadAdmin();
-    } else {
-      renderMember({ name, status, class: userClass });
-    }
-
-    async function loadAdmin() {
-      const content = document.getElementById('overview-content') as HTMLElement | null;
-      if (!content) return;
-      try {
-        const [statsRes, annRes] = await Promise.all([
-          fetch('/api/admin/stats'),
-          fetch('/api/announcements'),
-        ]);
-
-        if (!statsRes.ok) {
-          const err = await statsRes.json().catch(() => ({}));
-          throw new Error(`Stats API ${statsRes.status}: ${err.error || statsRes.statusText}`);
-        }
-
-        const statsBody = await statsRes.json();
-        const { members, activitiesThisMonth, activitiesByType, trackPopularity, totalProjects, recentMembers, pendingUsers } = statsBody.data;
-        const announcements = annRes.ok ? ((await annRes.json()).data?.announcements || []).slice(0, 3) : [];
-
-        const statusBadge = (status: string) => {
-          const colors: Record<string, string> = { active: 'bg-green-500/20 text-green-400', pending: 'bg-yellow-500/20 text-yellow-400', inactive: 'bg-red-500/20 text-red-400' };
-          return `<span class="px-1.5 py-0.5 rounded text-xs font-medium ${colors[status] || 'bg-gray-500/20 text-gray-400'}">${esc(status)}</span>`;
-        };
-
-        const pendingHtml = pendingUsers.length === 0
-          ? '<p class="text-gray-500 text-center py-4 text-sm">Tidak ada pendaftaran baru</p>'
-          : pendingUsers.slice(0, 5).map((u: any) => `
-            <div class="flex items-center justify-between p-3 bg-gray-950 rounded-lg">
-              <div>
-                <p class="font-medium text-sm">${esc(u.name)}</p>
-                <p class="text-xs text-gray-400">${esc(u.class)} · ${esc((u.tracks || []).join(', '))}</p>
-              </div>
-              <div class="flex gap-2">
-                <button data-action="approve" data-id="${u.id}" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs transition">Approve</button>
-                <button data-action="reject" data-id="${u.id}" class="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded text-xs transition">Reject</button>
-              </div>
-            </div>
-          `).join('');
-
-        const maxTrackCount = trackPopularity.length > 0 ? trackPopularity[0].count : 1;
-        const trackBarsHtml = trackPopularity.length === 0
-          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada data track</p>'
-          : trackPopularity.map((t: any) => `
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-gray-400 w-24 shrink-0 truncate" title="${esc(t.track)}">${esc(t.track)}</span>
-              <div class="flex-1 bg-gray-800 rounded-full h-3.5 overflow-hidden">
-                <div class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width:${Math.max(2, Math.round((t.count / maxTrackCount) * 100))}%"></div>
-              </div>
-              <span class="text-xs text-gray-400 w-8 text-right font-mono">${t.count}</span>
-            </div>
-          `).join('');
-
-        const maxTypeCount = activitiesByType.length > 0 ? activitiesByType[0].count : 1;
-        const typeBarsHtml = activitiesByType.length === 0
-          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada aktivitas bulan ini</p>'
-          : activitiesByType.map((a: any) => `
-            <div class="flex items-center gap-3">
-              <span class="text-xs text-gray-400 w-20 shrink-0 truncate capitalize">${esc(a.type)}</span>
-              <div class="flex-1 bg-gray-800 rounded-full h-3.5 overflow-hidden">
-                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width:${Math.max(2, Math.round((a.count / maxTypeCount) * 100))}%"></div>
-              </div>
-              <span class="text-xs text-gray-400 w-8 text-right font-mono">${a.count}</span>
-            </div>
-          `).join('');
-
-        const recentHtml = recentMembers.length === 0
-          ? '<p class="text-gray-500 text-sm text-center py-3">Belum ada anggota</p>'
-          : recentMembers.map((m: any) => `
-            <div class="flex items-center justify-between py-2 border-b border-gray-800 last:border-0">
-              <span class="text-sm">${esc(m.name)}</span>
-              <div class="flex items-center gap-3">
-                <span class="text-xs text-gray-400">${new Date(m.joinedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                ${statusBadge(m.status)}
-              </div>
-            </div>
-          `).join('');
-
-        const annHtml = announcements.length === 0
-          ? '<p class="text-gray-500 text-sm">Belum ada pengumuman</p>'
-          : announcements.map((a: any) => `
-            <div class="py-2 border-b border-gray-800 last:border-0">
-              <p class="font-medium text-sm">${esc(a.title)}</p>
-              <p class="text-xs text-gray-400 truncate">${esc(a.content)}</p>
-            </div>
-          `).join('');
-
-        content.innerHTML = `
-          <!-- Stats Cards -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-lg">👥</span>
-                <span class="text-xs text-gray-400">Total Members</span>
-              </div>
-              <p class="text-2xl font-bold">${members.total}</p>
-              <p class="text-xs text-gray-500">${members.pending} pending · ${members.inactive} inactive</p>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-lg">✅</span>
-                <span class="text-xs text-gray-400">Active</span>
-              </div>
-              <p class="text-2xl font-bold text-green-400">${members.active}</p>
-              <p class="text-xs text-gray-500">Anggota aktif</p>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-lg">📊</span>
-                <span class="text-xs text-gray-400">Activities</span>
-              </div>
-              <p class="text-2xl font-bold text-blue-400">${activitiesThisMonth}</p>
-              <p class="text-xs text-gray-500">Bulan ini</p>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-lg">🚀</span>
-                <span class="text-xs text-gray-400">Projects</span>
-              </div>
-              <p class="text-2xl font-bold text-purple-400">${totalProjects}</p>
-              <p class="text-xs text-gray-500">Total proyek</p>
-            </div>
-          </div>
-
-          <!-- Quick Links -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <a href="/app/members" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">👥</div>
-              <p class="font-medium text-sm">Members</p>
-              <p class="text-xs text-gray-500">Kelola anggota</p>
-            </a>
-            <a href="/app/projects" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">🚀</div>
-              <p class="font-medium text-sm">Projects</p>
-              <p class="text-xs text-gray-500">Galeri proyek</p>
-            </a>
-            <a href="/app/activities" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">📅</div>
-              <p class="font-medium text-sm">Activities</p>
-              <p class="text-xs text-gray-500">Log kegiatan</p>
-            </a>
-            <a href="/app/announcements" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">📢</div>
-              <p class="font-medium text-sm">Announce</p>
-              <p class="text-xs text-gray-500">Buat pengumuman</p>
-            </a>
-          </div>
-
-          <!-- Track Popularity & Activity Stats -->
-          <div class="grid lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h2 class="font-bold mb-4">Popularitas Track</h2>
-              <div class="space-y-3">${trackBarsHtml}</div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h2 class="font-bold mb-4">Aktivitas Bulan Ini</h2>
-              <div class="space-y-3">${typeBarsHtml}</div>
-            </div>
-          </div>
-
-          <!-- Recent Members & Announcements -->
-          <div class="grid lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div class="flex justify-between items-center mb-3">
-                <h2 class="font-bold">Anggota Terbaru</h2>
-                <a href="/app/members" class="text-blue-400 text-xs hover:text-blue-300">Lihat semua →</a>
-              </div>
-              <div>${recentHtml}</div>
-            </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <div class="flex justify-between items-center mb-3">
-                <h2 class="font-bold">Pengumuman Terbaru</h2>
-                <a href="/app/announcements" class="text-blue-400 text-xs hover:text-blue-300">Lihat semua →</a>
-              </div>
-              ${annHtml}
-            </div>
-          </div>
-
-          <!-- Pending Approvals -->
-          <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div class="flex justify-between items-center mb-3">
-              <h2 class="font-bold">Menunggu Persetujuan (${pendingUsers.length})</h2>
-              ${pendingUsers.length > 5 ? '<a href="/app/members?status=pending" class="text-blue-400 text-xs hover:text-blue-300">Lihat semua →</a>' : ''}
-            </div>
-            <div class="space-y-2">${pendingHtml}</div>
-          </div>
-        `;
-
-        // Event delegation untuk approve/reject
-        content.addEventListener('click', async (e) => {
-          const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
-          if (!btn) return;
-          const { action, id } = btn.dataset;
-          if (action === 'approve' || action === 'reject') await handleAction(id!, action);
-        });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        content.innerHTML = `<p class="text-red-400">Gagal memuat dashboard: ${msg}</p>`;
-        console.error('loadAdmin error:', e);
-      }
-    }
-
-    async function handleAction(userId: string, action: string) {
-      if (!confirm(`${action === 'approve' ? 'Setujui' : 'Tolak'} anggota ini?`)) return;
-      const res = await fetch('/api/admin/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, action }),
-      });
-      if (res.ok) loadAdmin();
-      else showToast('Gagal memproses', 'error');
-    }
-
-    function renderMember(user: { name?: string; status?: string; class?: string; role?: string }) {
-      const content = document.getElementById('overview-content') as HTMLElement | null;
-      if (!content) return;
-      const isActive = user.status === 'active';
-
-      content.innerHTML = `
-        ${!isActive ? `
-          <div class="bg-yellow-900/20 border border-yellow-800 rounded-xl p-4 mb-6 flex items-center gap-3">
-            <span class="text-2xl">⏳</span>
-            <div>
-              <p class="font-medium text-yellow-400 text-sm">Menunggu Persetujuan</p>
-              <p class="text-xs text-gray-400">Pendaftaranmu sedang ditinjau oleh maintainer</p>
-            </div>
-          </div>
-        ` : ''}
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <a href="/app/profile" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-            <div class="text-2xl mb-1">👤</div>
-            <p class="font-medium text-sm">Profile</p>
-            <p class="text-xs text-gray-500">Akun kamu</p>
-          </a>
-          ${isActive ? `
-            <a href="/app/card" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">🎫</div>
-              <p class="font-medium text-sm">Kartu Anggota</p>
-              <p class="text-xs text-gray-500">ID & QR Code</p>
-            </a>
-            <a href="/app/projects" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">🚀</div>
-              <p class="font-medium text-sm">Projects</p>
-              <p class="text-xs text-gray-500">Showcase karyamu</p>
-            </a>
-            <a href="/app/activities" class="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-blue-500/50 transition">
-              <div class="text-2xl mb-1">📊</div>
-              <p class="font-medium text-sm">Activities</p>
-              <p class="text-xs text-gray-500">Log kontribusi</p>
-            </a>
-          ` : ''}
-        </div>
-
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h2 class="font-bold mb-3">Status Akun</h2>
-          <div class="grid md:grid-cols-3 gap-3">
-            <div class="bg-gray-950 rounded-lg p-3">
-              <p class="text-xs text-gray-400 mb-1">Status</p>
-              <span class="px-2 py-0.5 rounded text-xs font-medium ${isActive ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">
-                ${esc(user.status ?? '').toUpperCase()}
-              </span>
-            </div>
-            <div class="bg-gray-950 rounded-lg p-3">
-              <p class="text-xs text-gray-400 mb-1">Role</p>
-              <p class="text-sm font-medium capitalize">${esc(user.role ?? 'member')}</p>
-            </div>
-            <div class="bg-gray-950 rounded-lg p-3">
-              <p class="text-xs text-gray-400 mb-1">Kelas</p>
-              <p class="text-sm font-medium">${esc(user.class ?? '-')}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  </script>
+<DashboardLayout title="Dashboard" requiredRole="auth">
+  <OverviewDashboard client:load initialUser={user} initialAdminData={adminData} />
 </DashboardLayout>

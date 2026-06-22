@@ -22,15 +22,26 @@ try {
   fetchError = true;
 }
 
+const colorClasses: Record<string, { border: string; text: string; bg: string }> = {
+  blue: { border: 'hover:border-blue-500/80 hover:shadow-blue-500/5', text: 'group-hover:text-blue-400', bg: 'bg-blue-500/10' },
+  indigo: { border: 'hover:border-indigo-500/80 hover:shadow-indigo-500/5', text: 'group-hover:text-indigo-400', bg: 'bg-indigo-500/10' },
+  purple: { border: 'hover:border-purple-500/80 hover:shadow-purple-500/5', text: 'group-hover:text-purple-400', bg: 'bg-purple-500/10' },
+  cyan: { border: 'hover:border-cyan-500/80 hover:shadow-cyan-500/5', text: 'group-hover:text-cyan-400', bg: 'bg-cyan-500/10' },
+  red: { border: 'hover:border-red-500/80 hover:shadow-red-500/5', text: 'group-hover:text-red-400', bg: 'bg-red-500/10' },
+  green: { border: 'hover:border-green-500/80 hover:shadow-green-500/5', text: 'group-hover:text-green-400', bg: 'bg-green-500/10' },
+  pink: { border: 'hover:border-pink-500/80 hover:shadow-pink-500/5', text: 'group-hover:text-pink-400', bg: 'bg-pink-500/10' },
+  orange: { border: 'hover:border-orange-500/80 hover:shadow-orange-500/5', text: 'group-hover:text-orange-400', bg: 'bg-orange-500/10' },
+};
+
 const tracks = [
-  { icon: "🤖", name: "Robotika & IoT" },
-  { icon: "🧠", name: "AI & Machine Learning" },
-  { icon: "📊", name: "Data Science" },
-  { icon: "🌐", name: "Jaringan Komputer" },
-  { icon: "🔐", name: "Keamanan Siber" },
-  { icon: "💻", name: "Software Engineering" },
-  { icon: "🎨", name: "Desain UI/UX" },
-  { icon: "📣", name: "Digital Marketing" },
+  { icon: "🤖", name: "Robotika & IoT", color: "blue" },
+  { icon: "🧠", name: "AI & Machine Learning", color: "indigo" },
+  { icon: "📊", name: "Data Science", color: "purple" },
+  { icon: "🌐", name: "Jaringan Komputer", color: "cyan" },
+  { icon: "🔐", name: "Keamanan Siber", color: "red" },
+  { icon: "💻", name: "Software Engineering", color: "green" },
+  { icon: "🎨", name: "Desain UI/UX", color: "pink" },
+  { icon: "📣", name: "Digital Marketing", color: "orange" },
 ];
 
 const medals = ['🥇', '🥈', '🥉'];
@@ -65,7 +76,7 @@ const medals = ['🥇', '🥈', '🥉'];
       </p>
       <a
         href="/register"
-        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-full transition text-sm"
+        class="btn-ripple inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-full transition text-sm"
       >
         Daftar Sekarang →
       </a>
@@ -86,7 +97,7 @@ const medals = ['🥇', '🥈', '🥉'];
     {visitors.length > 0 && (
       <div class="space-y-2">
         {visitors.map((v, i) => (
-          <div class={`flex items-center gap-4 rounded-xl px-4 py-3 ${i < 3 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-gray-900/60 border border-gray-800'}`}>
+          <div class={`flex items-center gap-4 rounded-2xl px-5 py-4 transition-all duration-300 ${i < 3 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-gray-900/40 border border-gray-800/80 hover:border-gray-700/60'}`}>
             <span class="w-8 text-center flex-shrink-0 text-xl">
               {i < 3 ? medals[i] : <span class="text-gray-500 text-sm font-mono">#{v.rank}</span>}
             </span>
@@ -106,16 +117,20 @@ const medals = ['🥇', '🥈', '🥉'];
   <section class="max-w-3xl mx-auto px-4 mb-16">
     <h2 class="text-lg font-bold mb-6 text-gray-300 text-center">💡 Apa itu Digital Lab?</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      {tracks.map(t => (
-        <div class="bg-gray-900/60 border border-gray-800 rounded-xl p-4 text-center hover:border-blue-500/40 transition">
-          <div class="text-2xl mb-2">{t.icon}</div>
-          <div class="text-xs text-gray-400 font-medium">{t.name}</div>
-        </div>
-      ))}
+      {tracks.map(t => {
+        const cls = colorClasses[t.color] || colorClasses.blue;
+        return (
+          <a href="/tracks" class={`btn-ripple bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4 text-center transition-all duration-300 ${cls.border} hover:shadow-md block group relative overflow-hidden`}>
+            <div class="absolute inset-0 bg-linear-to-b from-white/1 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="text-2xl mb-2 group-hover:scale-110 transition-transform duration-300 inline-block">{t.icon}</div>
+            <div class={`text-xs font-semibold transition-colors ${cls.text}`}>{t.name}</div>
+          </a>
+        );
+      })}
     </div>
     <p class="text-center text-gray-500 text-sm mt-6">
       Belajar bareng, bikin proyek nyata, dan berkontribusi ke open source.
-      <a href="/" class="text-blue-400 hover:underline ml-1">Pelajari lebih lanjut →</a>
+      <a href="/" class="btn-ripple text-blue-400 hover:text-blue-300 ml-1 inline-block px-2.5 py-1 bg-gray-900 border border-gray-800/60 rounded-xl transition-colors font-medium">Pelajari lebih lanjut →</a>
     </p>
   </section>
 </Layout>

@@ -6,6 +6,14 @@ import { db } from '@smauii/db';
 import { learningProgress, readingSessions } from '@smauii/db';
 import { eq, and, gte } from 'drizzle-orm';
 
+export async function getStaticPaths() {
+  const all = await getCollection('lessons');
+  const tracks = [...new Set(
+    all.filter(l => l.id.endsWith('/README')).map(l => l.id.split('/')[0])
+  )];
+  return tracks.map(track => ({ params: { track } }));
+}
+
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
@@ -15,16 +23,23 @@ if (!track) return Astro.redirect('/app/learn');
 const trackEntry = await getEntry('lessons', `${track}/README`);
 if (!trackEntry) return new Response(null, { status: 404 });
 
-const { user } = Astro.locals;
 const all = await getCollection('lessons');
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+const { user } = Astro.locals;
 
-const progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user!.id));
-const completedSlugs = new Set(progress.map(p => p.lessonSlug));
+let completedSlugs = new Set<string>();
+let sessions: any[] = [];
+let allSessions: any[] = [];
 
-// Reading sessions untuk track ini
-const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-const sessions = await db.select().from(readingSessions)
-  .where(and(eq(readingSessions.userId, user!.id), gte(readingSessions.startedAt, sevenDaysAgo)));
+if (!isSSG && user) {
+  const progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user.id));
+  completedSlugs = new Set(progress.map(p => p.lessonSlug));
+
+  // Reading sessions untuk track ini
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  sessions = await db.select().from(readingSessions)
+    .where(and(eq(readingSessions.userId, user.id), gte(readingSessions.startedAt, sevenDaysAgo)));
+}
 
 // Total waktu baca (detik) per lesson di track ini
 const trackLessonSlugs = new Set(all.filter(l => l.data.track === track && !l.id.endsWith('/README')).map(l => l.id));
@@ -33,9 +48,11 @@ const totalReadSeconds = trackSessions.reduce((sum, s) => sum + (s.duration ?? 0
 const totalReadMinutes = Math.round(totalReadSeconds / 60);
 
 // Streak — hari berturut-turut belajar (semua track)
-const streakCutoff = Date.now() - 366 * 24 * 60 * 60 * 1000;
-const allSessions = await db.select().from(readingSessions)
-  .where(and(eq(readingSessions.userId, user!.id), gte(readingSessions.startedAt, streakCutoff)));
+if (!isSSG && user) {
+  const streakCutoff = Date.now() - 366 * 24 * 60 * 60 * 1000;
+  allSessions = await db.select().from(readingSessions)
+    .where(and(eq(readingSessions.userId, user.id), gte(readingSessions.startedAt, streakCutoff)));
+}
 const activeDays = new Set(allSessions.map(s => new Date(s.startedAt).toDateString()));
 let streak = 0;
 const today = new Date();
@@ -138,7 +155,7 @@ const levelColor: Record<string, string> = {
                 const lessonPath = lesson.id.replace(`${track}/`, '');
                 return (
                   <a href={`/app/learn/${track}/${lessonPath}`}
-                    class={`flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition ${li < lessons.length - 1 ? 'border-b border-gray-800' : ''}`}>
+                    class="btn-ripple flex items-center gap-3 px-5 py-3 hover:bg-gray-800/50 transition ${li < lessons.length - 1 ? 'border-b border-gray-800' : ''} block">
                     <div class={`w-4 h-4 rounded-full border shrink-0 flex items-center justify-center ${done ? 'bg-green-500 border-green-500' : 'border-gray-600'}`}>
                       {done && (
                         <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +234,7 @@ const levelColor: Record<string, string> = {
         <!-- CTA -->
         {nextLesson && (
           <a href={`/app/learn/${track}/${nextLesson.id.replace(`${track}/`, '')}`}
-            class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition">
+            class="btn-ripple w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition block">
             {totalCompleted === 0 ? 'Mulai Belajar' : 'Lanjutkan'}
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

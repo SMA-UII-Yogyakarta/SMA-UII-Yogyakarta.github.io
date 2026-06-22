@@ -1,106 +1,174 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
+import SectionCard from '@components/ui/SectionCard.astro';
+import Stack from '@components/ui/Stack.astro';
+import Badge from '@components/ui/Badge.astro';
+import Grid from '@components/ui/Grid.astro';
 import { requireAuth } from '@lib/guards';
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
 const { user } = Astro.locals;
-const birthday = new Date('2026-04-22');
+
+// Dynamic Easter Egg Countdown
 const today = new Date();
-const daysLeft = Math.ceil((birthday.getTime() - today.getTime()) / 86400000);
-const isBirthday = daysLeft <= 0 && daysLeft > -1;
+let birthdayYear = today.getFullYear();
+let birthday = new Date(`${birthdayYear}-04-22`);
+
+// If it has already passed this year, set countdown to next year's April 22nd
+if (today.getTime() > birthday.getTime() + 86400000) {
+  birthday = new Date(`${birthdayYear + 1}-04-22`);
+}
+
+const timeDiff = birthday.getTime() - today.getTime();
+const daysLeft = Math.ceil(timeDiff / 86400000);
+const isBirthday = daysLeft === 0 || (today.getMonth() === 3 && today.getDate() === 22);
+
+// Percentage calculation (max 365 days)
+const totalDays = 365;
+const progressPercent = Math.max(0, Math.min(100, Math.round(((totalDays - daysLeft) / totalDays) * 100)));
+
+const techStack = [
+  { icon: "⚡", name: "Astro 6", category: "Framework", desc: "Server-Side Rendering (SSR) & optimasi performa ultra-ringan.", color: "border-orange-500/10 text-orange-400 bg-orange-500/5 hover:border-orange-500/30" },
+  { icon: "🎨", name: "Tailwind v4", category: "Styling", desc: "Utilitas styling modern dengan performa build secepat kilat.", color: "border-cyan-500/10 text-cyan-400 bg-cyan-500/5 hover:border-cyan-500/30" },
+  { icon: "🗄️", name: "Turso & Drizzle", category: "Database", desc: "SQLite terdistribusi & ORM TypeScript dengan tipe data aman.", color: "border-emerald-500/10 text-emerald-400 bg-emerald-500/5 hover:border-emerald-500/30" },
+  { icon: "🔐", name: "Lucia v3", category: "Auth", desc: "Manajemen sesi autentikasi murni tanpa ketergantungan pihak ketiga.", color: "border-indigo-500/10 text-indigo-400 bg-indigo-500/5 hover:border-indigo-500/30" },
+  { icon: "🚀", name: "Bun Runtime", category: "Runtime", desc: "Eksekusi JavaScript & bundler supercepat pengganti Node.js.", color: "border-pink-500/10 text-pink-400 bg-pink-500/5 hover:border-pink-500/30" },
+  { icon: "📝", name: "Git & Markdown", category: "Content", desc: "Manajemen kurikulum belajar terdesentralisasi via repositori.", color: "border-slate-500/10 text-slate-300 bg-slate-500/5 hover:border-slate-500/30" }
+];
 ---
 
-<DashboardLayout title="About">
-  <div class="max-w-2xl mx-auto py-8 px-4">
+<DashboardLayout title="Tentang Platform">
+  <div class="max-w-3xl mx-auto py-10 px-4 space-y-8">
 
-    <!-- Easter egg header -->
-    <div class="text-center mb-10">
-      {isBirthday ? (
-        <div class="text-6xl mb-4 animate-bounce">🎂</div>
-      ) : (
-        <div class="text-6xl mb-4">🥚</div>
-      )}
-      <p class="text-xs text-gray-600 uppercase tracking-widest mb-2">Easter Egg</p>
-      <h1 class="text-3xl font-bold mb-3">
-        {isBirthday ? 'Selamat Ulang Tahun! 🎉' : 'Kamu menemukan sesuatu...'}
-      </h1>
-      {!isBirthday && daysLeft > 0 && (
-        <p class="text-gray-400 text-sm">
-          <span class="text-blue-400 font-semibold">{daysLeft} hari</span> lagi menuju 22 April 🎂
+    <!-- ── EASTER EGG / COUNTDOWN CARD ── -->
+    <div class="relative overflow-hidden rounded-3xl border border-gray-800/80 bg-gray-900/20 p-6 sm:p-8 text-center shadow-xl backdrop-blur-sm">
+      <div class="absolute -right-20 -top-20 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl"></div>
+      <div class="absolute -left-20 -bottom-20 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl"></div>
+
+      <div class="relative z-10 space-y-4">
+        {isBirthday ? (
+          <div class="text-6xl animate-bounce filter drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]">🎂</div>
+        ) : (
+          <div class="text-5xl filter drop-shadow-[0_0_12px_rgba(59,130,246,0.2)]">🥚</div>
+        )}
+        
+        <div>
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
+            Halaman Rahasia
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+            {isBirthday ? 'Selamat Ulang Tahun untuk Platform! 🎉' : 'Kamu Menemukan Easter Egg'}
+          </h1>
+          <p class="text-xs sm:text-sm text-gray-400 max-w-md mx-auto mt-2 leading-relaxed">
+            Halaman ini tersembunyi di balik bilah menu. Hanya developer dan kontributor dengan akses kredensial yang mengetahuinya.
+          </p>
+        </div>
+
+        {!isBirthday && (
+          <div class="max-w-xs mx-auto space-y-2 pt-2">
+            <div class="flex justify-between items-center text-xs text-gray-500">
+              <span>Perjalanan Siklus</span>
+              <span class="font-medium text-blue-400">{daysLeft} hari lagi menuju 22 April 🎂</span>
+            </div>
+            <div class="h-2 w-full bg-gray-950 rounded-full overflow-hidden border border-gray-800/60 p-0.5">
+              <div class="h-full bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-1000" style={`width: ${progressPercent}%`}></div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- ── THE STORY CARD ── -->
+    <SectionCard class="overflow-hidden border border-gray-800/80 bg-gray-900/10">
+      <div slot="header" class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800/60">
+        <span class="text-2xl">☕</span>
+        <div>
+          <h2 class="font-bold text-white text-lg">Catatan Kreator</h2>
+          <p class="text-xs text-gray-500">Dibalik Layar & Filosofi Pembangunan</p>
+        </div>
+      </div>
+
+      <div class="space-y-5 text-sm sm:text-base text-gray-300 leading-relaxed">
+        <div class="border-l-2 border-blue-500 pl-4 py-1 italic bg-blue-500/5 rounded-r-xl text-gray-400">
+          "Platform ini bukan proyek korporasi, bukan tugas akademik terstruktur, dan bukan pula startup yang mengejar valuasi investor. Ini adalah sebuah hadiah ulang tahun yang saya ciptakan untuk diri sendiri — dan untuk semua orang yang lapar akan ilmu."
+        </div>
+
+        <p>
+          Ide awalnya sederhana: saya merindukan adanya sebuah ruang belajar di mana para pelajar Indonesia bisa menekuni teknologi secara serius. Bukan sekadar menonton video pasif untuk sertifikat kosong, melainkan ekosistem berbasis riset, di mana kodenya bisa diaudit langsung, kurikulumnya berakar pada open source, dan jalurnya jelas dari <span class="text-white font-medium">zero to production-ready</span>.
         </p>
-      )}
-    </div>
+        
+        <p>
+          <span class="text-white font-medium">SMA UII Yogyakarta</span> menjadi wadah pertama tempat platform ini ditanam dan dikembangkan. Bukan karena institusi lain tidak siap, melainkan karena di tempat inilah kami dapat memulai langkah konkret, berkolaborasi dengan siswa berbakat, dan menguji modul secara langsung di lapangan. 
+        </p>
 
-    <!-- Cerita -->
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6 space-y-4 text-gray-300 leading-relaxed">
-      <p>
-        Platform ini bukan proyek kantor, bukan tugas kuliah, bukan startup yang dikejar investor.
-        Ini adalah <span class="text-white font-medium">hadiah ulang tahun yang saya buat untuk diri sendiri</span> —
-        dan untuk siapapun yang mau belajar.
-      </p>
-      <p>
-        Idenya sederhana: saya ingin ada tempat di mana pelajar Indonesia bisa belajar teknologi
-        secara serius — dengan konten yang bisa diaudit, komunitas yang nyata, dan jalur yang jelas
-        dari "tidak tahu apa-apa" sampai "bisa berkontribusi ke proyek nyata".
-      </p>
-      <p>
-        SMA UII Yogyakarta adalah instansi pertama tempat ini diterapkan — bukan karena yang lain
-        tidak layak, tapi karena di sinilah saya bisa mulai dengan paling konkret.
-        Tapi visinya lebih besar dari itu: <span class="text-white font-medium">seluruh sekolah di Indonesia</span>.
-        Ini adalah bentuk kecintaan saya kepada tanah air dan kontribusi kecil saya kepada dunia pendidikan.
-      </p>
-      <p>
-        Semua kode dan konten open source. Fork, adaptasi, terapkan di sekolahmu —
-        dengan satu syarat: <span class="text-white font-medium">cantumkan kredit</span>,
-        agar ekosistem pendidikan digital Indonesia bisa tumbuh bersama, bukan sendiri-sendiri.
-      </p>
-      <p class="text-gray-500 text-sm italic">
-        — Dibangun dengan ❤️ dan banyak kopi, April 2026
-      </p>
-    </div>
+        <p>
+          Namun, mimpi jangka panjangnya tidak berhenti di sini. Kami ingin ini menyebar ke <span class="text-white font-semibold">seluruh sekolah di Indonesia</span>. Seluruh kode sumber, basis data, dan konten pembelajaran dirilis secara gratis. Kamu bebas mem-fork, mengadaptasi, dan menerapkannya di sekolahmu sendiri — dengan satu komitmen moral: <span class="text-white font-medium">tetap sertakan kredit pembuat asli</span> agar kita tumbuh bergotong royong.
+        </p>
 
-    <!-- Stack -->
-    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
-      <h2 class="font-semibold mb-4 text-sm text-gray-400 uppercase tracking-wider">Dibangun dengan</h2>
-      <div class="grid grid-cols-2 gap-2 text-sm">
-        {[
-          ['⚡', 'Astro 6', 'SSR Framework'],
-          ['🎨', 'Tailwind v4', 'Styling'],
-          ['🗄️', 'Turso + Drizzle', 'Database'],
-          ['🔐', 'Lucia v3', 'Auth'],
-          ['📝', 'Markdown + GitHub', 'Konten'],
-          ['🚀', 'Bun', 'Runtime'],
-        ].map(([icon, name, desc]) => (
-          <div class="flex items-center gap-2 text-gray-400">
-            <span>{icon}</span>
-            <div>
-              <span class="text-white text-xs font-medium">{name}</span>
-              <span class="text-gray-600 text-xs ml-1">— {desc}</span>
+        <div class="flex items-center gap-3 pt-4 border-t border-gray-800/40 text-xs sm:text-sm text-gray-500">
+          <span class="flex h-8 w-8 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 items-center justify-center font-bold text-xs">SK</span>
+          <div>
+            <p class="text-gray-400 font-semibold">Sandi Kodev</p>
+            <p class="text-[11px] text-gray-600">April 2026 · Built with passion and many cups of black coffee.</p>
+          </div>
+        </div>
+      </div>
+    </SectionCard>
+
+    <!-- ── TECH STACK CARD ── -->
+    <SectionCard class="border border-gray-800/80 bg-gray-900/10">
+      <div slot="header" class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-800/60">
+        <span class="text-2xl">⚙️</span>
+        <div>
+          <h2 class="font-bold text-white text-lg">Teknologi yang Digunakan</h2>
+          <p class="text-xs text-gray-500">Modern, Cepat, dan Skalabel</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {techStack.map((tech) => (
+          <div class={`p-4 rounded-2xl border transition-all duration-200 group flex items-start gap-3.5 ${tech.color}`}>
+            <span class="text-2xl p-2 rounded-xl bg-gray-950 border border-gray-800/60 leading-none flex-shrink-0 group-hover:scale-105 transition-transform">{tech.icon}</span>
+            <div class="space-y-1">
+              <div class="flex items-center gap-1.5">
+                <h4 class="text-xs sm:text-sm font-bold text-white leading-none">{tech.name}</h4>
+                <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-gray-950 border border-gray-800/60 text-gray-400 font-semibold">{tech.category}</span>
+              </div>
+              <p class="text-[11px] text-gray-400 leading-relaxed">{tech.desc}</p>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </SectionCard>
 
-    <!-- Links -->
-    <div class="flex gap-3 justify-center text-sm">
+    <!-- ── BUTTON LINKS ── -->
+    <div class="flex justify-center gap-3 flex-wrap">
       <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank"
-        class="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:border-blue-500/50 transition text-gray-400 hover:text-white">
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900/60 border border-gray-800/80 hover:border-gray-700 rounded-xl transition text-xs sm:text-sm text-gray-400 hover:text-white font-semibold">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
         </svg>
-        GitHub Org
+        GitHub Organization
       </a>
-      <a href="/learn"
-        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition text-white">
-        Mulai Belajar →
+      <a href="/app/overview"
+        class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl transition text-xs sm:text-sm text-white font-semibold shadow-lg shadow-blue-600/10">
+        Kembali ke Dashboard
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
       </a>
     </div>
 
-    <p class="text-center text-xs text-gray-700 mt-8">
-      Hanya {user?.name?.split(' ')[0] ?? 'kamu'} dan beberapa orang yang tahu halaman ini ada. 🤫
-    </p>
+    <!-- ── FOOTER LOG ── -->
+    <div class="max-w-md mx-auto text-center space-y-1">
+      <div class="inline-flex items-center gap-1.5 font-mono text-[10px] text-gray-700 bg-gray-900/10 border border-gray-800/30 px-3 py-1 rounded-lg">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        [SYS_LOG] Session user: {user?.name?.split(' ')[0] ?? 'guest'} (authorized)
+      </div>
+      <p class="text-[10px] text-gray-600">
+        Hanya kamu dan beberapa orang terpilih yang tahu halaman rahasia ini ada. 🤫
+      </p>
+    </div>
+
   </div>
 </DashboardLayout>

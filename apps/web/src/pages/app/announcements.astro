@@ -19,19 +19,21 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       <input type="hidden" name="id" value="">
       <div>
         <label class="block text-xs text-gray-400 mb-1">Judul *</label>
-        <input type="text" name="title" required
-          class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+        <input type="text" name="title" required data-validate="min:3"
+          class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 invalid:border-red-500">
+        <p class="text-xs text-red-400 mt-1 hidden" data-error="title"></p>
       </div>
       <div>
         <label class="block text-xs text-gray-400 mb-1">Isi *</label>
-        <textarea name="content" rows="5" required
-          class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus:border-blue-500"></textarea>
+        <textarea name="content" rows="5" required data-validate="min:10"
+          class="w-full px-3 py-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 invalid:border-red-500"></textarea>
+        <p class="text-xs text-red-400 mt-1 hidden" data-error="content"></p>
       </div>
       <div class="flex gap-3 pt-2">
         <button type="submit" id="submit-btn"
-          class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Publish</button>
+          class="btn-ripple flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm transition">Publish</button>
         <button type="button" id="close-modal"
-          class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
+          class="btn-ripple px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition">Batal</button>
       </div>
     </form>
   </Modal>
@@ -39,13 +41,32 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
   <script>
     declare function showToast(message: string, type?: string, duration?: number): void;
 
-    import { esc, unesc, fmtDate, renderPagination, icons } from '@lib/ui';
+    import { esc, unesc, fmtDate, renderPagination, icons, setBtnLoading, confirmAction, setupPullToRefresh, staggerList, setupSwipeAction } from '@lib/ui';
+    import { apiFetch } from '@lib/api-client';
 
     const modal = document.getElementById('add-modal');
     const form = document.getElementById('announcement-form') as HTMLFormElement;
     const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
     const modalTitle = modal?.querySelector('h2');
     const listEl = document.getElementById('announcements-list') as HTMLElement;
+
+    // Pull-to-refresh
+    let cleanupPtr: (() => void) | null = null;
+    setupPullToRefresh(listEl.parentElement as HTMLElement, async () => {
+      await load();
+    });
+
+    // Swipe-to-action
+    setupSwipeAction(listEl, async (id, action) => {
+      if (action === 'delete') {
+        const title = listEl.querySelector(`[data-swipe-id="${id}"] .swipe-action`)?.dataset.title;
+        const ok = await confirmAction({ message: `Hapus pengumuman "${title}"?`, confirmText: 'Hapus' });
+        if (!ok) return;
+        const { error } = await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' });
+        if (!error) load();
+        else showToast('Gagal menghapus', 'error');
+      }
+    });
 
     let currentPage = 1;
     const PAGE_LIMIT = 10;
@@ -59,7 +80,13 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     function renderCard(a: any): string {
       const isPinned = a.isPinned === 1 || a.isPinned === true;
       return `
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition ${isPinned ? 'border-yellow-600/30' : ''}">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition ${isPinned ? 'border-yellow-600/30' : ''}" data-swipe-id="${esc(a.id)}">
+          <!-- Swipe action button -->
+          <div class="swipe-action" data-action="delete" data-id="${esc(a.id)}" data-title="${esc(a.title)}">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
           <div class="flex justify-between items-start mb-2 gap-3">
             <div class="flex items-center gap-2">
               <h3 class="font-semibold">${esc(a.title)}</h3>
@@ -83,14 +110,34 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
     }
 
     async function load() {
-      const res = await fetch(`/api/announcements?page=${currentPage}&limit=${PAGE_LIMIT}`);
-      const { data } = await res.json();
+      const { data, error } = await apiFetch<any>(`/api/announcements?page=${currentPage}&limit=${PAGE_LIMIT}`);
+      if (error) {
+        showToast('Gagal memuat data pengumuman', 'error');
+        return;
+      }
       const list: any[] = data?.announcements || [];
       const total: number = data?.total || 0;
 
       listEl.innerHTML = list.length
         ? '<div class="space-y-4">' + list.map(renderCard).join('') + '</div>'
-        : '<div class="text-center py-10"><p class="text-gray-500 text-sm">Belum ada pengumuman</p></div>';
+        : `<div class="text-center py-16">
+            <svg class="w-20 h-20 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            <p class="text-gray-400 text-sm mb-1">Belum ada pengumuman</p>
+            <p class="text-gray-500 text-xs mb-4">Jadilah yang pertama membagikan informasi penting</p>
+            <button onclick="__modal['add-modal'].open()" class="btn-ripple bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Buat Pengumuman
+            </button>
+          </div>`;
+
+      // Staggered entry animation
+      const container = listEl.firstElementChild as HTMLElement;
+      if (container && list.length) {
+        const items = Array.from(container.children) as HTMLElement[];
+        staggerList(container, items);
+      }
 
       renderPagination('ann-pagination', 'announcements-list', total, currentPage, PAGE_LIMIT, 'pengumuman', 'window.annPage');
     }
@@ -99,17 +146,50 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
     // --- Modal helpers ---
 
+function validateField(name: string, value: string): string | null {
+      const titleEl = form?.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement | null;
+      const min = titleEl?.dataset.validate?.match(/min:(\d+)/)?.[1];
+      if (!value.trim()) return 'Field ini wajib diisi';
+      if (min && value.length < parseInt(min)) return `Minimal ${min} karakter`;
+      return null;
+    }
+
+    function showError(field: string, message: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.remove('hidden');
+      if (errEl) errEl.textContent = message;
+      inputEl?.classList.add('border-red-500');
+    }
+
+    function clearError(field: string) {
+      const errEl = document.querySelector(`[data-error="${field}"]`) as HTMLElement | null;
+      const inputEl = form?.querySelector(`[name="${field}"]`) as HTMLElement | null;
+      errEl?.classList.add('hidden');
+      inputEl?.classList.remove('border-red-500');
+    }
+
+    // Validate on blur
+    form?.querySelectorAll('[data-validate]').forEach(el => {
+      el.addEventListener('blur', () => {
+        const input = el as HTMLInputElement | HTMLTextAreaElement;
+        const error = validateField(input.name, input.value);
+        if (error) showError(input.name, error);
+        else clearError(input.name);
+      });
+    });
+
     function openModal(id = '', title = '', content = '') {
       (form.querySelector('[name="id"]') as HTMLInputElement).value = id;
       (form.querySelector('[name="title"]') as HTMLInputElement).value = title;
       (form.querySelector('[name="content"]') as HTMLTextAreaElement).value = content;
       if (modalTitle) modalTitle.textContent = id ? 'Edit Pengumuman' : 'Buat Pengumuman';
       submitBtn.textContent = id ? 'Simpan' : 'Publish';
-      modal?.classList.remove('hidden');
+      __modal['add-modal'].open();
     }
 
     function closeModal() {
-      modal?.classList.add('hidden');
+      __modal['add-modal'].close();
       form.reset();
     }
 
@@ -123,17 +203,61 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
       if (action === 'edit') {
         openModal(id, title, unesc(content!));
       } else if (action === 'delete') {
-        if (!confirm(`Hapus pengumuman "${title}"?`)) return;
-        const res = await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
-        res.ok ? load() : showToast('Gagal menghapus', 'error');
+        const card = btn.closest<HTMLElement>('[class*="bg-gray-900"]');
+        if (!card) return;
+        const ok = await confirmAction({ message: `Hapus pengumuman "${title}"?`, confirmText: 'Hapus' });
+        if (!ok) return;
+        
+        // Optimistic delete
+        const nextSibling = card.nextElementSibling;
+        const parent = card.parentElement;
+        card.remove();
+        
+        const { error } = await apiFetch(`/api/announcements/${id}`, { method: 'DELETE' });
+        if (error) {
+          // Rollback
+          if (nextSibling) parent?.insertBefore(card, nextSibling);
+          else parent?.appendChild(card);
+          showToast('Gagal menghapus', 'error');
+        }
       } else if (action === 'pin') {
+        // Optimistic pin toggle
         const newPinState = pinned === '1' ? 0 : 1;
-        const res = await fetch(`/api/announcements/${id}`, {
+        const iconBtn = btn as HTMLButtonElement;
+        const wasPinned = pinned === '1';
+        
+        // Toggle UI immediately
+        iconBtn.dataset.pinned = wasPinned ? '0' : '1';
+        iconBtn.setAttribute('title', wasPinned ? 'Pin' : 'Unpin');
+        iconBtn.innerHTML = wasPinned ? pinIcon : pinFilledIcon;
+        iconBtn.className = wasPinned ? 'text-gray-500 hover:text-yellow-400 transition p-1' : 'text-yellow-400 hover:text-yellow-400 transition p-1';
+        
+        const card = btn.closest<HTMLElement>('[class*="bg-gray-900"]');
+        if (wasPinned) {
+          card?.classList.remove('border-yellow-600/30');
+        } else {
+          card?.classList.add('border-yellow-600/30');
+        }
+        
+        // Update pinned badge
+        const badge = card?.querySelector('.bg-yellow-600\\/20');
+        if (badge) {
+          if (wasPinned) badge.remove();
+          else {
+            const titleEl = card?.querySelector('h3');
+            titleEl?.insertAdjacentHTML('afterend', '<span class="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded-full flex items-center gap-1">📌 Pinned</span>');
+          }
+        }
+        
+        const { error } = await apiFetch(`/api/announcements/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isPinned: newPinState }),
         });
-        res.ok ? load() : showToast('Gagal mengubah pin status', 'error');
+        if (error) {
+          // Rollback - reload to restore exact state
+          load();
+          showToast('Gagal mengubah pin status', 'error');
+        }
       }
     });
 
@@ -141,16 +265,34 @@ const redirect = requireMaintainer(Astro); if (redirect) return redirect;
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Validate all fields
       const fd = new FormData(form);
+      const title = fd.get('title') as string;
+      const content = fd.get('content') as string;
+      
+      let hasError = false;
+      const titleError = validateField('title', title);
+      const contentError = validateField('content', content);
+      
+      if (titleError) { showError('title', titleError); hasError = true; }
+      else clearError('title');
+      
+      if (contentError) { showError('content', contentError); hasError = true; }
+      else clearError('content');
+      
+      if (hasError) return;
+      
       const id = fd.get('id') as string;
+      setBtnLoading(submitBtn, true, 'Menyimpan...');
 
-      const res = await fetch(id ? `/api/announcements/${id}` : '/api/announcements', {
+      const { error } = await apiFetch(id ? `/api/announcements/${id}` : '/api/announcements', {
         method: id ? 'PATCH' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: fd.get('title'), content: fd.get('content') }),
+        body: JSON.stringify({ title, content }),
       });
 
-      if (res.ok) { closeModal(); load(); }
+      setBtnLoading(submitBtn, false);
+      if (!error) { closeModal(); load(); }
       else showToast(id ? 'Gagal mengupdate' : 'Gagal membuat pengumuman', 'error');
     });
 

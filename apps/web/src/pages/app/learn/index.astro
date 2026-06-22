@@ -10,6 +10,7 @@ import { eq, gte, desc, and } from 'drizzle-orm';
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
 const { user } = Astro.locals;
 const all = await getCollection('lessons');
 
@@ -17,8 +18,26 @@ const trackEntries = all
   .filter(l => l.id.endsWith('/README') && !l.data.module && l.data.track === undefined)
   .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
 
-const progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user!.id));
-const completedSlugs = new Set(progress.map(p => p.lessonSlug));
+let completedSlugs = new Set<string>();
+let recentSessions: any[] = [];
+let allSessions: any[] = [];
+let progress: any[] = [];
+
+if (!isSSG && user) {
+  progress = await db.select().from(learningProgress).where(eq(learningProgress.userId, user.id));
+  completedSlugs = new Set(progress.map(p => p.lessonSlug));
+
+  // Terakhir dipelajari — max 3 lesson unik, sorted by startedAt desc
+  recentSessions = await db.select().from(readingSessions)
+    .where(eq(readingSessions.userId, user.id))
+    .orderBy(desc(readingSessions.startedAt))
+    .limit(20);
+
+  // Contribution graph
+  const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+  allSessions = await db.select().from(readingSessions)
+    .where(and(eq(readingSessions.userId, user.id), gte(readingSessions.startedAt, oneYearAgo)));
+}
 
 const trackStats = trackEntries.map(track => {
   const trackSlug = track.id.replace('/README', '');
@@ -26,12 +45,6 @@ const trackStats = trackEntries.map(track => {
   const completed = lessons.filter(l => completedSlugs.has(l.id)).length;
   return { track, trackSlug, total: lessons.length, completed };
 });
-
-// Terakhir dipelajari — max 3 lesson unik, sorted by startedAt desc
-const recentSessions = await db.select().from(readingSessions)
-  .where(eq(readingSessions.userId, user!.id))
-  .orderBy(desc(readingSessions.startedAt))
-  .limit(20);
 
 const seenSlugs = new Set<string>();
 const recentLessons = recentSessions
@@ -45,11 +58,6 @@ const recentLessons = recentSessions
     return { lesson, trackSlug, trackTitle: trackEntry?.data.title ?? trackSlug, trackIcon: trackEntry?.data.icon ?? '📚', lastRead: s.startedAt };
   })
   .filter(Boolean) as { lesson: typeof all[0]; trackSlug: string; trackTitle: string; trackIcon: string; lastRead: number }[];
-
-// Contribution graph
-const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
-const allSessions = await db.select().from(readingSessions)
-  .where(and(eq(readingSessions.userId, user!.id), gte(readingSessions.startedAt, oneYearAgo)));
 
 const minutesPerDay: Record<string, number> = {};
 for (const s of allSessions) {
@@ -133,7 +141,7 @@ weeks.forEach((week, i) => {
             : `${Math.round(minsAgo / 1440)} hari lalu`;
           return (
             <a href={`/app/learn/${trackSlug}/${lessonPath}`}
-              class="bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-xl p-4 transition group flex flex-col gap-2">
+              class="btn-ripple bg-gray-900 border border-gray-800 hover:border-blue-500/50 rounded-xl p-4 transition group flex flex-col gap-2 block">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 text-xs text-gray-500">
                   <span>{trackIcon}</span>
@@ -156,10 +164,10 @@ weeks.forEach((week, i) => {
   <div class="flex flex-col sm:flex-row gap-3 mb-5">
     <input id="track-search" type="text" placeholder="Cari track..."
       autocomplete="off"
-      class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition placeholder-gray-600" />
+      class="flex-1 bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 transition placeholder-gray-600" />
     <div class="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none" style="-ms-overflow-style:none;scrollbar-width:none;">
       {['Semua','Pemula','Menengah','Lanjutan','🏆 Olimpiade'].map(f => (
-        <button data-filter={f} class={`filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap shrink-0 touch-manipulation ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : f === '🏆 Olimpiade' ? 'bg-gray-900 border-amber-700/50 text-amber-400 hover:border-amber-500' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
+        <button data-filter={f} class={`btn-ripple filter-btn px-3 py-2 rounded-xl text-xs font-medium transition border whitespace-nowrap shrink-0 touch-manipulation ${f === 'Semua' ? 'bg-blue-600 border-blue-600 text-white' : f === '🏆 Olimpiade' ? 'bg-gray-900 border-amber-700/50 text-amber-400 hover:border-amber-500' : 'bg-gray-900 border-gray-800 text-gray-400 hover:border-blue-500/50'}`}>{f}</button>
       ))}
     </div>
   </div>
@@ -184,7 +192,7 @@ weeks.forEach((week, i) => {
               data-title={track.data.title.toLowerCase()}
               data-level={dominantLevel}
               data-olimpiade={hasOlimpiade ? 'true' : 'false'}
-              class="track-card bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
+              class="btn-ripple track-card bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-blue-500/40 transition group block">
               <div class="flex items-start gap-3 mb-4">
                 <span class="text-3xl shrink-0">{track.data.icon}</span>
                 <div class="flex-1 min-w-0">

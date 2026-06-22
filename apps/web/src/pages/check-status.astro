@@ -2,11 +2,17 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Cek Status Pendaftaran — SMA UII Lab</title>
   <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     @import "tailwindcss";
+    @theme {
+      --font-sans: "Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    }
     body {
       margin: 0;
       background: #030712;
@@ -22,7 +28,7 @@
         </a>
       </div>
 
-      <div id="search-form" class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div id="search-form" class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 backdrop-blur-md">
         <h1 class="text-2xl font-bold text-white mb-2">Cek Status Pendaftaran</h1>
         <p class="text-gray-400 text-sm mb-6">Masukkan NIS atau Email untuk melihat status pendaftaranmu</p>
         
@@ -31,22 +37,22 @@
             <input
               type="text"
               id="identifier"
-              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 text-white"
+              class="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 hover:border-gray-700/80"
               placeholder="NIS atau Email"
             />
-            <p id="error-msg" class="text-red-400 text-sm mt-2 hidden"></p>
+            <p id="error-msg" class="text-red-400 text-sm mt-2.5 hidden"></p>
           </div>
           
           <button
             id="check-btn"
-            class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg font-semibold transition"
+            class="btn-ripple w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-3.5 rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-600/15"
           >
             Cek Status
           </button>
         </div>
       </div>
 
-      <div id="status-result" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div id="status-result" class="hidden bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 backdrop-blur-md">
         <div class="text-center mb-6">
           <div id="status-icon" class="text-6xl mb-4"></div>
           <h2 id="status-title" class="text-xl font-bold text-white mb-2"></h2>
@@ -54,42 +60,42 @@
         </div>
 
         <div class="space-y-3 text-sm">
-          <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">NIS</span>
-            <span id="result-nis" class="font-medium text-white"></span>
+          <div class="flex justify-between py-2 border-b border-gray-800/80">
+            <span class="text-gray-400 font-medium">NIS</span>
+            <span id="result-nis" class="font-bold text-gray-200"></span>
           </div>
-          <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">Nama</span>
-            <span id="result-name" class="font-medium text-white"></span>
+          <div class="flex justify-between py-2 border-b border-gray-800/80">
+            <span class="text-gray-400 font-medium">Nama</span>
+            <span id="result-name" class="font-bold text-gray-200"></span>
           </div>
-          <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">Email</span>
-            <span id="result-email" class="font-medium text-white"></span>
+          <div class="flex justify-between py-2 border-b border-gray-800/80">
+            <span class="text-gray-400 font-medium">Email</span>
+            <span id="result-email" class="font-bold text-gray-200"></span>
           </div>
-          <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">Kelas</span>
-            <span id="result-class" class="font-medium text-white"></span>
+          <div class="flex justify-between py-2 border-b border-gray-800/80">
+            <span class="text-gray-400 font-medium">Kelas</span>
+            <span id="result-class" class="font-bold text-gray-200"></span>
           </div>
-          <div class="flex justify-between py-2 border-b border-gray-700">
-            <span class="text-gray-400">Track</span>
-            <span id="result-tracks" class="font-medium text-white"></span>
+          <div class="flex justify-between py-2 border-b border-gray-800/80">
+            <span class="text-gray-400 font-medium">Track</span>
+            <span id="result-tracks" class="font-bold text-gray-200"></span>
           </div>
         </div>
 
-        <div id="countdown-section" class="hidden mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-center">
-          <p class="text-blue-400 text-sm mb-2">Estimasi waktu peninjauan</p>
-          <div id="countdown" class="text-3xl font-bold text-white"></div>
+        <div id="countdown-section" class="hidden mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-center">
+          <p class="text-blue-400 text-sm mb-2 font-medium">Estimasi waktu peninjauan</p>
+          <div id="countdown" class="text-3xl font-bold text-white font-mono"></div>
           <p class="text-gray-500 text-xs mt-2">Batas maksimal 3 hari kerja</p>
         </div>
 
-        <div id="expired-section" class="hidden mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
+        <div id="expired-section" class="hidden mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-center">
           <p class="text-yellow-400 font-semibold">Menunggu terlalu lama?</p>
           <p class="text-gray-400 text-sm mt-1">Silakan hubungi admin melalui GitHub Issues</p>
         </div>
 
         <button
           id="check-another"
-          class="w-full mt-6 border border-gray-700 hover:border-gray-600 text-gray-300 px-4 py-3 rounded-lg font-semibold transition"
+          class="btn-ripple w-full mt-6 border border-gray-800/85 bg-gray-900/40 hover:bg-gray-900/80 text-gray-300 px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:border-gray-705"
         >
           Cek NIS/Email Lain
         </button>
@@ -98,6 +104,7 @@
   </div>
 
   <script>
+    import { apiFetch } from '@lib/api-client';
     const params = new URLSearchParams(window.location.search);
     const prefillNisn = params.get('nisn') || '';
     const prefillName = params.get('name') || '';
@@ -196,6 +203,7 @@
       const identifier = identifierInput.value.trim();
       if (!identifier) {
         showError('Masukkan NIS atau Email');
+        identifierInput.focus();
         return;
       }
 
@@ -204,12 +212,12 @@
       checkBtn.textContent = 'Memeriksa...';
 
       try {
-        const response = await fetch(`/api/register?identifier=${encodeURIComponent(identifier)}&checkStatus=true`);
-        const result = await response.json();
-        const data = result.data;
+        const { data, error } = await apiFetch<any>(
+          `/api/register?identifier=${encodeURIComponent(identifier)}&checkStatus=true`
+        );
 
-        if (!response.ok) {
-          showError(result.error || 'Pendaftaran tidak ditemukan');
+        if (error) {
+          showError(error || 'Pendaftaran tidak ditemukan');
           return;
         }
 
