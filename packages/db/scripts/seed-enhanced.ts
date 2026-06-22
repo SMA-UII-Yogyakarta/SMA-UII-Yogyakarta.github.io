@@ -12,8 +12,7 @@ const tursoToken = env.TURSO_TOKEN || '';
 const client = createClient({ url: tursoUrl, authToken: tursoToken });
 const db = drizzle(client);
 
-// Default password for all test accounts
-const DEFAULT_PASSWORD = 'test123';
+const DEFAULT_PASSWORD = env.SEED_PASSWORD || 'test123';
 
 async function generateMemberCard(userId: string, name: string, nis: string) {
   const cardNumber = `SMAUII-${Date.now().toString().slice(-8)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;

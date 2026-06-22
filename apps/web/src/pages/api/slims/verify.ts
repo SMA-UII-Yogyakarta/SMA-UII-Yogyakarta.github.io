@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { getSiteConfig } from '@smauii/shared';
 
 const config = getSiteConfig();
@@ -50,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
 
       if (res.status === 404) {
-        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
+        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: ErrorCode.MEMBER_NOT_FOUND });
       }
 
       if (!res.ok) {
@@ -61,7 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
       const data = await res.json();
 
       if (!data.found) {
-        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
+        return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: ErrorCode.MEMBER_NOT_FOUND });
       }
 
       return createSuccessResponse({
@@ -87,7 +87,7 @@ export const POST: APIRoute = async ({ request }) => {
     const member = MOCK_SLIMS_DATA.find(m => m.nis === nis);
 
     if (!member) {
-      return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: 'MEMBER_NOT_FOUND' });
+      return createErrorResponse(`ID tidak ditemukan di database ${config.institution.shortName}`, 404, { code: ErrorCode.MEMBER_NOT_FOUND });
     }
 
     const isExpired = new Date(member.expiredAt) < new Date();

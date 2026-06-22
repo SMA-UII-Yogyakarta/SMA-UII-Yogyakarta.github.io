@@ -57,6 +57,304 @@ export function unesc(str: string): string {
   return txt.value;
 }
 
+/** Set tombol dalam state loading — disabled + spinner */
+export function setBtnLoading(btn: HTMLButtonElement | null, loading: boolean, loadingText = 'Menyimpan...'): void {
+  if (!btn) return;
+  if (loading) {
+    if (!btn.dataset.origLabel) btn.dataset.origLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner mr-1.5 inline-block align-middle"></span>${loadingText}`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn.dataset.origLabel || 'Simpan';
+  }
+}
+
+/** Action sheet confirm — gantikan confirm() native. Returns Promise<boolean> */
+let _confirmResolve: ((v: boolean) => void) | null = null;
+
+export function setupConfirmModal(): void {
+  const okBtn = document.getElementById('confirm-ok') as HTMLButtonElement | null;
+  const cancelBtn = document.getElementById('confirm-cancel') as HTMLButtonElement | null;
+  if (!okBtn || !cancelBtn) return;
+
+  okBtn.addEventListener('click', () => {
+    const r = _confirmResolve;
+    _confirmResolve = null;
+    (window as any).__modal?.['confirm-modal']?.close();
+    r?.(true);
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    const r = _confirmResolve;
+    _confirmResolve = null;
+    (window as any).__modal?.['confirm-modal']?.close();
+    r?.(false);
+  });
+}
+
+export function confirmAction(opts: {
+  title?: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  danger?: boolean;
+}): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    _confirmResolve = resolve;
+
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = modal?.querySelector('h2');
+    const msgEl = document.getElementById('confirm-msg');
+    const okBtn = document.getElementById('confirm-ok') as HTMLButtonElement | null;
+    const cancelBtn = document.getElementById('confirm-cancel') as HTMLButtonElement | null;
+
+    if (titleEl) titleEl.textContent = opts.title || 'Konfirmasi';
+    if (msgEl) msgEl.textContent = opts.message;
+    if (okBtn) {
+      okBtn.textContent = opts.confirmText || 'Hapus';
+      okBtn.className = `flex-1 px-4 py-2.5 text-white rounded-lg text-sm font-medium transition ${
+        opts.danger !== false ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
+      }`;
+    }
+    if (cancelBtn) cancelBtn.textContent = opts.cancelText || 'Batal';
+
+    (window as any).__modal?.['confirm-modal']?.open();
+  });
+}
+
+/** Animasikan entry list item satu per satu (staggered) */
+export function staggerList(container: HTMLElement, items: HTMLElement[], staggerMs = 60): void {
+  items.forEach((el, i) => {
+    el.classList.add('list-enter');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.style.transitionDelay = `${i * staggerMs}ms`;
+        el.classList.remove('list-enter');
+        el.classList.add('list-enter-active');
+      });
+    });
+  });
+}
+
+/** Pull-to-refresh untuk container scroll */
+export function setupPullToRefresh(
+  container: HTMLElement,
+  onRefresh: () => Promise<void>,
+): () => void {
+  let startY = 0;
+  let pulling = false;
+  const indicator = document.createElement('div');
+  indicator.className = 'ptr-indicator';
+  indicator.innerHTML = '<span class="spinner"></span>Memuat...';
+  container.insertBefore(indicator, container.firstChild);
+
+  function onTouchStart(e: TouchEvent) {
+    if (container.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    if (!pulling) return;
+    const delta = e.touches[0].clientY - startY;
+    if (delta < 0) { pulling = false; indicator.classList.remove('ptr-visible'); return; }
+    if (delta > 80) {
+      indicator.textContent = 'Lepaskan untuk memuat ulang';
+      indicator.classList.add('ptr-visible');
+    } else {
+      indicator.textContent = 'Tarik untuk memuat ulang';
+      indicator.classList.add('ptr-visible');
+      indicator.style.height = `${Math.min(delta, 48)}px`;
+    }
+  }
+
+  function onTouchEnd() {
+    if (!pulling) return;
+    pulling = false;
+    if (indicator.classList.contains('ptr-visible') && indicator.textContent?.includes('Lepaskan')) {
+      indicator.innerHTML = '<span class="spinner"></span>Memuat ulang...';
+      onRefresh().finally(() => {
+        indicator.classList.remove('ptr-visible');
+        indicator.style.height = '';
+        indicator.innerHTML = '<span class="spinner"></span>Memuat...';
+      });
+    } else {
+      indicator.classList.remove('ptr-visible');
+      indicator.style.height = '';
+    }
+  }
+
+  container.addEventListener('touchstart', onTouchStart, { passive: true });
+  container.addEventListener('touchmove', onTouchMove, { passive: true });
+  container.addEventListener('touchend', onTouchEnd);
+
+  return () => {
+    container.removeEventListener('touchstart', onTouchStart);
+    container.removeEventListener('touchmove', onTouchMove);
+    container.removeEventListener('touchend', onTouchEnd);
+    indicator.remove();
+  };
+}
+
+/** Swipe-to-action untuk list items — swipe kiri reveal delete button */
+export function setupSwipeAction(
+  container: HTMLElement,
+  onAction: (id: string, action: string) => Promise<void>,
+): () => void {
+  const SWIPE_THRESHOLD = 80; // px
+  const ACTION_WIDTH = 60; // px
+
+  let startX = 0;
+  let currentX = 0;
+  let activeItem: HTMLElement | null = null;
+  let actionButton: HTMLElement | null = null;
+
+  function onTouchStart(e: TouchEvent) {
+    const item = (e.target as HTMLElement).closest<HTMLElement>('[data-swipe-id]');
+    if (!item || !e.touches[0]) return;
+    
+    // Close other open items
+    closeAllSwipedItems();
+    
+    activeItem = item;
+    startX = e.touches[0].clientX;
+    currentX = startX;
+    item.style.transition = 'none';
+    
+    // Create/show action button
+    actionButton = item.querySelector('.swipe-action');
+    if (actionButton) {
+      actionButton.style.display = 'flex';
+      actionButton.style.opacity = '0';
+    }
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    if (!activeItem || !e.touches[0]) return;
+    
+    currentX = e.touches[0].clientX;
+    const delta = currentX - startX;
+    
+    if (delta < 0 && Math.abs(delta) < ACTION_WIDTH + 20) {
+      e.preventDefault();
+      const translate = Math.max(-ACTION_WIDTH, delta);
+      activeItem.style.transform = `translateX(${translate}px)`;
+      
+      if (actionButton) {
+        const progress = Math.min(Math.abs(delta) / ACTION_WIDTH, 1);
+        actionButton.style.opacity = String(progress);
+      }
+    }
+  }
+
+  function onTouchEnd() {
+    if (!activeItem) return;
+    
+    const delta = currentX - startX;
+    
+    if (delta < -SWIPE_THRESHOLD) {
+      // Swipe left enough — show action
+      activeItem.style.transform = `translateX(-${ACTION_WIDTH}px)`;
+      activeItem.style.transition = 'transform 0.2s ease';
+      if (actionButton) {
+        actionButton.style.opacity = '1';
+        actionButton.style.pointerEvents = 'auto';
+      }
+    } else {
+      // Not enough — reset
+      resetItem(activeItem);
+    }
+    
+    activeItem = null;
+    actionButton = null;
+  }
+
+  function closeAllSwipedItems() {
+    container.querySelectorAll<HTMLElement>('[data-swipe-id]').forEach(item => {
+      resetItem(item);
+    });
+  }
+
+  function resetItem(item: HTMLElement) {
+    item.style.transform = '';
+    item.style.transition = 'transform 0.2s ease';
+    const actionBtn = item.querySelector('.swipe-action') as HTMLElement;
+    if (actionBtn) {
+      actionBtn.style.opacity = '0';
+      actionBtn.style.pointerEvents = 'none';
+    }
+  }
+
+  // Handle action button click
+  container.addEventListener('click', (e) => {
+    const actionBtn = (e.target as HTMLElement).closest<HTMLElement>('.swipe-action');
+    if (!actionBtn) return;
+    
+    const item = actionBtn.closest<HTMLElement>('[data-swipe-id]');
+    const id = item?.dataset.swipeId;
+    const action = actionBtn.dataset.action;
+    
+    if (id && action) {
+      onAction(id, action);
+      resetItem(item);
+    }
+  });
+
+  container.addEventListener('touchstart', onTouchStart, { passive: true });
+  container.addEventListener('touchmove', onTouchMove, { passive: false });
+  container.addEventListener('touchend', onTouchEnd);
+
+  // Close swiped items on scroll
+  container.addEventListener('scroll', closeAllSwipedItems, { passive: true });
+
+  return () => {
+    container.removeEventListener('touchstart', onTouchStart);
+    container.removeEventListener('touchmove', onTouchMove);
+    container.removeEventListener('touchend', onTouchEnd);
+    container.removeEventListener('scroll', closeAllSwipedItems);
+  };
+}
+
+function closeAllSwipedItems() {
+  // Helper — will be overridden by setupSwipeAction
+}
+
+/** Infinite scroll — load more saat scroll mendekati bottom */
+export function setupInfiniteScroll(
+  container: HTMLElement,
+  onLoadMore: () => Promise<boolean>, // returns true if more data available
+  threshold = 100, // px from bottom
+): () => void {
+  let loading = false;
+  let hasMore = true;
+
+  function onScroll() {
+    if (loading || !hasMore) return;
+    
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+    
+    if (scrollHeight - scrollTop - clientHeight < threshold) {
+      loading = true;
+      onLoadMore().then(more => {
+        hasMore = more;
+        loading = false;
+      });
+    }
+  }
+
+  container.addEventListener('scroll', onScroll, { passive: true });
+  
+  // Initial check
+  onScroll();
+
+  return () => {
+    container.removeEventListener('scroll', onScroll);
+  };
+}
+
 /** Upload image ke /api/upload/image, return URL atau null */
 export async function uploadImage(
   file: File,

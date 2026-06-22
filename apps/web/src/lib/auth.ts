@@ -3,12 +3,16 @@ import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
 import { db } from '@smauii/db';
 import { sessions, users } from '@smauii/db';
 
+let isProd = false;
+try { isProd = import.meta.env.NODE_ENV === 'production'; }
+catch { isProd = process.env.NODE_ENV === 'production'; }
+
 const adapter = new DrizzleSQLiteAdapter(db, sessions, users);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: {
-      secure: import.meta.env.PROD,
+      secure: isProd,
     },
   },
   getUserAttributes: (attributes) => {

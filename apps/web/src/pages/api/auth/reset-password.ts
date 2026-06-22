@@ -3,7 +3,7 @@ import { db } from '@smauii/db';
 import { users, sessions } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 import { hash } from '@node-rs/argon2';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { verifyResetToken } from '@smauii/shared/jwt';
 import { resetPasswordSchema } from '@smauii/validation';
 
@@ -24,7 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
       return createErrorResponse(
         'Tautan reset tidak valid atau sudah kedaluwarsa.',
         400,
-        { code: 'INVALID_TOKEN' }
+        { code: ErrorCode.INVALID_TOKEN }
       );
     }
 
@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
       return createErrorResponse(
         'Tautan reset tidak valid atau sudah kedaluwarsa.',
         400,
-        { code: 'INVALID_TOKEN' }
+        { code: ErrorCode.INVALID_TOKEN }
       );
     }
 

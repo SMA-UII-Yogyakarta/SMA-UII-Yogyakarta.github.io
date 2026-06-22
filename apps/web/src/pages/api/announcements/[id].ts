@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { db } from '@smauii/db';
 import { announcements } from '@smauii/db';
 import { eq } from 'drizzle-orm';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { updateAnnouncementSchema } from '@smauii/validation';
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
@@ -14,7 +14,7 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
   try {
     const announcement = await db.query.announcements.findFirst({ where: eq(announcements.id, id) });
-    if (!announcement) return createErrorResponse('Pengumuman tidak ditemukan', 404, { code: 'NOT_FOUND' });
+    if (!announcement) return createErrorResponse('Pengumuman tidak ditemukan', 404, { code: ErrorCode.NOT_FOUND });
 
     const body = await request.json();
     const parsed = updateAnnouncementSchema.safeParse(body);
@@ -54,7 +54,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
   try {
     const announcement = await db.query.announcements.findFirst({ where: eq(announcements.id, id) });
-    if (!announcement) return createErrorResponse('Pengumuman tidak ditemukan', 404, { code: 'NOT_FOUND' });
+    if (!announcement) return createErrorResponse('Pengumuman tidak ditemukan', 404, { code: ErrorCode.NOT_FOUND });
 
     await db.delete(announcements).where(eq(announcements.id, id));
     return createSuccessResponse({ success: true });
@@ -63,3 +63,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return createErrorResponse('Internal server error', 500);
   }
 };
+
+export function getStaticPaths() {
+  return [];
+}
+

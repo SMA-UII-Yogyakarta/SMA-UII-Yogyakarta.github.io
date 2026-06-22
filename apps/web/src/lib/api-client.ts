@@ -1,9 +1,18 @@
-const DEPLOY_MODE = import.meta.env.DEPLOY_MODE || 'ssr';
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || '';
+// Dormant utility for SSG/Hybrid deployment mode (web app → external API)
+// Not currently imported — active auth uses Lucia httpOnly cookies.
+// Activate by importing this file when deploying in SSG mode.
 
-const isSSG = DEPLOY_MODE === 'ssg';
-const isHybrid = DEPLOY_MODE === 'hybrid';
-const useExternalAPI = isSSG || isHybrid;
+let useExternalAPI: boolean;
+let apiBaseUrl: string;
+try {
+  const mode = import.meta.env.DEPLOY_MODE || 'ssr';
+  useExternalAPI = mode === 'ssg' || mode === 'hybrid';
+  apiBaseUrl = import.meta.env.PUBLIC_API_URL || '';
+} catch {
+  const mode = process.env.DEPLOY_MODE || 'ssr';
+  useExternalAPI = mode === 'ssg' || mode === 'hybrid';
+  apiBaseUrl = process.env.PUBLIC_API_URL || '';
+}
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -24,6 +33,7 @@ export interface ApiResult<T> {
   data?: T;
   error?: string;
   code?: string;
+  details?: Record<string, string>;
 }
 
 export async function apiFetch<T>(
@@ -40,8 +50,7 @@ export async function apiFetch<T>(
     (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
 
-  const baseUrl = useExternalAPI ? API_BASE_URL : '';
-  const url = `${baseUrl}${path}`;
+  const url = `${apiBaseUrl}${path}`;
 
   try {
     const res = await fetch(url, {
@@ -64,6 +73,7 @@ export async function apiFetch<T>(
       return {
         error: json.error || 'Request failed',
         code: json.code,
+        ...(json.details && { details: json.details }),
       };
     }
 
@@ -74,7 +84,7 @@ export async function apiFetch<T>(
 }
 
 export function getApiBaseUrl(): string {
-  return useExternalAPI ? API_BASE_URL : '';
+  return apiBaseUrl;
 }
 
 export function isExternalApiMode(): boolean {
@@ -82,8 +92,7 @@ export function isExternalApiMode(): boolean {
 }
 
 export function apiUrl(path: string): string {
-  const baseUrl = useExternalAPI ? API_BASE_URL : '';
-  return `${baseUrl}${path}`;
+  return `${apiBaseUrl}${path}`;
 }
 
 export function authHeaders(): HeadersInit {

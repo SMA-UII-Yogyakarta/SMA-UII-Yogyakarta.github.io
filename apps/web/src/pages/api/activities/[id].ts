@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { db } from '@smauii/db';
 import { activities } from '@smauii/db';
 import { eq } from 'drizzle-orm';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { createActivitySchema } from '@smauii/validation';
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
@@ -14,7 +14,7 @@ export const PATCH: APIRoute = async ({ params, request, locals }) => {
 
   try {
     const activity = await db.query.activities.findFirst({ where: eq(activities.id, id) });
-    if (!activity) return createErrorResponse('Activity tidak ditemukan', 404, { code: 'NOT_FOUND' });
+    if (!activity) return createErrorResponse('Activity tidak ditemukan', 404, { code: ErrorCode.NOT_FOUND });
 
     if (activity.userId !== user.id && user.role !== 'maintainer') {
       return createErrorResponse('Forbidden', 403);
@@ -48,7 +48,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
   try {
     const activity = await db.query.activities.findFirst({ where: eq(activities.id, id) });
-    if (!activity) return createErrorResponse('Activity tidak ditemukan', 404, { code: 'NOT_FOUND' });
+    if (!activity) return createErrorResponse('Activity tidak ditemukan', 404, { code: ErrorCode.NOT_FOUND });
 
     // Hanya owner atau maintainer yang bisa hapus
     if (activity.userId !== user.id && user.role !== 'maintainer') {
@@ -62,3 +62,8 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return createErrorResponse('Internal server error', 500);
   }
 };
+
+export function getStaticPaths() {
+  return [];
+}
+

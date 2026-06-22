@@ -1,10 +1,9 @@
 import type { APIRoute } from 'astro';
 import { lucia } from '@lib/auth';
-import { db } from '@smauii/db';
-import { users, sessions } from '@smauii/db';
+import { db, users, sessions } from '@smauii/db';
 import { eq, or } from 'drizzle-orm';
 import { verify } from '@node-rs/argon2';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { loginSchemaWithNis } from '@smauii/validation';
 
 /**
@@ -81,7 +80,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     if (!user) {
-      return createErrorResponse('NIS/Email tidak ditemukan', 401, { code: 'USER_NOT_FOUND' });
+      return createErrorResponse('NIS/Email tidak ditemukan', 401, { code: ErrorCode.USER_NOT_FOUND });
     }
 
     // Check if password hash exists
@@ -89,14 +88,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return createErrorResponse(
         'Akun ini belum diatur password. Silakan hubungi administrator untuk mengatur password.',
         401,
-        { code: 'NO_PASSWORD_SET' }
+        { code: ErrorCode.NO_PASSWORD_SET }
       );
     }
 
     // Verify password
     const validPassword = await verify(user.passwordHash, password);
     if (!validPassword) {
-      return createErrorResponse('Invalid password', 401, { code: 'INVALID_PASSWORD' });
+      return createErrorResponse('Invalid password', 401, { code: ErrorCode.INVALID_PASSWORD });
     }
 
     // Check if user is approved
@@ -104,7 +103,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return createErrorResponse(
         'Pendaftaran kamu masih dalam proses peninjauan.',
         403,
-        { code: 'PENDING_APPROVAL', details: { nis: user.nis } }
+        { code: ErrorCode.PENDING_APPROVAL, details: { nis: user.nis } }
       );
     }
 
@@ -112,7 +111,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       return createErrorResponse(
         'Akun kamu dinonaktifkan. Silakan hubungi administrator.',
         403,
-        { code: 'ACCOUNT_INACTIVE' }
+        { code: ErrorCode.ACCOUNT_INACTIVE }
       );
     }
 

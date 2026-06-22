@@ -3,7 +3,7 @@ import { db } from '@smauii/db';
 import { users, memberTracks } from '@smauii/db';
 import { registerSchema } from '@smauii/validation';
 import { nanoid } from 'nanoid';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 import { sendRegistrationEmail } from '@smauii/shared';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -20,7 +20,7 @@ export const POST: APIRoute = async ({ request }) => {
       return createErrorResponse(
         'Validasi gagal',
         422,
-        { code: 'VALIDATION_ERROR', details: fieldErrors }
+        { code: ErrorCode.VALIDATION_ERROR, details: fieldErrors }
       );
     }
     
@@ -38,7 +38,7 @@ export const POST: APIRoute = async ({ request }) => {
       return createErrorResponse(
         'User dengan NIS/Email ini sudah terdaftar',
         409,
-        { code: 'USER_EXISTS' }
+        { code: ErrorCode.USER_EXISTS }
       );
     }
 
@@ -141,7 +141,7 @@ export const GET: APIRoute = async ({ url }) => {
       return createErrorResponse(
         'User dengan NIS/Email ini sudah terdaftar',
         409,
-        { code: 'USER_EXISTS' }
+        { code: ErrorCode.USER_EXISTS }
       );
     }
 

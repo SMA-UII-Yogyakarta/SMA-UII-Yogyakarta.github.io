@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createErrorResponse, createSuccessResponse } from '@smauii/shared';
+import { createErrorResponse, createSuccessResponse, ErrorCode } from '@smauii/shared';
 
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const file = formData.get('image') as File | null;
 
     if (!file) {
-      return createErrorResponse('File gambar diperlukan', 400, { code: 'MISSING_FILE' });
+      return createErrorResponse('File gambar diperlukan', 400, { code: ErrorCode.MISSING_FILE });
     }
 
     // Validasi tipe file
@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return createErrorResponse(
         'Tipe file tidak didukung. Gunakan JPG, PNG, WebP, atau GIF.',
         422,
-        { code: 'INVALID_FILE_TYPE' }
+        { code: ErrorCode.INVALID_FILE_TYPE }
       );
     }
 
@@ -31,7 +31,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return createErrorResponse(
         'Ukuran file terlalu besar. Maksimal 2MB.',
         422,
-        { code: 'FILE_TOO_LARGE' }
+        { code: ErrorCode.FILE_TOO_LARGE }
       );
     }
 

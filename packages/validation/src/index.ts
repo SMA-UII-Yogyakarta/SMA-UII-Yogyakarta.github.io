@@ -1,17 +1,20 @@
 import { z } from 'zod';
+import { getTrackValues, getTrackOptions, getClassOptions, type TrackDef } from '@smauii/shared';
+
+const _trackValues = getTrackValues() as [string, ...string[]];
+const _trackEnum = z.enum(_trackValues);
+
+export type TrackValue = (typeof _trackValues)[number];
 
 export const registerSchema = z.object({
   nis: z.string().min(1, 'NIS harus diisi').max(20, 'NIS maksimal 20 karakter'),
+  nisn: z.string().min(1, 'NISN harus diisi').max(20, 'NISN maksimal 20 karakter').optional(),
   name: z.string().min(1, 'Nama harus diisi').max(100, 'Nama maksimal 100 karakter'),
   email: z.string().min(1, 'Email harus diisi').email('Email tidak valid'),
   class: z.string().min(1, 'Kelas harus diisi'),
   githubUsername: z.string().optional(),
-  tracks: z.array(z.enum(['robotika', 'ai', 'data-science', 'network', 'security', 'software']))
-    .min(1, 'Pilih minimal 1 track')
-    .max(3, 'Maksimal 3 track'),
+  tracks: z.array(_trackEnum).min(1, 'Pilih minimal 1 track').max(3, 'Maksimal 3 track'),
 });
-
-export type TrackValue = 'robotika' | 'ai' | 'data-science' | 'network' | 'security' | 'software';
 
 export const apiRegisterSchema = registerSchema.extend({
   password: z.string().min(8, 'Password minimal 8 karakter'),
@@ -27,14 +30,7 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const trackOptions = [
-  { value: 'robotika', label: '🤖 Robotika/IoT' },
-  { value: 'ai', label: '🧠 AI (Kecerdasan Buatan)' },
-  { value: 'data-science', label: '📊 Data Science' },
-  { value: 'network', label: '🌐 Jaringan Komputer' },
-  { value: 'security', label: '🔐 Keamanan Siber' },
-  { value: 'software', label: '💻 Software Engineering' },
-];
+export const trackOptions: TrackDef[] = getTrackOptions();
 
 export const activityTypeOptions = [
   'contribution', 'event', 'workshop', 'meeting', 'other',
@@ -69,14 +65,7 @@ export const readingSessionSchema = z.object({
   duration: z.number().optional(),
 });
 
-export const classOptions = [
-  'X IPA 1', 'X IPA 2', 'X IPA 3', 'X IPA 4',
-  'X IPS 1', 'X IPS 2', 'X IPS 3',
-  'XI IPA 1', 'XI IPA 2', 'XI IPA 3', 'XI IPA 4',
-  'XI IPS 1', 'XI IPS 2', 'XI IPS 3',
-  'XII IPA 1', 'XII IPA 2', 'XII IPA 3', 'XII IPA 4',
-  'XII IPS 1', 'XII IPS 2', 'XII IPS 3',
-];
+export const classOptions = getClassOptions();
 
 export const userRoleOptions = ['member', 'maintainer', 'alumni'] as const;
 export const userStatusOptions = ['pending', 'active', 'inactive'] as const;
@@ -136,12 +125,9 @@ export const resetPasswordSchema = z.object({
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
-export const loginSchemaWithNis = z.object({
-  identifier: z.string().min(1, 'NIS atau email harus diisi'),
-  password: z.string().min(1, 'Password harus diisi'),
-});
-
-export type LoginSchemaWithNisInput = z.infer<typeof loginSchemaWithNis>;
+// Alias for clarity in login route — identical schema, explicit naming
+export const loginSchemaWithNis = loginSchema;
+export type LoginSchemaWithNisInput = LoginInput;
 
 export const learningProgressSchema = z.object({
   slug: z.string().min(1, 'Slug harus diisi'),

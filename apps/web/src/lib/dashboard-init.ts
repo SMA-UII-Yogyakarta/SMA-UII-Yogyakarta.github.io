@@ -108,7 +108,8 @@ export function initDashboard(_options: { role: string; userName: string }) {
   document.querySelectorAll('[data-nav]').forEach(el => {
     const href = el.getAttribute('href');
     if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
-      el.classList.add('bg-gray-800', 'text-white');
+      el.classList.add('bg-blue-600/15', 'text-blue-400', 'font-semibold');
+      el.classList.remove('text-gray-400');
     }
   });
 
