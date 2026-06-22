@@ -1,0 +1,77 @@
+---
+/**
+ * SelectGroup - Form select group with label, select, and error message
+ * 
+ * @param id - Select ID
+ * @param label - Select label
+ * @param options - Array of select options { value, label }
+ * @param value - Selected value
+ * @param required - Required field
+ * @param disabled - Disabled state
+ * @param error - Error message
+ * @param hint - Hint text
+ * @param class - Additional CSS classes
+ */
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  id: string;
+  label: string;
+  options: SelectOption[];
+  value?: string;
+  required?: boolean;
+  disabled?: boolean;
+  error?: string;
+  hint?: string;
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  options,
+  value,
+  required = false,
+  disabled = false,
+  error,
+  hint,
+  class: className = ''
+} = Astro.props;
+
+const hasError = !!error;
+---
+
+<div class="{className}">
+  <label for={id} class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+    {label}
+    {required && <span class="text-red-400 ml-1">*</span>}
+  </label>
+  <select
+    id={id}
+    name={id}
+    value={value}
+    required={required}
+    disabled={disabled}
+    aria-invalid={hasError ? 'true' : 'false'}
+    aria-describedby={hasError ? `${id}-error` : hint ? `${id}-hint` : undefined}
+    class="w-full bg-gray-950/60 border {hasError ? 'border-red-500' : 'border-gray-800/80'} rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-700/80 cursor-pointer"
+  >
+    <option value="">Select...</option>
+    {options.map(opt => (
+      <option value={opt.value}>{opt.label}</option>
+    ))}
+  </select>
+  {hasError && (
+    <p id={`${id}-error`} class="text-red-400 text-xs mt-1.5" role="alert">
+      {error}
+    </p>
+  )}
+  {!hasError && hint && (
+    <p id={`${id}-hint`} class="text-gray-500 text-xs mt-1.5">
+      {hint}
+    </p>
+  )}
+</div>

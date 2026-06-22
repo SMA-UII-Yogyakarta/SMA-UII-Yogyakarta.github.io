@@ -1,0 +1,62 @@
+---
+/**
+ * SectionCard - Section card with header and content slots
+ * 
+ * @param title - Section title
+ * @param subtitle - Optional subtitle
+ * @param action - Optional action button text
+ * @param actionHref - Optional action link
+ * @param onAction - Optional action click handler
+ * @param class - Additional CSS classes
+ * 
+ * @slot default - Main content
+ * @slot header - Custom header content (overrides title/subtitle)
+ * @slot footer - Optional footer content
+ */
+interface Props {
+  title?: string;
+  subtitle?: string;
+  action?: string;
+  actionHref?: string;
+  onAction?: () => void;
+  class?: string;
+}
+
+const {
+  title = '',
+  subtitle,
+  action,
+  actionHref,
+  onAction,
+  class: className = ''
+} = Astro.props;
+---
+
+<div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 {className}">
+  <!-- Header Slot -->
+  <slot name="header">
+    {title && (
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="font-bold">{title}</h2>
+          {subtitle && <p class="text-sm text-gray-400 mt-1">{subtitle}</p>}
+        </div>
+        {action && (
+          <a
+            href={actionHref}
+            onclick={onAction}
+            class="btn-ripple text-blue-400 text-xs hover:text-blue-300 transition"
+          >
+            {action} →
+          </a>
+        )}
+      </div>
+    )}
+  </slot>
+
+  <!-- Content -->
+  <slot />
+
+  <!-- Footer Slot -->
+  <slot name="footer" />
+</div>

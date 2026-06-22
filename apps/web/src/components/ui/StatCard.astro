@@ -1,0 +1,42 @@
+---
+/**
+ * StatCard - Reusable statistics card component
+ * 
+ * @param icon - Emoji or text icon (e.g., "👥", "📊")
+ * @param label - Card label/title
+ * @param value - Main value to display
+ * @param description - Optional description text below value
+ * @param href - Optional link (makes card clickable)
+ * @param onClick - Optional click handler
+ * @param class - Additional CSS classes
+ */
+interface Props {
+  icon?: string;
+  label: string;
+  value: string | number;
+  description?: string;
+  href?: string;
+  onClick?: () => void;
+  class?: string;
+}
+
+const { icon, label, value, description, href, onClick, class: className = '' } = Astro.props;
+---
+
+<{href ? 'a' : 'div'}
+  href={href}
+  onclick={onClick}
+  class="btn-ripple bg-gray-900/60 border border-gray-800/80 rounded-2xl p-5 hover:border-blue-500/60 hover:shadow-md transition-all duration-300 relative overflow-hidden {className}"
+>
+  {icon && (
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-lg">{icon}</span>
+      <span class="text-xs text-gray-400">{label}</span>
+    </div>
+  )}
+  {!icon && (
+    <p class="text-xs text-gray-400 mb-2">{label}</p>
+  )}
+  <p class="text-2xl font-bold">{value}</p>
+  {description && <p class="text-xs text-gray-500 mt-1">{description}</p>}
+</{href ? 'a' : 'div'}>

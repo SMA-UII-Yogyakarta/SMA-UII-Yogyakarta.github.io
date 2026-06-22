@@ -1,0 +1,79 @@
+---
+/**
+ * AvatarListItem - Reusable list item with avatar
+ * 
+ * @param avatar - Avatar URL or initial letter
+ * @param name - Main name/title
+ * @param description - Optional description text
+ * @param metadata - Optional metadata array (badges, tags)
+ * @param actions - Optional actions slot
+ * @param href - Optional link (makes item clickable)
+ * @param onClick - Optional click handler
+ * @param class - Additional CSS classes
+ */
+interface Metadata {
+  label: string;
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+}
+
+interface Props {
+  avatar?: string;
+  name: string;
+  description?: string;
+  metadata?: Metadata[];
+  href?: string;
+  onClick?: () => void;
+  class?: string;
+}
+
+const {
+  avatar,
+  name,
+  description,
+  metadata = [],
+  href,
+  onClick,
+  class: className = ''
+} = Astro.props;
+
+const tag = href ? 'a' : 'div';
+---
+
+<{tag === 'a' ? 'a' : 'div'}
+  {href ? `href=${href}` : ''}
+  onclick={onClick}
+  class="btn-ripple flex items-center gap-3 p-4 bg-gray-900 border border-gray-800 rounded-xl hover:border-blue-500/50 transition {className}"
+>
+  <!-- Avatar -->
+  {avatar ? (
+    <img src={avatar} alt={name} class="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+  ) : (
+    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )}
+
+  <!-- Content -->
+  <div class="flex-1 min-w-0">
+    <p class="font-semibold text-sm truncate">{name}</p>
+    {description && <p class="text-xs text-gray-400 truncate">{description}</p>}
+    {metadata && metadata.length > 0 && (
+      <div class="flex gap-1 mt-1 flex-wrap">
+        {metadata.map(meta => (
+          <span class={`px-2 py-0.5 rounded text-xs font-medium ${
+            meta.variant === 'success' ? 'bg-green-500/20 text-green-400' :
+            meta.variant === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+            meta.variant === 'error' ? 'bg-red-500/20 text-red-400' :
+            meta.variant === 'info' ? 'bg-blue-500/20 text-blue-400' :
+            'bg-gray-800 text-gray-400'
+          }`}>
+            {meta.label}
+          </span>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- Actions Slot -->
+  <slot name="actions" />
+</{tag === 'a' ? 'a' : 'div'}>

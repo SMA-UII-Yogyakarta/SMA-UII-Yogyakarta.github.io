@@ -1,0 +1,52 @@
+---
+/**
+ * Avatar - Reusable avatar component
+ * 
+ * @param src - Avatar image URL
+ * @param name - Name for initial fallback and alt text
+ * @param size - Avatar size: 'sm' | 'md' | 'lg' | 'xl'
+ * @param variant - Avatar style: 'solid' | 'outlined' | 'ringed'
+ * @param class - Additional CSS classes
+ */
+interface Props {
+  src?: string;
+  name: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'solid' | 'outlined' | 'ringed';
+  class?: string;
+}
+
+const {
+  src,
+  name,
+  size = 'md',
+  variant = 'solid',
+  class: className = ''
+} = Astro.props;
+
+const sizeClasses: Record<string, string> = {
+  sm: 'w-8 h-8 text-sm',
+  md: 'w-10 h-10 text-base',
+  lg: 'w-12 h-12 text-lg',
+  xl: 'w-16 h-16 text-xl'
+};
+
+const variantClasses: Record<string, string> = {
+  solid: 'bg-blue-600 text-white',
+  outlined: 'bg-gray-800 text-white border-2 border-gray-700',
+  ringed: 'bg-blue-600 text-white ring-2 ring-blue-500/50'
+};
+
+const initial = name.charAt(0).toUpperCase();
+---
+
+<div
+  class="{sizeClasses[size]} {variantClasses[variant]} rounded-full flex items-center justify-center font-bold {className}"
+  aria-label={name}
+>
+  {src ? (
+    <img src={src} alt={name} class="w-full h-full object-cover rounded-full" />
+  ) : (
+    <span>{initial}</span>
+  )}
+</div>

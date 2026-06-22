@@ -1,0 +1,90 @@
+---
+/**
+ * FilterBar - Reusable search and filter bar component
+ * 
+ * @param filters - Array of filter options { value, label }
+ * @param activeFilter - Currently active filter value
+ * @param onFilterChange - Callback when filter changes
+ * @param searchPlaceholder - Placeholder text for search input
+ * @param searchValue - Current search value
+ * @param onSearchChange - Callback when search changes
+ * @param showSearch - Whether to show search input (default: true)
+ * @param class - Additional CSS classes
+ */
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  filters: FilterOption[];
+  activeFilter: string;
+  onFilterChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  showSearch?: boolean;
+  class?: string;
+}
+
+const {
+  filters,
+  activeFilter,
+  onFilterChange,
+  searchPlaceholder = 'Cari...',
+  searchValue = '',
+  onSearchChange,
+  showSearch = true,
+  class: className = ''
+} = Astro.props;
+---
+
+<div class="flex flex-col sm:flex-row gap-3 mb-4 {className}">
+  <!-- Filter Buttons -->
+  <div class="flex flex-wrap gap-2">
+    {filters.map(filter => (
+      <button
+        data-filter={filter.value}
+        onclick={() => onFilterChange?.(filter.value)}
+        class="btn-ripple px-3 py-1.5 rounded-lg text-sm transition {
+          activeFilter === filter.value
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-800 text-gray-400 hover:text-white'
+        }"
+      >
+        {filter.label}
+      </button>
+    ))}
+  </div>
+
+  <!-- Search Input -->
+  {showSearch && (
+    <input
+      type="text"
+      value={searchValue}
+      oninput={(e) => onSearchChange?.((e.target as HTMLInputElement).value)}
+      placeholder={searchPlaceholder}
+      autocomplete="off"
+      class="flex-1 px-4 py-1.5 bg-gray-900 border border-gray-800 rounded-lg text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus:border-blue-500 transition"
+      aria-label="Search"
+    />
+  )}
+</div>
+
+<script>
+  // Client-side: emit custom event for parent to listen
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('filter-change', { 
+        detail: (btn as HTMLElement).dataset.filter 
+      }));
+    });
+  });
+
+  const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+  searchInput?.addEventListener('input', () => {
+    document.dispatchEvent(new CustomEvent('search-change', { 
+      detail: searchInput.value 
+    }));
+  });
+</script>

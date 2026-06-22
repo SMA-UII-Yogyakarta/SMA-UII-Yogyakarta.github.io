@@ -1,0 +1,42 @@
+---
+/**
+ * Grid - Responsive grid layout component
+ * 
+ * @param cols - Number of columns: 1 | 2 | 3 | 4 | auto
+ * @param gap - Gap size: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+ * @param class - Additional CSS classes
+ * 
+ * @slot default - Grid items
+ */
+interface Props {
+  cols?: 1 | 2 | 3 | 4 | 'auto';
+  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  class?: string;
+}
+
+const {
+  cols = 1,
+  gap = 'md',
+  class: className = ''
+} = Astro.props;
+
+const colsClasses: Record<string, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-1 sm:grid-cols-2',
+  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+  auto: 'grid-cols-[repeat(auto-fill,minmax(min(240px,100%),1fr))]'
+};
+
+const gapClasses: Record<string, string> = {
+  xs: 'gap-1',
+  sm: 'gap-2',
+  md: 'gap-3',
+  lg: 'gap-4',
+  xl: 'gap-6'
+};
+---
+
+<div class="grid {colsClasses[cols.toString()]} {gapClasses[gap]} {className}">
+  <slot />
+</div>

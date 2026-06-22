@@ -1,0 +1,37 @@
+---
+/**
+ * Divider - Horizontal divider with optional label
+ * 
+ * @param label - Optional label text (centers on divider)
+ * @param variant - Divider style: 'solid' | 'dashed' | 'dotted'
+ * @param class - Additional CSS classes
+ */
+interface Props {
+  label?: string;
+  variant?: 'solid' | 'dashed' | 'dotted';
+  class?: string;
+}
+
+const {
+  label,
+  variant = 'solid',
+  class: className = ''
+} = Astro.props;
+
+const variantClasses: Record<string, string> = {
+  solid: 'border-solid',
+  dashed: 'border-dashed',
+  dotted: 'border-dotted'
+};
+---
+
+<div class="relative {className}">
+  <div class="absolute inset-0 flex items-center" aria-hidden="true">
+    <div class="w-full border-t border-gray-800 {variantClasses[variant]}"></div>
+  </div>
+  {label && (
+    <div class="relative flex justify-center">
+      <span class="bg-gray-950 px-3 text-sm text-gray-500">{label}</span>
+    </div>
+  )}
+</div>

@@ -1,0 +1,69 @@
+---
+/**
+ * IconButton - Reusable icon button/link component
+ * 
+ * @param icon - SVG path string or emoji
+ * @param label - Button label text
+ * @param href - Optional link (makes it an <a> tag)
+ * @param onClick - Optional click handler
+ * @param variant - Button style: 'primary' | 'secondary' | 'bordered' | 'ghost'
+ * @param size - Button size: 'sm' | 'md' | 'lg'
+ * @param disabled - Disabled state
+ * @param ariaLabel - Accessibility label (defaults to label)
+ * @param class - Additional CSS classes
+ */
+interface Props {
+  icon?: string;
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  variant?: 'primary' | 'secondary' | 'bordered' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  ariaLabel?: string;
+  class?: string;
+}
+
+const {
+  icon,
+  label,
+  href,
+  onClick,
+  variant = 'secondary',
+  size = 'md',
+  disabled = false,
+  ariaLabel,
+  class: className = ''
+} = Astro.props;
+
+const baseStyles = 'btn-ripple flex items-center gap-2 rounded-lg transition font-medium';
+
+const variantStyles: Record<string, string> = {
+  primary: 'bg-blue-600 hover:bg-blue-500 text-white',
+  secondary: 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700',
+  bordered: 'bg-gray-900 border border-gray-800 text-gray-400 hover:text-white hover:border-blue-500/50',
+  ghost: 'text-gray-400 hover:text-white hover:bg-gray-800'
+};
+
+const sizeStyles: Record<string, string> = {
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-4 py-2 text-sm',
+  lg: 'px-6 py-3 text-base'
+};
+
+const tag = href ? 'a' : 'button';
+const typeAttr = !href ? 'type="button"' : '';
+const disabledAttr = disabled ? 'disabled aria-disabled="true"' : '';
+---
+
+<{tag === 'a' ? 'a' : 'button'}
+  {href ? `href=${href}` : ''}
+  {typeAttr}
+  {disabledAttr}
+  onclick={onClick}
+  aria-label={ariaLabel || label}
+  class="{baseStyles} {variantStyles[variant]} {sizeStyles[size]} {className}"
+>
+  {icon && <span class="flex-shrink-0">{icon}</span>}
+  <span>{label}</span>
+</{tag === 'a' ? 'a' : 'button'}>

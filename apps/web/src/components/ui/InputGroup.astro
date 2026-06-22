@@ -1,0 +1,72 @@
+---
+/**
+ * InputGroup - Form input group with label, input, and error message
+ * 
+ * @param id - Input ID (links label and input)
+ * @param label - Input label
+ * @param type - Input type: text | email | password | number | tel | url
+ * @param value - Input value
+ * @param placeholder - Placeholder text
+ * @param required - Required field
+ * @param disabled - Disabled state
+ * @param error - Error message to display
+ * @param hint - Hint text below input
+ * @param class - Additional CSS classes
+ */
+interface Props {
+  id: string;
+  label: string;
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  error?: string;
+  hint?: string;
+  class?: string;
+}
+
+const {
+  id,
+  label,
+  type = 'text',
+  value,
+  placeholder,
+  required = false,
+  disabled = false,
+  error,
+  hint,
+  class: className = ''
+} = Astro.props;
+
+const hasError = !!error;
+---
+
+<div class="{className}">
+  <label for={id} class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+    {label}
+    {required && <span class="text-red-400 ml-1">*</span>}
+  </label>
+  <input
+    type={type}
+    id={id}
+    name={id}
+    value={value}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    aria-invalid={hasError ? 'true' : 'false'}
+    aria-describedby={hasError ? `${id}-error` : hint ? `${id}-hint` : undefined}
+    class="w-full bg-gray-950/60 border {hasError ? 'border-red-500' : 'border-gray-800/80'} rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:border-gray-700/80"
+  />
+  {hasError && (
+    <p id={`${id}-error`} class="text-red-400 text-xs mt-1.5" role="alert">
+      {error}
+    </p>
+  )}
+  {!hasError && hint && (
+    <p id={`${id}-hint`} class="text-gray-500 text-xs mt-1.5">
+      {hint}
+    </p>
+  )}
+</div>

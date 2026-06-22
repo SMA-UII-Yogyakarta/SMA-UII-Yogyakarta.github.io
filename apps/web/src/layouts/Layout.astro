@@ -7,31 +7,44 @@ interface Props {
 }
 const { title, description = "SMA UII Lab — Ruang eksplorasi digital buat yang suka ngulik teknologi" } = Astro.props;
 const user = Astro.locals.user;
+const pathname = Astro.url.pathname;
+const isCurrent = (path: string) => pathname === path || (path !== '/' && pathname.startsWith(path));
 ---
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>{title} — SMA UII Lab</title>
   <meta name="description" content={description} />
   <link rel="icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans antialiased">
-  <nav class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl">
-    <div class="bg-gray-900/75 backdrop-blur-md border border-gray-700/40 rounded-full px-6 py-3.5 flex items-center gap-6 shadow-lg shadow-black/20">
+<body class="bg-gray-950 text-gray-100 font-sans antialiased min-h-screen relative overflow-x-hidden">
+  <!-- No global decorative overlays — background is clean gray-950 -->
+  <div class="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
+    <!-- Soft top vignette for navbar readability -->
+    <div class="absolute inset-x-0 top-0 h-24"
+         style="background: linear-gradient(to bottom, rgba(3,4,10,0.5), transparent);"></div>
+  </div>
+
+  <nav id="site-nav" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-6xl transition-all duration-300">
+    <div class="bg-gray-950/90 backdrop-blur-xl border border-gray-800/70 rounded-xl px-5 py-3 flex items-center gap-6 shadow-xl shadow-black/30">
       <!-- Logo -->
-      <a href="/" class="font-bold text-white flex items-center gap-2 flex-shrink-0">
-        <span class="text-blue-400">⬡</span> SMA UII Lab
+      <a href="/" class="font-semibold text-sm text-white flex items-center gap-2 flex-shrink-0 tracking-tight">
+        <span class="text-blue-400 text-base leading-none">⬡</span>
+        SMA UII Lab
       </a>
 
       <!-- Nav tengah — hidden di mobile -->
-      <div class="hidden md:flex flex-1 items-center justify-center gap-6">
-        <a href="/tracks" class="text-gray-400 hover:text-white transition">Track</a>
-        <a href="/learn" class="text-gray-400 hover:text-white transition">Belajar</a>
-        <a href="/projects" class="text-gray-400 hover:text-white transition">Proyek</a>
-        <a href="/members" class="text-gray-400 hover:text-white transition">Anggota</a>
-        <a href="/about" class="text-gray-400 hover:text-white transition">Tentang</a>
+      <div class="hidden md:flex flex-1 items-center justify-center gap-1">
+        <a href="/tracks"  class={`px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 ${isCurrent('/tracks')  ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'}`}>Track</a>
+        <a href="/learn"   class={`px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 ${isCurrent('/learn')   ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'}`}>Belajar</a>
+        <a href="/projects" class={`px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 ${isCurrent('/projects') ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'}`}>Proyek</a>
+        <a href="/members" class={`px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 ${isCurrent('/members') ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'}`}>Anggota</a>
+        <a href="/about"   class={`px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 ${isCurrent('/about')   ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-white hover:bg-gray-800/60'}`}>Tentang</a>
       </div>
 
       <!-- Spacer mobile -->
@@ -41,32 +54,24 @@ const user = Astro.locals.user;
       <div class="flex items-center gap-2 flex-shrink-0">
         {user ? (
           <div class="relative" id="nav-profile">
-            <button id="nav-profile-btn" class="flex items-center gap-2 hover:bg-gray-800 px-3 py-1.5 rounded-xl transition">
-              <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+            <button id="nav-profile-btn" class="flex items-center gap-2 hover:bg-gray-800/80 px-2.5 py-1.5 rounded-lg transition-colors duration-200" aria-label="Profile menu">
+              <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <span class="hidden sm:block text-sm font-medium">{user.name.split(' ')[0]}</span>
-              <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span class="hidden sm:block text-sm text-gray-300">{user.name.split(' ')[0]}</span>
+              <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
               </svg>
             </button>
-            <div id="nav-profile-dropdown" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-900 border border-gray-800 rounded-xl shadow-xl overflow-hidden">
-              <a href="/app" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <div id="nav-profile-dropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl overflow-hidden z-50">
+              <a href="/app" class="flex items-center gap-2 px-3.5 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                 Dashboard
               </a>
-              <!-- Mobile nav links in dropdown -->
-              <div class="md:hidden border-t border-gray-800">
-                <a href="/tracks" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">Track</a>
-                <a href="/learn" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">Belajar</a>
-                <a href="/projects" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">Proyek</a>
-                <a href="/members" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">Anggota</a>
-                <a href="/about" class="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 transition">Tentang</a>
-              </div>
-              <div class="border-t border-gray-800"></div>
+              <div class="border-t border-gray-800/80 mx-3.5"></div>
               <form action="/api/auth/logout" method="POST">
-                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-gray-800 transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                <button type="submit" class="w-full flex items-center gap-2 px-3.5 py-2.5 text-sm text-red-400 hover:bg-gray-800 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                   Logout
                 </button>
               </form>
@@ -74,13 +79,13 @@ const user = Astro.locals.user;
           </div>
         ) : (
           <>
-            <div class="hidden md:flex items-center gap-3">
-              <a href="/register" class="text-blue-400 hover:text-blue-300 transition">Daftar</a>
-              <a href="/login" class="border border-gray-700 px-4 py-1.5 rounded-xl hover:border-blue-500 transition text-sm">Login</a>
+            <div class="hidden md:flex items-center gap-2">
+              <a href="/register" class="text-sm text-gray-400 hover:text-white transition-colors px-3 py-1.5">Daftar</a>
+              <a href="/login" class="text-sm bg-white text-gray-950 font-semibold px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">Login</a>
             </div>
             <!-- Mobile: hamburger for guests -->
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-gray-800 transition" aria-label="Menu">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button id="mobile-menu-btn" class="md:hidden p-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white" aria-label="Menu">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
             </button>
@@ -88,37 +93,117 @@ const user = Astro.locals.user;
         )}
       </div>
     </div>
-
-    <!-- Mobile menu for guests -->
-    {!user && (
-      <div id="mobile-menu" class="hidden md:hidden mt-2 bg-gray-900/95 backdrop-blur-md border border-gray-700/40 rounded-2xl px-4 py-3 shadow-lg">
-        <div class="flex flex-col gap-1">
-          <a href="/tracks" class="px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">Track</a>
-          <a href="/learn" class="px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">Belajar</a>
-          <a href="/projects" class="px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">Proyek</a>
-          <a href="/members" class="px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">Anggota</a>
-          <a href="/about" class="px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">Tentang</a>
-          <div class="border-t border-gray-800 mt-1 pt-2 flex gap-2">
-            <a href="/register" class="flex-1 text-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Daftar</a>
-            <a href="/login" class="flex-1 text-center border border-gray-700 hover:border-blue-500 px-4 py-2 rounded-lg text-sm transition">Login</a>
-          </div>
-        </div>
-      </div>
-    )}
   </nav>
 
-  <script>
-    const btn = document.getElementById('nav-profile-btn');
-    const dropdown = document.getElementById('nav-profile-dropdown');
-    btn?.addEventListener('click', (e) => { e.stopPropagation(); dropdown?.classList.toggle('hidden'); });
-    document.addEventListener('click', () => dropdown?.classList.add('hidden'));
+  <!-- Mobile Drawer Backdrop -->
+  <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" aria-hidden="true"></div>
 
-    const mobileBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    mobileBtn?.addEventListener('click', (e) => { e.stopPropagation(); mobileMenu?.classList.toggle('hidden'); });
-    document.addEventListener('click', () => mobileMenu?.classList.add('hidden'));
+  <!-- Mobile Drawer Panel -->
+  <div id="mobile-drawer" class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-gray-900/95 backdrop-blur-lg border-l border-gray-800/80 z-[55] shadow-2xl translate-x-full transition-transform duration-300 md:hidden flex flex-col justify-between" style="padding-bottom: env(safe-area-inset-bottom)">
+    <!-- Drawer Header -->
+    <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+      <a href="/" class="font-bold text-white flex items-center gap-2">
+        <span class="text-blue-400">⬡</span> SMA UII Lab
+      </a>
+      <button id="mobile-drawer-close" class="p-2 -mr-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition" aria-label="Close menu">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Navigation Links -->
+    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
+      <a href="/" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Beranda</a>
+      <a href="/tracks" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/tracks') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Track</a>
+      <a href="/learn" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/learn') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Belajar</a>
+      <a href="/projects" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/projects') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Proyek</a>
+      <a href="/members" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/members') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Anggota</a>
+      <a href="/about" class={`flex items-center px-4 py-3 rounded-xl text-sm font-semibold transition ${isCurrent('/about') ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-gray-300 hover:bg-gray-800'}`}>Tentang</a>
+    </div>
+
+    <!-- Drawer Footer (Auth & Actions) -->
+    <div class="p-6 border-t border-gray-800 bg-gray-950/40">
+      {user ? (
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-white truncate leading-none">{user.name}</p>
+              <p class="text-xs text-gray-500 truncate mt-1">NIS: {user.nis}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <a href="/app" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition">
+              Dashboard
+            </a>
+            <form action="/api/auth/logout" method="POST" class="logout-form w-full">
+              <button type="submit" class="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-800 hover:bg-gray-700 hover:text-red-400 text-gray-300 rounded-xl text-xs font-semibold transition">
+                Logout
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <div class="flex flex-col gap-2">
+          <a href="/register" class="w-full text-center bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition">Daftar</a>
+          <a href="/login" class="w-full text-center border border-gray-700 hover:border-blue-500 px-4 py-2.5 rounded-xl text-sm font-semibold transition">Login</a>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <script>
+    const profileBtn = document.getElementById('nav-profile-btn');
+    const profileDropdown = document.getElementById('nav-profile-dropdown');
+    const hamburgerBtn = document.getElementById('mobile-menu-btn');
+    
+    const drawer = document.getElementById('mobile-drawer');
+    const drawerBackdrop = document.getElementById('mobile-drawer-backdrop');
+    const drawerClose = document.getElementById('mobile-drawer-close');
+
+    function openDrawer() {
+      drawer?.classList.remove('translate-x-full');
+      drawer?.classList.add('translate-x-0');
+      drawerBackdrop?.classList.remove('opacity-0', 'pointer-events-none');
+      drawerBackdrop?.classList.add('opacity-100', 'pointer-events-auto');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeDrawer() {
+      drawer?.classList.remove('translate-x-0');
+      drawer?.classList.add('translate-x-full');
+      drawerBackdrop?.classList.remove('opacity-100', 'pointer-events-auto');
+      drawerBackdrop?.classList.add('opacity-0', 'pointer-events-none');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    profileBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.innerWidth < 768) {
+        openDrawer();
+      } else {
+        profileDropdown?.classList.toggle('hidden');
+      }
+    });
+
+    hamburgerBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDrawer();
+    });
+
+    drawerClose?.addEventListener('click', closeDrawer);
+    drawerBackdrop?.addEventListener('click', closeDrawer);
+
+    document.addEventListener('click', (e) => {
+      if (!profileBtn?.contains(e.target as Node)) {
+        profileDropdown?.classList.add('hidden');
+      }
+    });
   </script>
-  <div class="pt-20">
+  <div class="pt-20 relative z-10">
     <slot />
   </div>
 
@@ -127,57 +212,154 @@ const user = Astro.locals.user;
     import { launchBirthdayEvent } from '@lib/events/sandikodev-birthday';
     launchBirthdayEvent();
   </script>
-  <footer class="border-t border-gray-800 mt-24 py-12">
-    <div class="max-w-5xl mx-auto px-4">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
-        <!-- About -->
-        <div>
-          <h3 class="font-bold mb-3 flex items-center gap-2">
-            <span class="text-blue-400">⬡</span> SMA UII Lab
-          </h3>
-          <p class="text-sm text-gray-400">
-            Ruang eksplorasi digital untuk siswa yang menekuni teknologi.
+  <footer class="relative mt-24 border-t border-gray-800" style="padding-bottom: env(safe-area-inset-bottom); background: #07080f;">
+
+    <div class="max-w-6xl mx-auto px-4 pt-12 pb-8">
+
+      <!-- ── DESKTOP: full 4-col grid ── -->
+      <div class="hidden md:grid md:grid-cols-4 gap-10 mb-10">
+
+        <!-- Brand col -->
+        <div class="col-span-1 space-y-4">
+          <a href="/" class="flex items-center gap-2 font-bold text-white hover:text-blue-400 transition w-fit">
+            <span class="text-blue-400 text-xl">⬡</span>
+            <span>SMA UII Lab</span>
+          </a>
+          <p class="text-sm text-gray-400 leading-relaxed">
+            Ruang eksplorasi digital untuk siswa yang menekuni dunia teknologi.
           </p>
+          <!-- Social -->
+          <div class="flex items-center gap-2.5 pt-1">
+            <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" rel="noopener" aria-label="GitHub Organisation" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700/60 hover:border-blue-500/40 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+            </a>
+            <a href="https://github.com/sandikodev" target="_blank" rel="noopener" aria-label="@sandikodev" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700/60 hover:border-blue-500/40 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </a>
+            <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" rel="noopener" aria-label="Issues" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700/60 hover:border-blue-500/40 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </a>
+          </div>
         </div>
-        
-        <!-- Links -->
+
+        <!-- Navigasi col -->
         <div>
-          <h4 class="font-semibold mb-3 text-sm">Navigasi</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="/tracks" class="hover:text-blue-400 transition">Track</a></li>
-            <li><a href="/learn" class="hover:text-blue-400 transition">Belajar</a></li>
-            <li><a href="/projects" class="hover:text-blue-400 transition">Proyek</a></li>
-            <li><a href="/members" class="hover:text-blue-400 transition">Anggota</a></li>
-            <li><a href="/about" class="hover:text-blue-400 transition">Tentang</a></li>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Navigasi</h4>
+          <ul class="space-y-2.5">
+            <li><a href="/tracks" class="text-sm text-gray-400 hover:text-white transition">Track</a></li>
+            <li><a href="/learn" class="text-sm text-gray-400 hover:text-white transition">Belajar</a></li>
+            <li><a href="/projects" class="text-sm text-gray-400 hover:text-white transition">Proyek</a></li>
+            <li><a href="/members" class="text-sm text-gray-400 hover:text-white transition">Anggota</a></li>
+            <li><a href="/about" class="text-sm text-gray-400 hover:text-white transition">Tentang</a></li>
           </ul>
         </div>
-        
-        <!-- Resources -->
+
+        <!-- Resources col -->
         <div>
-          <h4 class="font-semibold mb-3 text-sm">Resources</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" target="_blank" class="hover:text-blue-400 transition">Filosofi</a></li>
-            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank" class="hover:text-blue-400 transition">Kontribusi</a></li>
-            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CODE_OF_CONDUCT.md" target="_blank" class="hover:text-blue-400 transition">Code of Conduct</a></li>
-            <li><a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" class="hover:text-blue-400 transition">GitHub Org</a></li>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Resources</h4>
+          <ul class="space-y-2.5">
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">Filosofi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">Kontribusi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">Code of Conduct</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">GitHub Org</a></li>
           </ul>
         </div>
-        
-        <!-- Contact -->
+
+        <!-- Kontak col -->
         <div>
-          <h4 class="font-semibold mb-3 text-sm">Kontak</h4>
-          <ul class="space-y-2 text-sm text-gray-400">
-            <li><a href="https://github.com/sandikodev" target="_blank" class="hover:text-blue-400 transition">@sandikodev</a></li>
-            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" class="hover:text-blue-400 transition">Issues</a></li>
-            <li class="text-gray-500">lab.smauiiyk.sch.id</li>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Kontak</h4>
+          <ul class="space-y-2.5">
+            <li><a href="https://github.com/sandikodev" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">@sandikodev</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-white transition">Issues & Feedback</a></li>
+            <li><span class="text-sm text-gray-500 select-all">lab.smauiiyk.sch.id</span></li>
           </ul>
+        </div>
+
+      </div><!-- /desktop grid -->
+
+      <!-- ── MOBILE: compact, no doom-scroll ── -->
+      <div class="md:hidden">
+
+        <!-- Brand + social row -->
+        <div class="flex items-center justify-between pb-5 mb-1">
+          <a href="/" class="flex items-center gap-2 font-bold text-white">
+            <span class="text-blue-400 text-lg">⬡</span>
+            SMA UII Lab
+          </a>
+          <div class="flex items-center gap-2">
+            <a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" rel="noopener" aria-label="GitHub" class="w-9 h-9 rounded-xl bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-gray-400 active:bg-gray-700 transition-colors">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+            </a>
+            <a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" rel="noopener" aria-label="Issues" class="w-9 h-9 rounded-xl bg-gray-800/80 border border-gray-700/50 flex items-center justify-center text-gray-400 active:bg-gray-700 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick nav: tappable 2x2 pill grid -->
+        <div class="grid grid-cols-2 gap-2 mb-1">
+          <a href="/tracks" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-900/60 border border-gray-800/60 text-sm text-gray-300 active:bg-gray-800 transition-colors">
+            <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            Track
+          </a>
+          <a href="/learn" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-900/60 border border-gray-800/60 text-sm text-gray-300 active:bg-gray-800 transition-colors">
+            <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Belajar
+          </a>
+          <a href="/projects" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-900/60 border border-gray-800/60 text-sm text-gray-300 active:bg-gray-800 transition-colors">
+            <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Proyek
+          </a>
+          <a href="/members" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-900/60 border border-gray-800/60 text-sm text-gray-300 active:bg-gray-800 transition-colors">
+            <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Anggota
+          </a>
+        </div>
+
+        <!-- Collapsible: Resources -->
+        <details class="group border-b border-gray-800/60">
+          <summary class="flex items-center justify-between py-4 text-sm font-semibold text-gray-300 cursor-pointer select-none list-none [-webkit-tap-highlight-color:transparent]">
+            <span>Resources</span>
+            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <ul class="pb-4 space-y-3 pl-1">
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/PHILOSOPHY.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">Filosofi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">Kontribusi</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">Code of Conduct</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">GitHub Org</a></li>
+          </ul>
+        </details>
+
+        <!-- Collapsible: Kontak -->
+        <details class="group border-b border-gray-800/60">
+          <summary class="flex items-center justify-between py-4 text-sm font-semibold text-gray-300 cursor-pointer select-none list-none [-webkit-tap-highlight-color:transparent]">
+            <span>Kontak</span>
+            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <ul class="pb-4 space-y-3 pl-1">
+            <li><a href="https://github.com/sandikodev" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">@sandikodev</a></li>
+            <li><a href="https://github.com/SMA-UII-Yogyakarta/SMA-UII-Yogyakarta.github.io/issues" target="_blank" rel="noopener" class="text-sm text-gray-400 hover:text-blue-400 transition">Issues & Feedback</a></li>
+            <li><span class="text-sm text-gray-500 select-all">lab.smauiiyk.sch.id</span></li>
+          </ul>
+        </details>
+
+      </div><!-- /mobile -->
+
+      <!-- ── Bottom bar ── -->
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-gray-500 text-center sm:text-left">
+          © 2026 SMA UII Lab · SMA Universitas Islam Indonesia Yogyakarta
+        </p>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Open Source
+          </span>
+          <span class="text-gray-700">·</span>
+          <span class="text-xs text-gray-600">MIT License</span>
         </div>
       </div>
-      
-      <div class="border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-        <p>© 2026 SMA UII Lab · SMA Universitas Islam Indonesia Yogyakarta</p>
-        <p class="mt-1">Open Source · MIT License</p>
-      </div>
+
     </div>
   </footer>
 
@@ -186,24 +368,18 @@ const user = Astro.locals.user;
     document.querySelectorAll('form[action="/api/auth/logout"]').forEach(form => {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        // Clear JWT token for SSG/Jamstack mode (no-op in SSR mode)
+        localStorage.removeItem('auth_token');
         try {
-          const response = await fetch('/api/auth/logout', {
+          await fetch('/api/auth/logout', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
           });
-          
-          if (response.ok || response.redirected) {
-            window.location.href = '/login';
-          } else {
-            window.location.href = '/login';
-          }
-        } catch (error) {
-          console.error('Logout error:', error);
-          window.location.href = '/login';
+        } catch {
+          // In SSG mode the endpoint may not exist — ignore and redirect anyway
         }
+        window.location.href = '/login';
       });
     });
   </script>

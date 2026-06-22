@@ -1,0 +1,73 @@
+---
+/**
+ * Card - Generic card container component
+ * 
+ * @param title - Optional card title
+ * @param subtitle - Optional subtitle
+ * @param href - Optional link (makes card clickable)
+ * @param onClick - Optional click handler
+ * @param variant - Card style: 'default' | 'hover' | 'interactive'
+ * @param padding - Padding size: 'none' | 'sm' | 'md' | 'lg'
+ * @param class - Additional CSS classes
+ * 
+ * @slot default - Card content
+ * @slot header - Custom header
+ * @slot footer - Custom footer
+ */
+interface Props {
+  title?: string;
+  subtitle?: string;
+  href?: string;
+  onClick?: () => void;
+  variant?: 'default' | 'hover' | 'interactive';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const {
+  title,
+  subtitle,
+  href,
+  onClick,
+  variant = 'default',
+  padding = 'md',
+  class: className = ''
+} = Astro.props;
+
+const variantClasses: Record<string, string> = {
+  default: 'bg-gray-900/60 border border-gray-800/80',
+  hover: 'bg-gray-900/60 border border-gray-800/80 hover:border-blue-500/60 hover:shadow-md transition-all duration-300',
+  interactive: 'bg-gray-900/60 border border-gray-800/80 hover:border-blue-500/60 hover:bg-gray-800/50 hover:shadow-md transition-all duration-300 cursor-pointer'
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'p-3',
+  md: 'p-5',
+  lg: 'p-6'
+};
+
+const tag = href ? 'a' : 'div';
+---
+
+<{tag === 'a' ? 'a' : 'div'}
+  {href ? `href=${href}` : ''}
+  onclick={onClick}
+  class="{variantClasses[variant]} {paddingClasses[padding]} rounded-2xl {className}"
+>
+  <!-- Header Slot -->
+  <slot name="header">
+    {title && (
+      <div class="mb-3">
+        <h3 class="font-semibold">{title}</h3>
+        {subtitle && <p class="text-sm text-gray-400 mt-1">{subtitle}</p>}
+      </div>
+    )}
+  </slot>
+
+  <!-- Content -->
+  <slot />
+
+  <!-- Footer Slot -->
+  <slot name="footer" />
+</{tag === 'a' ? 'a' : 'div'}>
