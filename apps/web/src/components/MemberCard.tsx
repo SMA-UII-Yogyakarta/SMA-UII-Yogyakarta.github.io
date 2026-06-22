@@ -125,13 +125,13 @@ export default function MemberCardComponent({ user, card }: MemberCardProps) {
         <button
           onClick={downloadCard}
           disabled={downloading}
-          className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+          className="btn-ripple flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition"
         >
           {downloading ? 'Mengunduh...' : '📥 Download Kartu'}
         </button>
         <button
           onClick={() => window.print()}
-          className="flex-1 border border-gray-700 hover:border-blue-500 px-6 py-3 rounded-lg font-semibold transition"
+          className="btn-ripple flex-1 border border-gray-700 hover:border-blue-500 px-6 py-3 rounded-lg font-semibold transition"
         >
           🖨️ Print Kartu
         </button>

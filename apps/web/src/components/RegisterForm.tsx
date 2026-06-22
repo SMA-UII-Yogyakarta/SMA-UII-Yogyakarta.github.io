@@ -7,6 +7,7 @@ import { GithubStep } from './auth/steps/GithubStep';
 import { TracksStep } from './auth/steps/TracksStep';
 import { ConfirmStep } from './auth/steps/ConfirmStep';
 import { getSiteConfig } from '@smauii/shared';
+import { apiFetch } from '../lib/api-client';
 
 const config = getSiteConfig();
 
@@ -69,29 +70,27 @@ export default function RegisterForm() {
     setDataConfirmed(false);
 
     try {
-      const checkResponse = await fetch(`/api/register?nisn=${encodeURIComponent(nisn.trim())}`);
-      const checkResult = await checkResponse.json();
-
-      if (!checkResponse.ok && checkResult.code === 'USER_EXISTS') {
+      // Check if NISN already registered
+      const { error: checkError, code: checkCode } = await apiFetch(
+        `/api/register?nisn=${encodeURIComponent(nisn.trim())}`
+      );
+      if (checkError && checkCode === 'USER_EXISTS') {
         setError('User dengan NIS/Email ini sudah terdaftar');
         return;
       }
 
-      const response = await fetch('/api/slims/verify', {
+      // Verify with SLIMS library system
+      const { data, error: slimsError, code: slimsCode } = await apiFetch<any>('/api/slims/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nisn: nisn.trim() }),
       });
 
-      const result = await response.json();
-      const data = result.data;
-
-      if (!response.ok) {
-        if (result.code === 'MEMBER_NOT_FOUND') {
+      if (slimsError) {
+        if (slimsCode === 'MEMBER_NOT_FOUND') {
           setError(`ID tidak ditemukan di database ${config.institution.shortName}`);
           return;
         }
-        throw new Error(result.error || 'Verifikasi gagal');
+        throw new Error(slimsError || 'Verifikasi gagal');
       }
 
       if (data.isPending) {
@@ -145,15 +144,13 @@ export default function RegisterForm() {
 
     try {
       const validated = registerSchema.parse(formData);
-      const response = await fetch('/api/register', {
+      const { error: submitError } = await apiFetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(validated),
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Pendaftaran gagal');
+      if (submitError) {
+        throw new Error(submitError || 'Pendaftaran gagal');
       }
 
       window.location.href = `/success?nis=${encodeURIComponent(formData.nis)}`;

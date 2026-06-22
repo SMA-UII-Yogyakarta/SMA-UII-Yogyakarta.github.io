@@ -18,7 +18,7 @@ export function GithubStep({
   const canProceed = hasGithub !== null && (hasGithub === false || githubUsername.trim() !== '');
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-6 backdrop-blur-md">
       <h3 className="font-bold mb-4">Akun GitHub</h3>
       <p className="text-gray-400 text-sm mb-4">Apakah kamu punya akun GitHub?</p>
 
@@ -31,9 +31,9 @@ export function GithubStep({
               onHasGithubChange(true);
               onGithubUsernameChange('');
             }}
-            className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+            className="w-5 h-5 rounded border-gray-800 bg-gray-950 text-blue-600 focus:ring-blue-500/40 cursor-pointer"
           />
-          <span className="text-sm">Ya, saya punya akun GitHub</span>
+          <span className="text-sm font-medium">Ya, saya punya akun GitHub</span>
         </label>
         <label className="flex items-center gap-3 cursor-pointer mt-2">
           <input
@@ -43,9 +43,9 @@ export function GithubStep({
               onHasGithubChange(false);
               onGithubUsernameChange('');
             }}
-            className="w-5 h-5 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+            className="w-5 h-5 rounded border-gray-800 bg-gray-950 text-blue-600 focus:ring-blue-500/40 cursor-pointer"
           />
-          <span className="text-sm">Tidak, saya belum punya akun GitHub</span>
+          <span className="text-sm font-medium">Tidak, saya belum punya akun GitHub</span>
         </label>
       </div>
 
@@ -55,24 +55,24 @@ export function GithubStep({
             type="text"
             value={githubUsername}
             onChange={(e) => onGithubUsernameChange(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500"
+            className="w-full bg-gray-950/60 border border-gray-800/80 rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus:border-blue-500/60 focus:bg-gray-900/60 transition-all duration-300 placeholder-gray-600 hover:border-gray-700/80"
             placeholder="username"
           />
         </div>
       )}
 
       <div className="flex gap-3 mt-6">
-        <button type="button" onClick={onPrev} className="flex-1 border border-gray-700 hover:border-gray-600 px-4 py-2.5 rounded-lg font-semibold transition">
+        <button type="button" onClick={onPrev} className="btn-ripple flex-1 border border-gray-800/85 bg-gray-900/40 hover:bg-gray-900/80 text-gray-400 hover:text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300">
           ← Kembali
         </button>
         <button
           type="button"
           onClick={onNext}
           disabled={!canProceed}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition ${
+          className={`btn-ripple flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
             !canProceed
-              ? 'bg-gray-700 cursor-not-allowed text-gray-500'
-              : 'bg-blue-600 hover:bg-blue-500 text-white'
+              ? 'bg-gray-800/50 opacity-40 cursor-not-allowed text-gray-500'
+              : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/15'
           }`}
         >
           {hasGithub === null ? 'Pilih dulu →' : (hasGithub === true && githubUsername ? 'Lanjutkan →' : 'Lewati →')}

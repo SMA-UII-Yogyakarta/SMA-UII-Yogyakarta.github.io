@@ -2,76 +2,461 @@
 interface Props {
   id: string;
   title: string;
+  /** Enable drag-to-move on desktop handle */
   draggable?: boolean;
+  /** Max width class for desktop (ignored on mobile — always full-width) */
   maxWidth?: string;
+  /** Show X close button in header */
+  showCloseButton?: boolean;
+  /** Close on backdrop click */
+  closeOnBackdrop?: boolean;
+  /** Close on Escape key */
+  closeOnEscape?: boolean;
 }
-const { id, title, draggable = false, maxWidth = 'max-w-md' } = Astro.props;
+
+const {
+  id,
+  title,
+  draggable = false,
+  maxWidth = 'max-w-md',
+  showCloseButton = true,
+  closeOnBackdrop = true,
+  closeOnEscape = true,
+} = Astro.props;
+
 const innerId = `${id}-inner`;
 const handleId = `${id}-handle`;
 const titleId = `${id}-title`;
+const closeBtnId = `${id}-close`;
+const backdropId = `${id}-backdrop`;
+const centerId = `${id}-center`;
+const dataDraggable = draggable ? 'true' : null;
+const dataCloseBg = closeOnBackdrop ? 'true' : null;
+const dataCloseEsc = closeOnEscape ? 'true' : null;
 ---
+
+<style is:global>
+  /* ═══════════════════════════════════════════════════════════════
+     MODAL STATE SYSTEM
+     Framework: modal-root (hidden by default, toggled via class)
+
+     States:
+       hidden   — display:none (initial & closed)
+       (none)   — animating in (display:block, pre-transition)
+       .open    — fully visible, transition complete
+       .exiting — animating out
+
+     Mobile (<640px): bottom sheet, slide up from below
+     Desktop (≥640px): centered dialog, fade + scale
+
+     Scroll lock via body.modal-open (set by JS)
+  ═══════════════════════════════════════════════════════════════ */
+
+  /* ── Scroll lock ── */
+  body.modal-open {
+    overflow: hidden;
+    padding-right: var(--sb-width, 0px);
+  }
+
+  /* ── Backdrop transition ── */
+  .modal-root .modal-backdrop {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .modal-root.open .modal-backdrop,
+  .modal-root:not(.hidden):not(.exiting) .modal-backdrop {
+    opacity: 1;
+  }
+
+  /* ── Panel transitions (mobile: slide up from bottom) ── */
+  .modal-root .modal-panel {
+    transform: translateY(100%);
+    opacity: 1;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+                opacity 0.2s ease;
+  }
+  .modal-root.open .modal-panel {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── Exit animation ── */
+  .modal-root.exiting .modal-panel {
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.25s ease-in, opacity 0.15s ease;
+  }
+  .modal-root.exiting .modal-backdrop {
+    opacity: 0;
+  }
+
+  /* ── Desktop (≥640px): centered dialog with scale ── */
+  @media (min-width: 640px) {
+    .modal-root .modal-panel {
+      transform: translateY(0) scale(0.95);
+      opacity: 0;
+    }
+    .modal-root.open .modal-panel {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    .modal-root.exiting .modal-panel {
+      transform: translateY(0) scale(0.95);
+      opacity: 0;
+    }
+
+    /* ── Pull-to-dismiss indicator: hidden on desktop ── */
+    .modal-root .modal-drag-indicator {
+      display: none;
+    }
+  }
+
+  /* ── Pull-to-dismiss visual feedback ── */
+  .modal-root.pulling .modal-panel {
+    transition: none !important;
+  }
+</style>
 
 <div
   id={id}
-  data-inner-id={innerId}
-  data-handle-id={handleId}
-  data-draggable={draggable ? 'true' : null}
+  class="modal-root hidden fixed inset-0 z-50"
   role="dialog"
   aria-modal="true"
   aria-labelledby={titleId}
-  class={`hidden fixed inset-0 z-50 bg-black/60 ${draggable ? '' : 'sm:flex sm:items-center sm:justify-center sm:p-4'}`}
+  tabindex="-1"
+  data-draggable={dataDraggable}
+  data-close-bg={dataCloseBg}
+  data-close-esc={dataCloseEsc}
 >
-  <div
-    id={innerId}
-    class={`bg-gray-900 border border-gray-800 w-full ${maxWidth} ${draggable ? 'absolute select-none' : 'flex flex-col max-h-[90vh] rounded-t-2xl sm:rounded-xl fixed bottom-0 left-0 right-0 sm:static sm:bottom-auto sm:left-auto sm:right-auto'}`}
-    style={draggable ? 'top:50%;left:50%;transform:translate(-50%,-50%)' : ''}
-  >
-    <!-- Drag handle — mobile only -->
-    <div class="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
-      <div class="w-10 h-1 bg-gray-700 rounded-full"></div>
-    </div>
-    <div id={handleId} class={`flex items-center justify-between px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0 ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-      <h2 id={titleId} class="text-lg font-bold">{title}</h2>
-      {draggable && <span class="hidden sm:block text-gray-600 text-xs">⠿ drag</span>}
-    </div>
-    <div class="px-6 pb-6 overflow-y-auto" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom))">
-      <slot />
+  <!-- Backdrop -->
+  <div id={backdropId} class="modal-backdrop absolute inset-0 bg-black/60"></div>
+
+  <!-- Center container (mobile: fill, desktop: centered) -->
+  <div id={centerId} class="absolute inset-0 flex items-end sm:items-center sm:justify-center sm:p-4">
+    <div
+      id={innerId}
+      class={`
+        modal-panel
+        bg-gray-900 border border-gray-800
+        w-full ${maxWidth}
+        flex flex-col
+        max-h-[90vh] max-h-[90dvh]
+        rounded-t-2xl sm:rounded-xl
+        overflow-hidden
+        ${draggable ? '' : ''}
+        ${draggable ? 'sm:absolute sm:!bottom-auto sm:!left-auto sm:!right-auto' : ''}
+      `}
+      style={draggable ? '' : ''}
+    >
+      <!-- Drag handle indicator — mobile only -->
+      <div class="modal-drag-indicator flex justify-center pt-3 pb-1 flex-shrink-0">
+        <div class="w-10 h-1 bg-gray-700 rounded-full"></div>
+      </div>
+
+      <!-- Header -->
+      <div
+        id={handleId}
+        class={`
+          flex items-center justify-between
+          px-6 pt-4 sm:pt-6 pb-4 flex-shrink-0
+          ${draggable ? 'cursor-grab active:cursor-grabbing select-none' : ''}
+        `}
+      >
+        <h2 id={titleId} class="text-lg font-bold">{title}</h2>
+        <div class="flex items-center gap-2">
+          {draggable && <span class="hidden sm:block text-gray-600 text-xs">⠿ drag</span>}
+          {showCloseButton && (
+            <button
+              id={closeBtnId}
+              type="button"
+              aria-label="Tutup"
+              class="text-gray-500 hover:text-white hover:bg-gray-800 transition p-1.5 rounded-lg -mr-1.5"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      <!-- Content body -->
+      <div class="px-6 pb-6 overflow-y-auto overscroll-contain" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom))">
+        <slot />
+      </div>
     </div>
   </div>
 </div>
 
-{draggable && (
-  <script>
-    document.querySelectorAll<HTMLElement>('[data-draggable="true"]').forEach((modal) => {
-      const innerId = modal.dataset.innerId!;
-      const handleId = modal.dataset.handleId!;
-      const inner = document.getElementById(innerId) as HTMLElement | null;
-      const handle = document.getElementById(handleId);
+<script>
+  (() => {
+    const ID = '{id}';
+    const modal = document.getElementById(ID) as HTMLElement | null;
+    if (!modal) return;
 
-      if (!handle || !inner) return;
+    const inner = document.getElementById('{innerId}') as HTMLElement | null;
+    const backdrop = document.getElementById('{backdropId}') as HTMLElement | null;
+    const handle = document.getElementById('{handleId}') as HTMLElement | null;
+    const closeBtn = document.getElementById('{closeBtnId}') as HTMLElement | null;
+    const isDraggable = modal.dataset.draggable === 'true';
+    const closeOnBg = modal.dataset.closeBg === 'true';
+    const closeOnEsc = modal.dataset.closeEsc === 'true';
 
-      handle.addEventListener('mousedown', (e: MouseEvent) => {
+    // ──── Scroll lock utilities ────
+
+    const sbWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    function lockScroll() {
+      document.documentElement.style.setProperty('--sb-width', sbWidth + 'px');
+      document.body.classList.add('modal-open');
+    }
+
+    function unlockScroll() {
+      document.body.classList.remove('modal-open');
+      document.documentElement.style.removeProperty('--sb-width');
+    }
+
+    // ──── Focus management ────
+
+    let prevFocus: HTMLElement | null = null;
+
+    function getFocusable(): HTMLElement[] {
+      return Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])'
+        )
+      );
+    }
+
+    function trapFocus(e: KeyboardEvent) {
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    }
+
+    function focusFirst() {
+      const focusable = getFocusable();
+      // Prefer non-close-btn elements
+      const target = focusable.find(el => el !== closeBtn) || focusable[0] || modal;
+      target?.focus({ preventScroll: true });
+    }
+
+    // ──── Pull-to-dismiss (mobile) ────
+
+    let touchStartY = 0;
+    let touchCurrentY = 0;
+    let isPulling = false;
+
+    function onTouchStart(e: TouchEvent) {
+      touchStartY = e.touches[0].clientY;
+      touchCurrentY = touchStartY;
+      isPulling = true;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (!isPulling || !inner) return;
+      touchCurrentY = e.touches[0].clientY;
+      const delta = touchCurrentY - touchStartY;
+      if (delta < 0) return; // only pull down
+      e.preventDefault();
+      modal.classList.add('pulling');
+      const progress = Math.min(delta / 300, 1); // max 300px drag
+      const translateY = delta * (1 - progress * 0.3); // elastic feel
+      inner.style.transform = `translateY(${translateY}px)`;
+      if (backdrop) {
+        backdrop.style.opacity = String(1 - progress * 0.5);
+      }
+    }
+
+    function onTouchEnd() {
+      if (!isPulling || !inner) return;
+      isPulling = false;
+      modal.classList.remove('pulling');
+      const delta = touchCurrentY - touchStartY;
+      inner.style.transform = '';
+      if (backdrop) backdrop.style.opacity = '';
+      if (delta > 100) {
+        // Dismiss
+        close();
+      }
+      // else: snap back (CSS transition handles it)
+    }
+
+    // ──── Desktop drag (draggable mode only) ────
+
+    if (isDraggable) {
+      let dragActive = false;
+
+      function startDrag(e: MouseEvent | TouchEvent) {
+        if (!inner) return;
+        dragActive = true;
+        // Switch to fixed positioning for drag
         const rect = inner.getBoundingClientRect();
-        inner.style.cssText = `top:${rect.top}px;left:${rect.left}px;transform:none`;
-        const ox = e.clientX - rect.left;
-        const oy = e.clientY - rect.top;
-        const onMove = (e: MouseEvent) => {
-          inner.style.left = `${e.clientX - ox}px`;
-          inner.style.top = `${e.clientY - oy}px`;
-        };
-        const onUp = () => {
+        inner.style.position = 'fixed';
+        inner.style.top = rect.top + 'px';
+        inner.style.left = rect.left + 'px';
+        inner.style.margin = '0';
+        inner.style.transform = 'none';
+        inner.style.width = rect.width + 'px';
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        const ox = clientX - rect.left;
+        const oy = clientY - rect.top;
+
+        function onMove(e: MouseEvent | TouchEvent) {
+          if (!dragActive || !inner) return;
+          const cx = 'touches' in e ? e.touches[0].clientX : e.clientX;
+          const cy = 'touches' in e ? e.touches[0].clientY : e.clientY;
+          inner.style.left = (cx - ox) + 'px';
+          inner.style.top = (cy - oy) + 'px';
+        }
+
+        function onUp() {
+          if (!dragActive) return;
+          dragActive = false;
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup', onUp);
-        };
+          document.removeEventListener('touchmove', onMove);
+          document.removeEventListener('touchend', onUp);
+        }
+
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
-      });
+        document.addEventListener('touchmove', onMove, { passive: true });
+        document.addEventListener('touchend', onUp);
+      }
 
-      new MutationObserver(() => {
-        if (!modal.classList.contains('hidden') && inner) {
-          inner.style.cssText = 'top:50%;left:50%;transform:translate(-50%,-50%)';
+      // Use handle for drag initiation
+      if (handle) {
+        handle.addEventListener('mousedown', startDrag);
+        handle.addEventListener('touchstart', startDrag, { passive: true });
+      }
+    }
+
+    // ──── Open / Close API ────
+
+    let closing = false;
+
+    function open() {
+      if (closing || !modal.classList.contains('hidden')) return;
+      prevFocus = document.activeElement as HTMLElement;
+      lockScroll();
+      modal.classList.remove('hidden');
+      // Two-phase animation trigger: wait for paint of initial state
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          modal.classList.add('open');
+          focusFirst();
+        });
+      });
+    }
+
+    function close() {
+      if (closing || modal.classList.contains('hidden')) return;
+      closing = true;
+      modal.classList.remove('open');
+      modal.classList.add('exiting');
+      modal.addEventListener('transitionend', () => {
+        modal.classList.remove('exiting');
+        modal.classList.add('hidden');
+        unlockScroll();
+        closing = false;
+        // Reset inline styles from pull-to-dismiss
+        if (inner) inner.style.transform = '';
+        if (backdrop) backdrop.style.opacity = '';
+        prevFocus?.focus({ preventScroll: true });
+        prevFocus = null;
+      }, { once: true });
+      // Fallback: if no transitionend within 400ms, force close
+      setTimeout(() => {
+        if (closing) {
+          modal.classList.remove('open', 'exiting');
+          modal.classList.add('hidden');
+          unlockScroll();
+          closing = false;
+          if (inner) inner.style.transform = '';
+          if (backdrop) backdrop.style.opacity = '';
+          prevFocus?.focus({ preventScroll: true });
+          prevFocus = null;
         }
-      }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+      }, 400);
+    }
+
+    // ──── Backward compatibility observer ────
+    // Handles direct classList manipulation by page code (no animation)
+    const compatObserver = new MutationObserver(() => {
+      if (modal.classList.contains('hidden')) {
+        if (!closing) {
+          unlockScroll();
+          prevFocus?.focus({ preventScroll: true });
+          prevFocus = null;
+        }
+      } else {
+        if (!modal.classList.contains('open')) {
+          // Reset drag position if coming from draggable mode
+          if (isDraggable && inner) {
+            inner.style.position = '';
+            inner.style.top = '';
+            inner.style.left = '';
+            inner.style.margin = '';
+            inner.style.width = '';
+            inner.style.transform = '';
+          }
+          lockScroll();
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              modal.classList.add('open');
+              focusFirst();
+            });
+          });
+        }
+      }
     });
-  </script>
-)}
+    compatObserver.observe(modal, { attributes: true, attributeFilter: ['class'] });
+
+    // ──── Event handlers ────
+
+    // Escape key
+    if (closeOnEsc) {
+      modal.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Escape') close();
+        trapFocus(e);
+      });
+    } else {
+      modal.addEventListener('keydown', trapFocus);
+    }
+
+    // Backdrop click
+    if (closeOnBg && backdrop) {
+      backdrop.addEventListener('click', close);
+    }
+
+    // Close button
+    closeBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      close();
+    });
+
+    // Mobile pull-to-dismiss
+    if (inner) {
+      inner.addEventListener('touchstart', onTouchStart, { passive: true });
+      inner.addEventListener('touchmove', onTouchMove, { passive: false });
+      inner.addEventListener('touchend', onTouchEnd);
+    }
+
+    // ──── Global API ────
+
+    (window as any).__modal = (window as any).__modal || {};
+    (window as any).__modal[ID] = { open, close };
+  })();
+</script>
