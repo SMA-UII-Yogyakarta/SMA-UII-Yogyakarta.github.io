@@ -1,10 +1,12 @@
 name: Tests
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Alasan menjalankan test'
+        required: false
+        default: 'Manual trigger'
 
 env:
   # Opt into Node.js 24 now to avoid deprecation warnings

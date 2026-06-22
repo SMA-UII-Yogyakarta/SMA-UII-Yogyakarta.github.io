@@ -1,0 +1,65 @@
+name: Deploy Web → GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Alasan deploy ke GitHub Pages'
+        required: true
+        default: 'Release fitur baru'
+
+# Izin untuk push ke GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pastikan hanya 1 deployment jalan sekaligus
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build SSG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build (SSG mode)
+        run: DEPLOY_MODE=ssg bun run build
+        env:
+          # URL API publik — set di GitHub repo → Settings → Secrets → Actions
+          PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
