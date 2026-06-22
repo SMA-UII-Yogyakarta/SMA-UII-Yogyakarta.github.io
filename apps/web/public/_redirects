@@ -1,0 +1,8 @@
+# Cloudflare Pages — _redirects
+# Astro SSG menghasilkan file HTML statis per route (/about → /about/index.html).
+# Cloudflare Pages sudah menangani ini secara otomatis.
+# Rule di bawah memastikan SPA-style navigation dan 404 yang benar.
+
+# Semua request yang bukan file statis → serve HTML halaman tsb (200)
+# Cloudflare Pages memprioritaskan file nyata sebelum redirect ini.
+/*    /index.html    200

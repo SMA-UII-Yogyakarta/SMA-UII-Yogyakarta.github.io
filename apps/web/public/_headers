@@ -1,0 +1,43 @@
+# Cloudflare Pages — _headers
+# Ref: https://developers.cloudflare.com/pages/configuration/headers/
+
+# ──────────────────────────────────────────────────────────────
+# Security headers untuk semua halaman
+# ──────────────────────────────────────────────────────────────
+/*
+  # Cegah halaman ini di-embed di iframe situs lain (clickjacking)
+  X-Frame-Options: SAMEORIGIN
+
+  # Cegah browser menebak MIME type (sniffing attack)
+  X-Content-Type-Options: nosniff
+
+  # Batasi info referrer yang dikirim ke situs lain
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Matikan fitur browser yang tidak dipakai
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+  # HSTS — paksa HTTPS selama 1 tahun (hanya berlaku kalau site sudah full HTTPS)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # Basic XSS protection (backup, CSP lebih kuat)
+  X-XSS-Protection: 1; mode=block
+
+# ──────────────────────────────────────────────────────────────
+# Cache static assets agresif (versioned oleh Astro)
+# ──────────────────────────────────────────────────────────────
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.*
+  Cache-Control: public, max-age=86400
+
+# ──────────────────────────────────────────────────────────────
+# CORS untuk fetch ke API (Cloudflare Workers)
+# Ini mengizinkan browser di domain ini memanggil API.
+# Ganti origin dengan URL API yang sebenarnya kalau berbeda.
+# ──────────────────────────────────────────────────────────────
+/api/*
+  Access-Control-Allow-Origin: https://lab.smauiiyk.sch.id
+  Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization
