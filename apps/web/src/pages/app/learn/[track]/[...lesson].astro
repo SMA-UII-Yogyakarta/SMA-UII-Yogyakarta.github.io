@@ -6,17 +6,8 @@ import { db } from '@smauii/db';
 import { learningProgress } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 
-export async function getStaticPaths() {
-  const all = await getCollection('lessons');
-  return all
-    .filter(l => !l.id.endsWith('/README'))
-    .map(l => {
-      const parts = l.id.split('/');
-      const track = parts[0];
-      const lesson = parts.slice(1).join('/');
-      return { params: { track, lesson } };
-    });
-}
+// Dynamic route: no getStaticPaths, always SSR
+const all = await getCollection('lessons');
 
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
@@ -28,8 +19,13 @@ const lessonId = `${track}/${lesson}`;
 const entry = await getEntry('lessons', lessonId);
 if (!entry || entry.id.endsWith('/README')) return new Response(null, { status: 404 });
 
+// SSG-first: no Astro.locals reference at build time
+let user = null;
 const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
-const { user } = Astro.locals;
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 let completedSlugs = new Set<string>();
 if (!isSSG && user) {
@@ -37,8 +33,6 @@ if (!isSSG && user) {
   completedSlugs = new Set(progress.map(p => p.lessonSlug));
 }
 const isCompleted = completedSlugs.has(entry.id);
-
-const all = await getCollection('lessons');
 
 const modSlug = entry.data.module;
 const siblings = all

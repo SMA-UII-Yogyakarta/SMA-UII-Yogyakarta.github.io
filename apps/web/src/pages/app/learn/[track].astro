@@ -3,9 +3,9 @@ import DashboardLayout from '@layouts/DashboardLayout.astro';
 import { requireAuth } from '@lib/guards';
 import { getCollection, getEntry } from 'astro:content';
 import { db } from '@smauii/db';
-import { learningProgress, readingSessions } from '@smauii/db';
 import { eq, and, gte } from 'drizzle-orm';
 
+// SSG: generate static paths from content
 export async function getStaticPaths() {
   const all = await getCollection('lessons');
   const tracks = [...new Set(
@@ -24,8 +24,12 @@ const trackEntry = await getEntry('lessons', `${track}/README`);
 if (!trackEntry) return new Response(null, { status: 404 });
 
 const all = await getCollection('lessons');
+let user = null;
 const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
-const { user } = Astro.locals;
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 let completedSlugs = new Set<string>();
 let sessions: any[] = [];

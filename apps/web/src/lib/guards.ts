@@ -1,5 +1,20 @@
 import type { AstroGlobal } from 'astro';
 
+/**
+ * Server-side auth guards for Mode A (SSR) only.
+ * 
+ * DEPLOY_MODE modes:
+ * - Mode A (ssr): Guards active, uses Astro.locals.user from Lucia session
+ * - Mode B/C (ssg): Guards return null, client-side auth handles everything
+ * 
+ * In SSG mode, pages should:
+ * 1. Not call guards (or call them - they return null)
+ * 2. Use client-side auth detection (localStorage token + /api/auth/me fetch)
+ * 3. Redirect client-side based on auth state
+ * 
+ * @see {@link ../docs/DEPLOYMENT_ARCHITECTURE.md} for multi-mode strategy
+ */
+
 type RedirectResponse = Response;
 
 const isSSGMode = () => {

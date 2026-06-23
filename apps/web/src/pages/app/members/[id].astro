@@ -1,41 +1,14 @@
 ---
 import DashboardLayout from '@layouts/DashboardLayout.astro';
 import MemberDetailDashboard from '@components/app/MemberDetailDashboard';
-import { requireMaintainer } from '@lib/guards';
 
-const redirect = requireMaintainer(Astro); if (redirect) return redirect;
-
-export async function getStaticPaths() {
-  return [];
-}
-
+// SSG mode: fully static, client-side fetches data
 const { id } = Astro.params;
-const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
-
-// SSR: fetch member data at request-time
-let initialData = null;
-
-if (!isSSG && id) {
-  try {
-    const res = await fetch(`${import.meta.env.PUBLIC_API_URL || ''}/api/admin/users?id=${id}`, {
-      headers: {
-        Cookie: Astro.request.headers.get('cookie') || '',
-      },
-    });
-    if (res.ok) {
-      const json = await res.json();
-      initialData = json.data || null;
-    }
-  } catch {
-    // fallback to client-side fetch in MemberDetailDashboard
-  }
-}
 ---
 
-<DashboardLayout title={initialData ? initialData.user.name : 'Detail Anggota'}>
+<DashboardLayout title="Detail Anggota">
   <MemberDetailDashboard
     id={id ?? 'fallback'}
-    initialData={initialData}
     client:idle
   />
 </DashboardLayout>

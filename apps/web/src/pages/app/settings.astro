@@ -3,8 +3,16 @@ import DashboardLayout from '@layouts/DashboardLayout.astro';
 import SettingsDashboard from '@components/app/SettingsDashboard';
 import { requireAuth } from '@lib/guards';
 
+// SSG-first: guards return null in SSG mode
 const redirect = requireAuth(Astro); if (redirect) return redirect;
-const { user } = Astro.locals;
+
+// Get user data from DashboardLayout client-side script (SSG) or Astro.locals (SSR)
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 // Form initial data mapping (only in SSR mode)
 const settingsData = user ? {

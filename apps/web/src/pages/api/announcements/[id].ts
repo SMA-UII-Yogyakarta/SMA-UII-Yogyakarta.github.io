@@ -64,7 +64,3 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   }
 };
 
-export function getStaticPaths() {
-  return [];
-}
-

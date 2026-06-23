@@ -4,10 +4,18 @@ import PageHeader from '@components/app/PageHeader.astro';
 import Modal from '@components/app/Modal.astro';
 import SkeletonList from '@components/app/SkeletonList.astro';
 import { requireAuth } from '@lib/guards';
-const redirect = requireAuth(Astro); if (redirect) return redirect;
-const { user } = Astro.locals;
-const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
 
+// SSG-first: guards return null in SSG mode
+const redirect = requireAuth(Astro); if (redirect) return redirect;
+
+// Get user data from DashboardLayout client-side script (SSG) or Astro.locals (SSR)
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
+const canLog = (user?.status === 'active' && user?.role !== 'alumni') ?? false;
 ---
 
 <DashboardLayout title="Activities">

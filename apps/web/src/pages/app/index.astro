@@ -1,5 +1,13 @@
 ---
-const { user } = Astro.locals;
+// SSG-first: no Astro.locals reference at build time
+// In SSG mode, this page is static - client-side handles redirect
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
+
 if (!user) return Astro.redirect('/login');
 if (user.status === 'pending') return Astro.redirect(`/check-status?nisn=${user.nisn}`);
 if (user.status === 'inactive') return Astro.redirect('/login?error=inactive');

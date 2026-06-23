@@ -6,13 +6,19 @@ import { db } from '@smauii/db';
 import { memberCards } from '@smauii/db';
 import { eq } from 'drizzle-orm';
 
+// SSG-first: guards return null in SSG mode
 const redirect = requireMember(Astro); if (redirect) return redirect;
-const { user } = Astro.locals;
+
+// Get user data from DashboardLayout client-side script (SSG) or Astro.locals (SSR)
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 // SSR Data fetching (skipped in SSG mode)
 let card = null;
-const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
-
 if (!isSSG && user) {
   try {
     const cardRes = await db.query.memberCards.findFirst({ where: eq(memberCards.userId, user.id) });

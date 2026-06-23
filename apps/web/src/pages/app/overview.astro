@@ -6,39 +6,42 @@ import { db } from '@smauii/db';
 import { users, memberTracks, activities, announcements } from '@smauii/db';
 import { desc, eq, sql } from 'drizzle-orm';
 
+// SSG-first: guards return null in SSG mode, client handles auth
 const redirect = requireAuth(Astro); if (redirect) return redirect;
-const { user } = Astro.locals;
 
-// SSR: Fetch data in frontmatter for admin dashboard only in SSR mode
+// SSR-only data fetching for admin dashboard (skipped in SSG mode)
 let adminData = null;
 const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
 
-if (!isSSG && user && user.role === 'maintainer') {
-  try {
-    const [membersCount, activeCount, pendingCount, inactiveCount, activitiesThisMonth, totalProjects, trackPopularity, recentMembers, pendingUsers, recentAnnouncements] = await Promise.all([
-      db.select({ count: sql<number>`count(*)` }).from(users).then(r => r[0].count),
-      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'active')).then(r => r[0]?.count || 0),
-      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'pending')).then(r => r[0]?.count || 0),
-      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'inactive')).then(r => r[0]?.count || 0),
-      db.select({ count: sql<number>`count(*)` }).from(activities).where(sql`strftime('%Y-%m', activities.createdAt) = strftime('%Y-%m', 'now')`).then(r => r[0]?.count || 0),
-      db.select({ count: sql<number>`count(*)` }).from(memberTracks).then(r => r[0]?.count || 0),
-      db.select({ track: memberTracks.track, count: sql<number>`count(*)` }).from(memberTracks).groupBy(memberTracks.track).orderBy(sql`count(*) DESC`).limit(5),
-      db.select({ id: users.id, name: users.name, class: users.class, status: users.status, joinedAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(5),
-      db.select({ id: users.id, name: users.name, class: users.class, tracks: sql<string>`json_group_array(${memberTracks.track})` }).from(users).leftJoin(memberTracks, eq(users.id, memberTracks.userId)).where(eq(users.status, 'pending')).groupBy(users.id).limit(5),
-      db.select({ id: announcements.id, title: announcements.title, content: announcements.content, createdAt: announcements.createdAt }).from(announcements).orderBy(desc(announcements.createdAt)).limit(3),
-    ]);
-    
-    adminData = {
-      members: { total: membersCount, active: activeCount, pending: pendingCount, inactive: inactiveCount },
-      activitiesThisMonth,
-      totalProjects,
-      trackPopularity: trackPopularity.map(t => ({ track: t.track, count: t.count })),
-      recentMembers: recentMembers.map(m => ({ ...m, joinedAt: m.joinedAt })),
-      pendingUsers: pendingUsers.map(u => ({ ...u, tracks: JSON.parse(u.tracks as string) })),
-      announcements: recentAnnouncements,
-    };
-  } catch (error) {
-    console.error('SSR adminData query failed, falling back to client-side load:', error);
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const { user } = Astro.locals;
+  if (user && user.role === 'maintainer') {
+    try {
+      const [membersCount, activeCount, pendingCount, inactiveCount, activitiesThisMonth, totalProjects, trackPopularity, recentMembers, pendingUsers, recentAnnouncements] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(users).then(r => r[0].count),
+        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'active')).then(r => r[0]?.count || 0),
+        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'pending')).then(r => r[0]?.count || 0),
+        db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.status, 'inactive')).then(r => r[0]?.count || 0),
+        db.select({ count: sql<number>`count(*)` }).from(activities).where(sql`strftime('%Y-%m', activities.createdAt) = strftime('%Y-%m', 'now')`).then(r => r[0]?.count || 0),
+        db.select({ count: sql<number>`count(*)` }).from(memberTracks).then(r => r[0]?.count || 0),
+        db.select({ track: memberTracks.track, count: sql<number>`count(*)` }).from(memberTracks).groupBy(memberTracks.track).orderBy(sql`count(*) DESC`).limit(5),
+        db.select({ id: users.id, name: users.name, class: users.class, status: users.status, joinedAt: users.createdAt }).from(users).orderBy(desc(users.createdAt)).limit(5),
+        db.select({ id: users.id, name: users.name, class: users.class, tracks: sql<string>`json_group_array(${memberTracks.track})` }).from(users).leftJoin(memberTracks, eq(users.id, memberTracks.userId)).where(eq(users.status, 'pending')).groupBy(users.id).limit(5),
+        db.select({ id: announcements.id, title: announcements.title, content: announcements.content, createdAt: announcements.createdAt }).from(announcements).orderBy(desc(announcements.createdAt)).limit(3),
+      ]);
+      
+      adminData = {
+        members: { total: membersCount, active: activeCount, pending: pendingCount, inactive: inactiveCount },
+        activitiesThisMonth,
+        totalProjects,
+        trackPopularity: trackPopularity.map(t => ({ track: t.track, count: t.count })),
+        recentMembers: recentMembers.map(m => ({ ...m, joinedAt: m.joinedAt })),
+        pendingUsers: pendingUsers.map(u => ({ ...u, tracks: JSON.parse(u.tracks as string) })),
+        announcements: recentAnnouncements,
+      };
+    } catch (error) {
+      console.error('SSR adminData query failed, falling back to client-side load:', error);
+    }
   }
 }
 ---

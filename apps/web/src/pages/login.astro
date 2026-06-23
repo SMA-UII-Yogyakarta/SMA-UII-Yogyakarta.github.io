@@ -1,7 +1,6 @@
 ---
 import AuthLayout from '@layouts/AuthLayout.astro';
-// SSG mode: bypass server-side check (client-side redirect handles this via script below)
-if (import.meta.env.DEPLOY_MODE !== 'ssg' && Astro.locals.user) return Astro.redirect('/app/overview');
+// SSG-first: no Astro.locals, client-side redirect for logged-in users
 ---
 
 <AuthLayout title="Masuk" subtitle="Akses dashboard anggota SMA UII Lab">

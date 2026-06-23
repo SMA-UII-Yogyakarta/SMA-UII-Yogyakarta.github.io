@@ -6,50 +6,53 @@ import { db } from '@smauii/db';
 import { users, memberTracks, memberCards, badges, userBadges } from '@smauii/db';
 import { eq, desc } from 'drizzle-orm';
 
+// SSG-first: guards return null in SSG mode, client handles auth
 const redirect = requireMember(Astro); if (redirect) return redirect;
-const { user } = Astro.locals;
 
-// SSR Data fetching (skipped in SSG mode)
+// SSR-only data fetching (skipped in SSG mode)
 let profileData = null;
 const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
 
-if (!isSSG && user) {
-  try {
-    const [tracksRes, cardRes, approverRes, userBadgesRes] = await Promise.all([
-      db.select({ track: memberTracks.track }).from(memberTracks).where(eq(memberTracks.userId, user.id)),
-      db.query.memberCards.findFirst({ where: eq(memberCards.userId, user.id) }),
-      user.approvedBy ? db.query.users.findFirst({ where: eq(users.id, user.approvedBy) }) : null,
-      db.select({
-        id: userBadges.id,
-        awardedAt: userBadges.awardedAt,
-        badge: badges,
-      })
-        .from(userBadges)
-        .innerJoin(badges, eq(userBadges.badgeId, badges.id))
-        .where(eq(userBadges.userId, user.id))
-        .orderBy(desc(userBadges.awardedAt))
-    ]);
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const { user } = Astro.locals;
+  if (user) {
+    try {
+      const [tracksRes, cardRes, approverRes, userBadgesRes] = await Promise.all([
+        db.select({ track: memberTracks.track }).from(memberTracks).where(eq(memberTracks.userId, user.id)),
+        db.query.memberCards.findFirst({ where: eq(memberCards.userId, user.id) }),
+        user.approvedBy ? db.query.users.findFirst({ where: eq(users.id, user.approvedBy) }) : null,
+        db.select({
+          id: userBadges.id,
+          awardedAt: userBadges.awardedAt,
+          badge: badges,
+        })
+          .from(userBadges)
+          .innerJoin(badges, eq(userBadges.badgeId, badges.id))
+          .where(eq(userBadges.userId, user.id))
+          .orderBy(desc(userBadges.awardedAt))
+      ]);
 
-    profileData = {
-      id: user.id,
-      nis: user.nis,
-      nisn: user.nisn,
-      name: user.name,
-      email: user.email,
-      githubUsername: user.githubUsername,
-      avatarUrl: user.avatarUrl,
-      class: user.class,
-      role: user.role,
-      status: user.status,
-      badgeScore: user.badgeScore || 0,
-      joinedAt: user.joinedAt,
-      card: cardRes || null,
-      tracks: tracksRes.map(t => t.track),
-      badges: userBadgesRes,
-      approver: approverRes ? { name: approverRes.name } : null,
-    };
-  } catch (error) {
-    console.error('SSR profileData query failed, falling back to client-side load:', error);
+      profileData = {
+        id: user.id,
+        nis: user.nis,
+        nisn: user.nisn,
+        name: user.name,
+        email: user.email,
+        githubUsername: user.githubUsername,
+        avatarUrl: user.avatarUrl,
+        class: user.class,
+        role: user.role,
+        status: user.status,
+        badgeScore: user.badgeScore || 0,
+        joinedAt: user.joinedAt,
+        card: cardRes || null,
+        tracks: tracksRes.map(t => t.track),
+        badges: userBadgesRes,
+        approver: approverRes ? { name: approverRes.name } : null,
+      };
+    } catch (error) {
+      console.error('SSR profileData query failed, falling back to client-side load:', error);
+    }
   }
 }
 ---

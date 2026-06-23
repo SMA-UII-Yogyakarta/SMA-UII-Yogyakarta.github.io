@@ -9,7 +9,13 @@ import { requireAuth } from '@lib/guards';
 const redirect = requireAuth(Astro);
 if (redirect) return redirect;
 
-const { user } = Astro.locals;
+// SSG-first: no Astro.locals reference at build time
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 // Dynamic Easter Egg Countdown
 const today = new Date();

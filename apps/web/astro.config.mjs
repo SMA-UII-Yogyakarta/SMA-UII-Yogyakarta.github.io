@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
+import cloudflare from '@astrojs/cloudflare';
 import node from '@astrojs/node';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -12,7 +13,7 @@ const DEPLOY_MODE = process.env.DEPLOY_MODE || 'ssr';
 
 // Domain utama — dipakai untuk canonical URL, sitemap, og:url, dsb.
 // Ganti ke domain Anda kalau deploy ke GitHub Pages atau domain lain.
-// Contoh: 'https://sma-uii-yogyakarta.github.io/smauii-dev-foundation'
+// Contoh: 'https://sma-ui-ui-yogyakarta.github.io/smauii-dev-foundation'
 const site = 'https://lab.smauiiyk.sch.id';
 
 const dbAlias = DEPLOY_MODE === 'ssg'
@@ -73,17 +74,22 @@ const baseConfig = {
 let config;
 
 if (DEPLOY_MODE === 'ssg') {
+  // Pure SSG mode for static hosting (GitHub Pages, Netlify static)
   config = defineConfig({
     ...baseConfig,
     output: 'static',
   });
 } else if (DEPLOY_MODE === 'hybrid') {
+  // Hybrid mode: static pages + serverless functions on Cloudflare
   config = defineConfig({
     ...baseConfig,
     output: 'server',
-    adapter: node({ mode: 'standalone' }),
+    adapter: cloudflare({
+      mode: 'advanced',
+    }),
   });
 } else {
+  // SSR mode for Node.js deployment (Docker, VPS)
   config = defineConfig({
     ...baseConfig,
     output: 'server',

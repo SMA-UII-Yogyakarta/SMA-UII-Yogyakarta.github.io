@@ -2,21 +2,20 @@
 import Layout from '@layouts/Layout.astro';
 import { getCollection, getEntry } from 'astro:content';
 
-export async function getStaticPaths() {
-  const all = await getCollection('lessons');
-  const tracks = [...new Set(
-    all.filter(l => l.id.endsWith('/README')).map(l => l.id.split('/')[0])
-  )];
-  return tracks.map(track => ({ params: { track } }));
-}
+// Dynamic route: no getStaticPaths, always SSR
+const all = await getCollection('lessons');
+const tracks = [...new Set(
+  all.filter(l => l.id.endsWith('/README')).map(l => l.id.split('/')[0])
+)];
 
+// Validate track param at request time
 const { track } = Astro.params;
-if (!track) return Astro.redirect('/learn');
+if (!track || !tracks.includes(track)) {
+  return new Response(null, { status: 404 });
+}
 
 const trackEntry = await getEntry('lessons', `${track}/README`);
 if (!trackEntry) return new Response(null, { status: 404 });
-
-const all = await getCollection('lessons');
 
 const modules: Record<string, typeof all> = {};
 for (const l of all) {
@@ -32,7 +31,14 @@ for (const mod of Object.values(modules)) {
 
 const allLessons = Object.values(modules).flat();
 const totalDuration = allLessons.reduce((s, l) => s + (l.data.duration ?? 0), 0);
-const { user } = Astro.locals;
+
+// SSG-first: no Astro.locals reference at build time
+let user = null;
+const isSSG = import.meta.env.DEPLOY_MODE === 'ssg';
+if (!isSSG && import.meta.env.DEPLOY_MODE === 'ssr') {
+  const locals = Astro.locals;
+  user = locals.user;
+}
 
 const levelBadges: Record<string, string> = {
   beginner: 'bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-lg font-semibold text-[10px]',

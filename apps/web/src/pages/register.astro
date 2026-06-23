@@ -1,8 +1,7 @@
 ---
 import AuthLayout from '@layouts/AuthLayout.astro';
 import RegisterForm from '@components/RegisterForm';
-// SSG mode: bypass server-side check (no middleware runs during static build/runtime)
-if (import.meta.env.DEPLOY_MODE !== 'ssg' && Astro.locals.user) return Astro.redirect('/app/overview');
+// SSG-first: no Astro.locals, client-side redirect for logged-in users
 ---
 <AuthLayout title="Daftar Anggota" subtitle="Bergabung dengan komunitas developer SMA UII Lab" wide>
   <RegisterForm client:load />

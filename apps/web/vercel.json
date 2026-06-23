@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "DEPLOY_MODE=ssr bun run build",
+  "outputDirectory": "dist",
+  "installCommand": "bun install",
+  "framework": "astro",
+  "regions": ["sin1"],
+  "env": {
+    "DEPLOY_MODE": "ssr",
+    "TURSO_URL": "@turso_url",
+    "TURSO_TOKEN": "@turso_token", 
+    "JWT_SECRET": "@jwt_secret",
+    "DATABASE_URL": "@turso_url",
+    "DATABASE_TOKEN": "@turso_token"
+  }
+}
